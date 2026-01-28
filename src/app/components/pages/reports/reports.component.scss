@@ -1,0 +1,59 @@
+.p-card .p-card-body {
+    padding: 0 !important; /* Anula el padding por defecto para que los divs internos controlen el espaciado */
+}
+.p-card .p-card-content {
+  padding: 0; /* Asegura que el contenido de la tarjeta no tenga padding extra */
+}
+.p-dropdown {
+  width: 100%; /* Asegura que el dropdown ocupe todo el ancho disponible */
+}
+.p-dropdown .p-dropdown-label {
+  min-height: 2.5rem; /* Altura mínima para que coincida con los campos de input de ShadCN */
+  line-height: 1.25rem; /* Ajuste para el texto dentro del input */
+  padding: 0.5rem 0.75rem; /* Ajuste el padding para coincidir con la apariencia del input de ShadCN */
+}
+.p-button {
+  /* Estilos generales para botones de PrimeNG para que se parezcan a los de ShadCN */
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  height: 2.5rem; /* h-10 */
+  padding: 0 1rem; /* px-4 */
+}
+
+.p-button.p-button-outlined {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+}
+
+/* Estilos específicos para p-tag para replicar p-badge de shadcn */
+.p-tag {
+    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+}
+
+/* Variantes de p-tag para simular las variantes de Badge de ShadCN */
+.p-tag.p-tag-info { /* draft - outline */
+  @apply border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200;
+}
+.p-tag.p-tag-warning { /* sent - secondary */
+    @apply border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200;
+}
+.p-tag.p-tag-success { /* accepted - default */
+    @apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
+    background-color: #22c55e; /* green-500 */
+    color: white;
+}
+.p-tag.p-tag-danger { /* rejected - destructive */
+    @apply border-transparent bg-red-500 text-white hover:bg-red-500/90;
+}
+.p-tag.p-tag-secondary { /* expired - secondary (using warning or info for better visual distinction) */
+    @apply border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200;
+}
+
+/* Estilo para los iconos de PrimeIcons */
+.pi {
+  font-size: 1.25rem; /* Base size for h-5 w-5 (20px) */
+  display: inline-flex; /* Ensures proper alignment and size with text */
+  align-items: center;
+  justify-content: center;
+}
+.pi.h-3.w-3 {
+    font-size: 0.75rem; /* 12px for h-3 w-3 */
+}

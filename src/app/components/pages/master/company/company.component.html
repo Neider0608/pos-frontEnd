@@ -1,0 +1,185 @@
+<p-toast />
+
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <div class="flex items-center justify-between flex-wrap gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800 transition-all">
+            <div class="flex items-center gap-6">
+                <div class="w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-400 text-white rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
+                    <i class="pi pi-building text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Compañía</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium italic">Configura la identidad legal y datos de contacto de tu empresa.</p>
+                </div>
+            </div>
+
+            <button
+                pButton
+                label="Nueva Compañía"
+                icon="pi pi-plus"
+                (click)="openNewDialog()"
+                class="!rounded-2xl !py-4 !px-8 !bg-blue-600 !border-none !shadow-xl !shadow-blue-100 dark:!shadow-none hover:!scale-105 active:!scale-95 transition-all font-bold"
+            ></button>
+        </div>
+
+        <div class="grid grid-cols-12 gap-4 items-center">
+            <div class="col-span-12 md:col-span-8 relative group">
+                <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                <input
+                    pInputText
+                    [(ngModel)]="searchTerm"
+                    (input)="filterCompanies()"
+                    placeholder="Buscar por NIT o Razón Social..."
+                    class="!pl-14 w-full !rounded-2xl !border-slate-200 dark:!border-slate-800 !bg-white dark:!bg-slate-900 !py-5 !text-base shadow-sm focus:!ring-4 focus:!ring-blue-500/10 transition-all dark:text-slate-200"
+                />
+            </div>
+            <div class="col-span-12 md:col-span-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 rounded-2xl p-5 flex items-center justify-between">
+                <span class="text-[10px] font-black text-blue-400 dark:text-blue-500 uppercase tracking-[0.2em]">Total Empresas</span>
+                <span class="text-2xl font-black text-blue-700 dark:text-blue-300 leading-none">{{ filteredCompanies.length }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+            <p-table [value]="filteredCompanies" [paginator]="true" [rows]="8" responsiveLayout="scroll" styleClass="p-datatable-borderless">
+                <ng-template pTemplate="header">
+                    <tr class="!bg-slate-50 dark:!bg-slate-800/50">
+                        <th pSortableColumn="BusinessName" class="!py-6 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Nombre Comercial <p-sortIcon field="BusinessName"></p-sortIcon></th>
+                        <th class="!py-6 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">Identificación (NIT)</th>
+                        <th class="!py-6 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">DV</th>
+                        <th class="!py-6 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-right">Gestión</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-com>
+                    <tr class="border-b border-slate-50 dark:border-slate-800/50 last:border-none hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-all group">
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center">
+                                    <img *ngIf="com.image" [src]="com.Image" class="w-full h-full object-cover" />
+                                    <i *ngIf="!com.image" class="pi pi-image text-slate-400"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-700 dark:text-slate-200 text-lg tracking-tight group-hover:text-blue-600 transition-colors">{{ com.businessName }}</span>
+                                    <span class="text-xs text-slate-400 font-medium italic truncate max-w-[200px]">{{ com.address }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg font-mono text-xs font-black text-center">
+                                {{ com.nit }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg font-mono text-xs font-black text-center">
+                                {{ com.verificationDigit }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button (click)="editCompany(com)" class="w-11 h-11 rounded-2xl flex items-center justify-center text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all" pTooltip="Editar">
+                                    <i class="pi pi-pencil text-lg"></i>
+                                </button>
+                                <!-- <button (click)="deleteCompany(com)" class="w-11 h-11 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all" pTooltip="Eliminar">
+                                    <i class="pi pi-trash text-lg"></i>
+                                </button> -->
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <p-dialog [(visible)]="showDialog" [modal]="true" [draggable]="false" [resizable]="false" [dismissableMask]="true" styleClass="!rounded-[3rem] !border-none !shadow-2xl !bg-white dark:!bg-slate-900 overflow-hidden" [style]="{ width: '480px' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-4 pt-6">
+                <div class="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl flex items-center justify-center">
+                    <i class="pi pi-pencil text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter leading-none mb-1">{{ dialogTitle }}</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Parámetros corporativos</p>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="space-y-8 pt-6 px-4">
+            <!--    <div class="flex flex-col items-center gap-2">
+                <div
+                    (click)="fileInput.click()"
+                    class="w-24 h-24 rounded-[2rem] bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-all group overflow-hidden"
+                >
+                    <img *ngIf="activeCompany.image" [src]="activeCompany.image" class="w-full h-full object-cover" />
+                    <i *ngIf="!activeCompany.image" class="pi pi-camera text-slate-300 group-hover:text-blue-500 text-2xl"></i>
+                    <input #fileInput type="file" (change)="onFileSelected($event)" class="hidden" accept="image/*" />
+                </div>
+                <span class="text-[10px] font-black text-slate-400 uppercase">Logo Empresa</span>
+            </div> -->
+
+            <div class="relative">
+                <label class="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Razón Social</label>
+                <input
+                    pInputText
+                    [(ngModel)]="activeCompany.businessName"
+                    (ngModelChange)="activeCompany.businessName = $event?.toUpperCase()"
+                    placeholder="Nombre de la empresa"
+                    class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-5 dark:text-white font-bold"
+                />
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">NIT</label>
+                    <input pInputText [(ngModel)]="activeCompany.nit" placeholder="800..." class="w-full font-medium !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1"> DV </label>
+                    <input
+                        pInputText
+                        type="number"
+                        min="0"
+                        max="9"
+                        [(ngModel)]="activeCompany.verificationDigit"
+                        placeholder="0"
+                        class="w-full text-center !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white font-bold font-medium"
+                    />
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Email</label>
+                <input
+                    pInputText
+                    [(ngModel)]="activeCompany.email"
+                    (ngModelChange)="activeCompany.email = $event?.toUpperCase()"
+                    placeholder="contacto@..."
+                    class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white font-medium"
+                />
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Dirección Física</label>
+                <textarea
+                    pInputTextarea
+                    [(ngModel)]="activeCompany.address"
+                    rows="2"
+                    placeholder="Sede principal..."
+                    class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white font-medium"
+                ></textarea>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex gap-4 justify-end pb-8 pt-4 px-4">
+                <button pButton label="Descartar" class="p-button-text !text-slate-400 hover:!text-slate-600 !font-bold" (click)="showDialog = false"></button>
+                <button
+                    pButton
+                    label="Guardar Compañía"
+                    icon="pi pi-check-circle"
+                    (click)="saveCompany()"
+                    class="!rounded-2xl !py-5 !px-10 !bg-blue-600 !border-none !font-black !shadow-2xl !shadow-blue-200 dark:!shadow-none transition-all hover:-translate-y-1"
+                ></button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

@@ -1,0 +1,113 @@
+/* Anulación de estilos por defecto de PrimeNG para una mejor integración con Tailwind */
+.p-card .p-card-body {
+    padding: 0 !important; /* Anula el padding por defecto para que los divs internos controlen el espaciado */
+}
+.p-card .p-card-content {
+  padding: 0; /* Asegura que el contenido de la tarjeta no tenga padding extra */
+}
+
+/* Ajustes para las pestañas de PrimeNG */
+.p-tabview .p-tabview-nav {
+  @apply grid w-full; /* Replicate grid behavior of ShadCN TabsList */
+  border: none !important; /* Remove PrimeNG default border */
+  background: none !important; /* Remove PrimeNG default background */
+  margin-bottom: 1.5rem; /* Equivalent to space-y-6 if first element is tab content */
+  border-radius: 0.5rem; /* rounded-md */
+  background-color: #f3f4f6; /* bg-gray-100 for TabsList */
+  padding: 0.25rem; /* p-1 */
+  justify-content: center; /* Center items if using flex or grid */
+}
+
+.p-tabview .p-tabview-nav li {
+    margin-right: 0 !important; /* Remove default PrimeNG margin between tabs */
+    margin-bottom: 0 !important; /* Remove default PrimeNG margin */
+    flex-grow: 1; /* Make tabs fill width in grid */
+    display: flex; /* Ensure inner content is centered */
+    justify-content: center;
+    align-items: center;
+}
+
+.p-tabview .p-tabview-nav-link {
+    @apply flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow;
+    color: #6b7280; /* text-gray-500 */
+    height: 2.5rem; /* h-10 */
+    background-color: transparent !important; /* Override PrimeNG active tab background */
+    border: none !important; /* Override PrimeNG active tab border */
+    box-shadow: none !important; /* Override PrimeNG active tab shadow */
+}
+
+.p-tabview .p-tabview-nav-link.p-highlight {
+    @apply bg-white text-gray-900 shadow;
+    background-color: white !important; /* data-[state=active]:bg-background */
+    color: #1f2937 !important; /* data-[state=active]:text-foreground */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* data-[state=active]:shadow */
+}
+
+.p-tabview .p-tabview-panels {
+  padding: 0 !important; /* Remove default PrimeNG padding */
+}
+.p-tabview .p-tabview-panel {
+  padding: 0 !important; /* Ensure the content div controls padding */
+}
+
+/* Ajustes para los dropdowns de PrimeNG */
+.p-dropdown {
+  width: 100%; /* Asegura que el dropdown ocupe todo el ancho disponible */
+}
+.p-dropdown .p-dropdown-label {
+  min-height: 2.5rem; /* Altura mínima para que coincida con los campos de input de ShadCN */
+  line-height: 1.25rem; /* Ajuste para el texto dentro del input */
+  padding: 0.5rem 0.75rem; /* Ajuste el padding para coincidir con la apariencia del input de ShadCN */
+}
+.p-inputtext {
+  min-height: 2.5rem; /* h-10 */
+}
+
+/* Estilos generales para botones de PrimeNG para que se parezcan a los de ShadCN */
+.p-button {
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  height: 2.5rem; /* h-10 */
+  padding: 0 1rem; /* px-4 */
+}
+
+.p-button.p-button-outlined {
+  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+}
+
+.p-button.p-button-sm {
+  height: 2.25rem; /* h-9 */
+  padding: 0 0.75rem; /* px-3 */
+  font-size: 0.875rem; /* text-sm */
+}
+
+/* Estilo para los iconos de PrimeIcons */
+.pi {
+  font-size: 1.25rem; /* Base size for h-5 w-5 (20px) */
+  display: inline-flex; /* Ensures proper alignment and size with text */
+  align-items: center;
+  justify-content: center;
+}
+.pi.h-3.w-3 {
+    font-size: 0.75rem; /* 12px for h-3 w-3 */
+}
+
+/* Estilos para el InputSwitch (Switch) de PrimeNG para simular ShadCN */
+:host ::ng-deep .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+  background: #1f2937 !important; /* bg-foreground, default active color */
+}
+:host ::ng-deep .p-inputswitch .p-inputswitch-slider {
+  background: #e5e7eb !important; /* bg-input (light gray) for inactive */
+  width: 2.75rem !important; /* w-11 */
+  height: 1.5rem !important; /* h-6 */
+}
+:host ::ng-deep .p-inputswitch .p-inputswitch-slider:before {
+  width: 1.25rem !important; /* w-5 */
+  height: 1.25rem !important; /* h-5 */
+  top: 0.125rem !important; /* my-0.5 */
+  left: 0.125rem !important; /* mx-0.5 */
+  transition-duration: 0.2s; /* smooth transition */
+  background: #ffffff !important; /* bg-background (white) */
+}
+:host ::ng-deep .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider:before {
+  transform: translateX(1.25rem) !important; /* Move to the right for w-11 */
+}

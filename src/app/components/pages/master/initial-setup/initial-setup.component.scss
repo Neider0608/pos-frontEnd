@@ -1,0 +1,61 @@
+:host ::ng-deep .p-card {
+    margin: auto; /* Centra la tarjeta horizontalmente */
+  }
+
+  :host ::ng-deep .p-card .p-card-body {
+    padding: 0 !important;
+  }
+
+  .p-card .p-card-content {
+    padding: 0;
+  }
+
+  .p-dropdown {
+    width: 100%;
+  }
+
+  .p-dropdown .p-dropdown-label {
+    min-height: 2.5rem;
+    line-height: 1.25rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .p-inputtext {
+    min-height: 2.5rem;
+  }
+
+  .p-button {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    height: 2.5rem;
+    padding: 0 1rem;
+  }
+
+  .p-button.p-button-outlined {
+    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .pi {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pi.h-3.w-3 {
+    font-size: 0.75rem;
+  }
+
+  .pi.h-4.w-4 {
+    font-size: 1rem;
+  }
+
+  .pi.h-5.w-5 {
+    font-size: 1.25rem;
+  }
+
+  .pi.h-8.w-8 {
+    font-size: 2rem;
+  }
+
+  .pi.h-12.w-12 {
+    font-size: 3rem;
+  }

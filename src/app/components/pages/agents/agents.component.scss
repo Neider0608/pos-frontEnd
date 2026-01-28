@@ -1,0 +1,21 @@
+:host ::ng-deep {
+    .p-datatable .p-datatable-thead > tr > th {
+        border-top: none;
+    }
+
+    .p-inputnumber-buttons-horizontal .p-inputnumber-input {
+        order: 2;
+    }
+
+    .p-avatar {
+        transition: transform 0.2s;
+    }
+
+    tr:hover .p-avatar {
+        transform: scale(1.1);
+    }
+}
+
+.surface-hover:hover {
+    background-color: var(--surface-100);
+}

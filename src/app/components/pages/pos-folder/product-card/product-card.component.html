@@ -1,0 +1,58 @@
+<!-- <p-card
+    (click)="onSelectProduct()"
+    styleClass="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 active:scale-95"
+    [ngClass]="{
+        'p-4': isTouchMode,
+        'p-3': !isTouchMode
+    }"
+>
+    <div class="flex flex-col items-center text-center space-y-3">
+        <div
+            class="bg-secondary rounded-lg flex items-center justify-center"
+            [ngClass]="{
+                'w-20 h-20': isTouchMode,
+                'w-16 h-16': !isTouchMode
+            }"
+        >
+            <i
+                class="pi pi-box text-muted-foreground"
+                [ngClass]="{
+                    'text-4xl': isTouchMode,
+                    'text-3xl': !isTouchMode
+                }"
+            ></i>
+        </div>
+
+        <div class="space-y-1 w-full">
+            <h4
+                class="font-semibold line-clamp-2"
+                [ngClass]="{
+                    'text-sm h-10': isTouchMode,
+                    'text-xs h-8': !isTouchMode
+                }"
+            >
+                {{ product.name }}
+            </h4>
+
+            <div class="flex items-center justify-center gap-2">
+                <span
+                    class="font-bold text-accent"
+                    [ngClass]="{
+                        'text-lg': isTouchMode,
+                        'text-base': !isTouchMode
+                    }"
+                >
+                    {{ product.price | currency: 'USD' }}
+                </span>
+
+                @if (product.hasDiscount) {
+                    <p-badge severity="danger" styleClass="text-xs" value="-{{ product.discountPercent }}%"></p-badge>
+                }
+            </div>
+
+            <p class="text-xs text-muted-foreground">Stock: {{ product.stock }}</p>
+            <p-badge severity="secondary" styleClass="text-xs" value="{{ product.category }}"></p-badge>
+        </div>
+    </div>
+</p-card>
+ -->

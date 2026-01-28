@@ -1,0 +1,169 @@
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <div class="flex items-center justify-between flex-wrap gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-5">
+                <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shadow-inner">
+                    <i class="pi pi-truck text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Proveedores</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Cadena de suministro, alianzas comerciales y catálogo de origen.</p>
+                </div>
+            </div>
+
+            <button
+                pButton
+                label="Nuevo Proveedor"
+                icon="pi pi-plus"
+                (click)="showAddDialog = true"
+                class="!rounded-2xl !py-4 !px-8 !bg-amber-600 !border-none !shadow-lg !shadow-amber-200 dark:!shadow-none hover:!scale-105 transition-transform font-bold"
+            ></button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Registros</p>
+                    <h3 class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ suppliers.length }}</h3>
+                </div>
+                <div class="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400">
+                    <i class="pi pi-database"></i>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aliados Activos</p>
+                    <h3 class="text-2xl font-black text-emerald-600">{{ activeSuppliers }}</h3>
+                </div>
+                <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl flex items-center justify-center text-emerald-500">
+                    <i class="pi pi-check-circle"></i>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Items Vinculados</p>
+                    <h3 class="text-2xl font-black text-amber-600">{{ totalProducts }}</h3>
+                </div>
+                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center text-amber-500">
+                    <i class="pi pi-box"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-5">
+            <div class="relative w-full">
+                <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input
+                    pInputText
+                    [(ngModel)]="searchTerm"
+                    placeholder="Buscar por razón social, NIT o contacto directo..."
+                    class="!pl-12 w-full !rounded-xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 !text-base focus:!ring-2 focus:!ring-amber-500 transition-all dark:text-slate-200"
+                />
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+            <p-table [value]="filteredSuppliers" [paginator]="true" [rows]="8" responsiveLayout="scroll">
+                <ng-template pTemplate="header">
+                    <tr class="!bg-slate-50 dark:!bg-slate-800/50">
+                        <th class="!py-5 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Proveedor</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Contacto Principal</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">Productos</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">Estado</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-right">Acciones</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-supplier>
+                    <tr class="border-b border-slate-50 dark:border-slate-800 last:border-none hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="px-8 py-5">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-base uppercase tracking-tight">{{ supplier.name }}</span>
+                                <span class="text-[10px] text-slate-400 font-mono font-bold tracking-tighter">NIT: {{ supplier.taxId }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-sm font-bold text-slate-600 dark:text-slate-300 leading-none">{{ supplier.contact }}</span>
+                                <div class="flex items-center gap-2 text-[11px] text-slate-400"><i class="pi pi-phone text-[9px]"></i> {{ supplier.phone }}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-center">
+                            <span class="px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-black"> {{ supplier.productsCount }} items </span>
+                        </td>
+                        <td class="px-6 py-5 text-center">
+                            <span
+                                [class]="supplier.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-400 border-slate-200'"
+                                class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border"
+                            >
+                                {{ supplier.status === 'active' ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <button class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all">
+                                    <i class="pi pi-pencil"></i>
+                                </button>
+                                <button class="w-10 h-10 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <p-dialog [(visible)]="showAddDialog" [modal]="true" [draggable]="false" [resizable]="false" [dismissableMask]="true" styleClass="!rounded-[2.5rem] !border-none !shadow-2xl !bg-white dark:!bg-slate-900" [style]="{ width: '550px' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-3 pt-4">
+                <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 text-amber-600 rounded-xl flex items-center justify-center">
+                    <i class="pi pi-truck"></i>
+                </div>
+                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Ficha de Proveedor</h2>
+            </div>
+        </ng-template>
+
+        <div class="space-y-6 pt-4 px-2">
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Razón Social / Nombre Comercial</label>
+                <input pInputText [(ngModel)]="newSupplier.name" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">NIT / ID Tributario</label>
+                    <input pInputText [(ngModel)]="newSupplier.taxId" placeholder="900.000.000-1" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Persona de Contacto</label>
+                    <input pInputText [(ngModel)]="newSupplier.contact" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Teléfono Directo</label>
+                    <input pInputText [(ngModel)]="newSupplier.phone" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Correo Corporativo</label>
+                    <input pInputText [(ngModel)]="newSupplier.email" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Dirección de Operaciones</label>
+                <input pInputText [(ngModel)]="newSupplier.address" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex gap-3 justify-end pb-4 px-2">
+                <button pButton label="Cancelar" class="p-button-text !text-slate-400 !font-bold" (click)="showAddDialog = false"></button>
+                <button pButton label="Guardar Aliado" icon="pi pi-save" (click)="saveNewSupplier()" class="!rounded-2xl !py-4 !px-8 !bg-amber-600 !border-none !font-black !shadow-lg !shadow-amber-100 dark:!shadow-none"></button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

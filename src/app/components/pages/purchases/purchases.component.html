@@ -1,0 +1,307 @@
+<p-toast></p-toast>
+
+<div class="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
+    <div class="max-w-[1900px] mx-auto space-y-6">
+        <div class="flex justify-center mb-4">
+            <div class="bg-white p-1 rounded-2xl shadow-sm border border-slate-200 flex gap-1">
+                <button (click)="activeView = 'new'" [class]="activeView === 'new' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500'" class="px-8 py-2.5 rounded-xl font-black text-xs uppercase transition-all">Nueva Compra</button>
+                <button (click)="activeView = 'history'" [class]="activeView === 'history' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500'" class="px-8 py-2.5 rounded-xl font-black text-xs uppercase transition-all">
+                    Historial de Compras
+                </button>
+            </div>
+        </div>
+
+        <div *ngIf="activeView === 'new'" class="space-y-6 animate-in fade-in duration-500">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40">
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+                        <i class="pi pi-shopping-cart text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-4xl font-black tracking-tighter text-slate-900 uppercase">Nueva Compra</h2>
+                        <p class="text-slate-400 font-bold flex items-center gap-2 italic">Abastecimiento y Recepción de Mercancía</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button pButton icon="pi pi-file-pdf" label="Subir Factura (IA)" (click)="op.toggle($event)" class="!rounded-2xl !px-6 !py-4 !bg-blue-50 !text-blue-600 !border-none !font-black hover:!bg-blue-100 transition-all"></button>
+                    <button pButton icon="pi pi-check" label="Finalizar Compra" (click)="savePurchase()" class="!rounded-2xl !px-8 !py-4 !bg-slate-900 !text-white !border-none !font-black shadow-xl hover:scale-105 transition-all"></button>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-4 space-y-6">
+                    <section class="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm">
+                        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Información del Proveedor</h3>
+                        <div class="space-y-4">
+                            <div class="group">
+                                <label class="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-2">Proveedor</label>
+                                <p-dropdown
+                                    [options]="suppliers"
+                                    optionLabel="name"
+                                    ,
+                                    optionValue="id"
+                                    [(ngModel)]="purchase.providerId"
+                                    placeholder="Seleccionar"
+                                    styleClass="w-full !bg-slate-100/50 !border-none !rounded-2xl !py-2 font-bold"
+                                ></p-dropdown>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-2">N° Factura</label>
+                                    <input pInputText [(ngModel)]="purchase.invoiceNumber" placeholder="FAC-001" class="w-full !bg-slate-100/50 !border-none !rounded-2xl !py-4 font-bold px-4" />
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-2 ml-2">Fecha</label>
+                                    <p-calendar [(ngModel)]="purchase.date" styleClass="w-full" inputStyleClass="!bg-slate-100/50 !border-none !rounded-2xl !py-4 font-bold"></p-calendar>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl">
+                        <h3 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 text-center">Resumen</h3>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                                <span class="text-slate-400 font-bold uppercase text-[10px]">Subtotal</span>
+                                <span class="text-xl font-black">${{ purchase.subtotal | number }}</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2">
+                                <span class="text-white font-black uppercase text-[12px]">Total Neto</span>
+                                <span class="text-4xl font-black tracking-tighter text-blue-500">${{ purchase.total | number }}</span>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="lg:col-span-8">
+                    <section class="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col h-full">
+                        <div class="p-6 bg-slate-50/50 border-b border-slate-100 flex gap-4">
+                            <div class="relative flex-1">
+                                <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+
+                                <p-autoComplete
+                                    [(ngModel)]="selectedProduct"
+                                    [suggestions]="filteredProducts"
+                                    (completeMethod)="filterProducts($event)"
+                                    (onSelect)="onProductSelect($event)"
+                                    field="name"
+                                    placeholder="Buscar por Nombre, Referencia, EAN o Extensiones..."
+                                    styleClass="w-full"
+                                    inputStyleClass="!w-full !pl-14 !py-5 !bg-white !border-none !rounded-2xl font-bold shadow-sm focus:ring-2 ring-blue-500/20"
+                                    panelStyleClass="modern-search-panel"
+                                >
+                                    <ng-template let-product pTemplate="item">
+                                        <div class="flex flex-col gap-1 py-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="font-black text-slate-800 mr-1">{{ product.name }}</span>
+                                                <span> Ref: {{ product.reference }} | EAN: {{ product.barcode }}</span>
+                                            </div>
+                                            <div class="flex gap-2 text-[9px] font-bold uppercase text-slate-400">
+                                                <span *ngIf="product.extension1" class="border-r border-slate-200 pr-2 italic">Ext 1: {{ product.extension1 }}</span>
+                                                <span *ngIf="product.extension2" class="border-r border-slate-200 pr-2 italic">Ext 2: {{ product.extension2 }}</span>
+                                                <span class="text-slate-300">{{ product.category }}</span>
+                                            </div>
+                                        </div>
+                                    </ng-template>
+                                </p-autoComplete>
+                            </div>
+
+                            <button (click)="openQuickCreate()" pButton icon="pi pi-plus" label="Crear Nuevo" class="!rounded-2xl !px-6 !bg-emerald-500 !border-none !font-black hover:scale-105 transition-all shadow-lg shadow-emerald-100"></button>
+                        </div>
+                        <p-table [value]="purchase.details" [scrollable]="true" scrollHeight="450px" styleClass="p-datatable-sm">
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th class="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest w-5/12">Información del Producto</th>
+                                    <th class="py-6 px-4 text-center w-32 text-[10px] font-black text-slate-400 uppercase">Cant.</th>
+                                    <th class="py-6 px-4 text-right w-40 text-[10px] font-black text-slate-400 uppercase">Costo Unit.</th>
+                                    <th class="py-6 px-4 text-right text-[10px] font-black text-slate-400 uppercase">Subtotal</th>
+                                    <th class="py-6 px-8 w-20"></th>
+                                </tr>
+                            </ng-template>
+
+                            <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+                                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
+                                    <td class="py-4 px-8">
+                                        <div class="flex flex-col gap-1">
+                                            <span class="text-sm font-black text-slate-800 leading-tight">{{ item.productName }}</span>
+
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] font-bold text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded"> REF: {{ item.reference }} </span>
+                                                <span *ngIf="item.barcode" class="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded"> <i class="pi pi-barcode text-[9px] mr-1"></i>{{ item.barcode }} </span>
+                                            </div>
+
+                                            <div class="flex gap-3 mt-1" *ngIf="item.ext1 || item.ext2">
+                                                <span *ngIf="item.ext1" class="text-[9px] font-black text-slate-400 uppercase tracking-tighter italic">
+                                                    {{ item.ext1 }}
+                                                </span>
+                                                <span *ngIf="item.ext2" class="text-[9px] font-black text-slate-400 uppercase tracking-tighter italic border-l border-slate-200 pl-3">
+                                                    {{ item.ext2 }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-4 py-4 text-center">
+                                        <p-inputNumber [(ngModel)]="item.quantity" (onInput)="calculateTotals()" inputStyleClass="!w-24 !text-center !rounded-xl !border-none !bg-slate-100/50 font-black text-sm py-2 focus:!ring-2 !ring-slate-200">
+                                        </p-inputNumber>
+                                    </td>
+
+                                    <td class="px-4 py-4">
+                                        <p-inputNumber
+                                            [(ngModel)]="item.cost"
+                                            (onInput)="calculateTotals()"
+                                            mode="currency"
+                                            currency="USD"
+                                            locale="en-US"
+                                            [minFractionDigits]="0"
+                                            placeholder="0.00"
+                                            inputStyleClass="!w-full !text-right !rounded-xl !border-none !bg-blue-50/50 !text-blue-700 font-black text-sm py-2 shadow-inner focus:!ring-2 !ring-blue-200"
+                                        >
+                                        </p-inputNumber>
+                                    </td>
+
+                                    <td class="px-4 py-4 text-right">
+                                        <span class="font-black text-slate-900 text-base tracking-tighter"> ${{ item.quantity * item.cost | number }} </span>
+                                    </td>
+
+                                    <td class="px-8 py-4 text-center">
+                                        <button (click)="removeItem(rowIndex)" class="w-10 h-10 flex items-center justify-center rounded-xl text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition-all">
+                                            <i class="pi pi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="activeView === 'history'" class="space-y-6 animate-in fade-in duration-500">
+            <header class="bg-white border border-slate-200 p-8 rounded-[2.5rem] shadow-sm flex flex-col xl:flex-row justify-between items-center gap-6">
+                <div>
+                    <h2 class="text-4xl font-black tracking-tighter text-slate-900 uppercase leading-none">Historial</h2>
+                    <p class="text-slate-400 font-bold italic mt-2">Consulta y auditoría de facturas registradas</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4 bg-slate-50 p-4 rounded-[2.2rem] border border-slate-100">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-3">Fecha Inicial</label>
+                        <p-calendar [(ngModel)]="startDate" dateFormat="dd/mm/yy" [showIcon]="true" inputStyleClass="!bg-white !border-none !rounded-xl !py-3 !px-4 font-bold shadow-sm !w-44 text-xs" styleClass="custom-calendar-icon"> </p-calendar>
+                    </div>
+
+                    <div class="h-8 w-[1px] bg-slate-200 mt-4 hidden md:block"></div>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase ml-3">Fecha Final</label>
+                        <p-calendar [(ngModel)]="endDate" dateFormat="dd/mm/yy" [showIcon]="true" inputStyleClass="!bg-white !border-none !rounded-xl !py-3 !px-4 font-bold shadow-sm !w-44 text-xs" styleClass="custom-calendar-icon"> </p-calendar>
+                    </div>
+
+                    <button (click)="filterHistory()" pButton icon="pi pi-search" label="Filtrar" class="!rounded-2xl !bg-slate-900 !border-none !px-6 !py-3 !mt-4 !font-black !text-xs shadow-lg shadow-slate-200"></button>
+                </div>
+            </header>
+
+            <div class="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+                <p-table [value]="history" [rows]="10" [paginator]="true" styleClass="p-datatable-sm">
+                    <ng-template pTemplate="header">
+                        <tr class="!bg-slate-50/50">
+                            <th class="py-6 px-10 text-[10px] font-black text-slate-400 uppercase">Fecha / Factura</th>
+                            <th class="py-6 px-4 text-[10px] font-black text-slate-400 uppercase">Proveedor</th>
+                            <th class="py-6 px-4 text-[10px] font-black text-slate-400 uppercase text-center">Items</th>
+                            <th class="py-6 px-4 text-[10px] font-black text-slate-400 uppercase text-right">Total</th>
+                            <th class="py-6 px-10 w-32"></th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-h>
+                        <tr class="hover:bg-slate-50/50 border-b border-slate-50 transition-colors">
+                            <td class="py-5 px-10">
+                                <div class="flex flex-col">
+                                    <span class="text-slate-900 font-black text-sm">{{ h.date | date: 'dd MMM, yyyy' }}</span>
+                                    <span class="text-blue-600 font-bold text-[10px] uppercase tracking-tighter">{{ h.invoice }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-5">
+                                <span class="font-bold text-slate-700 text-xs uppercase tracking-tight">{{ h.provider }}</span>
+                            </td>
+                            <td class="px-4 py-5 text-center">
+                                <span class="bg-slate-100 text-slate-500 px-3 py-1 rounded-lg font-black text-[10px]"> {{ h.items }} SKU </span>
+                            </td>
+                            <td class="px-4 py-5 text-right">
+                                <span class="text-slate-900 font-black text-lg tracking-tighter">${{ h.total | number }}</span>
+                            </td>
+                            <td class="py-5 px-10 text-right">
+                                <button (click)="viewPurchaseDetail(h)" class="p-3 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+                                    <i class="pi pi-eye text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p-dialog [(visible)]="displayDetail" [modal]="true" [header]="'DETALLE: ' + selectedPurchase?.invoice" [style]="{ width: '800px' }" styleClass="modern-dialog">
+    <div class="bg-slate-50 p-6 rounded-3xl grid grid-cols-2 gap-4 mb-6">
+        <div>
+            <p class="text-[9px] font-black text-slate-400 uppercase">Proveedor</p>
+            <p class="font-black">{{ selectedPurchase?.provider }}</p>
+        </div>
+        <div class="text-right">
+            <p class="text-[9px] font-black text-slate-400 uppercase">Total Compra</p>
+            <p class="font-black text-2xl text-blue-600">${{ selectedPurchase?.total | number }}</p>
+        </div>
+    </div>
+    <p-table [value]="[1, 2, 3]">
+        <ng-template pTemplate="header">
+            <tr>
+                <th class="text-[9px] uppercase font-black">Producto</th>
+                <th class="text-[9px] uppercase font-black text-center">Cant</th>
+                <th class="text-[9px] uppercase font-black text-right">Costo</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body">
+            <tr>
+                <td class="py-4 font-bold text-sm">Producto Ejemplo Detallado</td>
+                <td class="text-center font-black">10</td>
+                <td class="text-right font-black">$15,000</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
+
+<p-popover #op styleClass="!rounded-[2rem] !shadow-2xl !border-slate-100">
+    <div class="p-6 w-80">
+        <h4 class="text-xs font-black text-slate-900 uppercase mb-4 tracking-widest text-center">Extraer datos de factura</h4>
+
+        <div class="flex flex-col gap-3">
+            <!-- PDF -->
+            <button type="button" (click)="openFile('pdf')" class="flex items-center gap-4 p-4 rounded-2xl bg-red-50 text-red-700 hover:bg-red-100 border border-red-100">
+                <i class="pi pi-file-pdf text-xl"></i>
+                <div class="text-left leading-tight">
+                    <p class="text-xs font-black">Subir PDF</p>
+                </div>
+            </button>
+
+            <!-- Imagen -->
+            <button type="button" (click)="openFile('img')" class="flex items-center gap-4 p-4 rounded-2xl bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-100">
+                <i class="pi pi-image text-xl"></i>
+                <div class="text-left leading-tight">
+                    <p class="text-xs font-black">Subir Imagen</p>
+                </div>
+            </button>
+
+            <!-- Word -->
+            <button type="button" (click)="openFile('doc')" class="flex items-center gap-4 p-4 rounded-2xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-100">
+                <i class="pi pi-file-word text-xl"></i>
+                <div class="text-left leading-tight">
+                    <p class="text-xs font-black">Subir Word</p>
+                </div>
+            </button>
+        </div>
+
+        <!-- INPUT OCULTO -->
+        <input #fileInput type="file" hidden [accept]="acceptedTypes" (change)="handleFileUpload($event)" />
+    </div>
+</p-popover>

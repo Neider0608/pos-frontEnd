@@ -1,0 +1,330 @@
+<p-toast></p-toast>
+
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-6 font-sans transition-colors duration-500">
+    <div class="max-w-[1600px] mx-auto space-y-6">
+        <header class="flex flex-wrap items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-5">
+                <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center shadow-inner">
+                    <i class="pi pi-file-invoice text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none">Facturación</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Terminal de Ventas POS</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/50 p-2 rounded-[2rem]">
+                    @for (invoice of invoices; track invoice.invoiceNumber; let i = $index) {
+                        <button
+                            (click)="selectInvoice(invoice)"
+                            [class]="activeInvoice?.invoiceNumber === invoice.invoiceNumber ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-md scale-105' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'"
+                            class="px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all"
+                        >
+                            {{ invoice.invoiceNumber }}
+                        </button>
+                    }
+                    <button
+                        pButton
+                        icon="pi pi-plus"
+                        (click)="createNewInvoice(this.invoices.length)"
+                        class="!w-10 !h-10 !rounded-full !bg-emerald-600 !border-none hover:!scale-110 transition-transform shadow-lg shadow-emerald-200 dark:shadow-none"
+                    ></button>
+                </div>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div class="lg:col-span-4 relative group">
+                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-4">Escaneo de Barras</label>
+                <i class="pi pi-barcode absolute left-7 top-[46px] text-slate-400 group-focus-within:text-emerald-500 transition-colors z-10"></i>
+                <input
+                    #barcodeInputRef
+                    pInputText
+                    placeholder="Esperando lectura EAN..."
+                    [(ngModel)]="barcodeSearch"
+                    (keydown.enter)="searchByBarcode()"
+                    class="!pl-12 w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 !font-mono focus:!ring-2 focus:!ring-emerald-500 transition-all dark:text-slate-200"
+                />
+            </div>
+
+            <div class="lg:col-span-3 relative group">
+                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-4">Referencia / SKU</label>
+                <i class="pi pi-tag absolute left-7 top-[46px] text-slate-400 z-10"></i>
+                <input
+                    pInputText
+                    placeholder="Código interno..."
+                    [(ngModel)]="productCodeSearch"
+                    (keydown.enter)="searchByProductCode()"
+                    class="!pl-12 w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 focus:!ring-2 focus:!ring-emerald-500 transition-all dark:text-slate-200"
+                />
+            </div>
+
+            <div class="lg:col-span-5 flex items-end gap-3">
+                <button
+                    pButton
+                    (click)="showSearchDialog = true"
+                    label="Buscar por Nombre (F2)"
+                    icon="pi pi-search"
+                    class="flex-1 !rounded-2xl !py-4 !bg-slate-800 dark:!bg-slate-700 !border-none !font-bold hover:!bg-slate-700 transition-all"
+                ></button>
+
+                <div class="hidden md:flex flex-col items-center justify-center px-6 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800">
+                    <span class="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Items</span>
+                    <span class="text-xl font-black text-emerald-700 dark:text-emerald-400">{{ activeInvoice?.items?.length || 0 }}</span>
+                </div>
+            </div>
+        </section>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <section class="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+                <div class="p-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-3"><i class="pi pi-list text-emerald-500"></i> Detalle de Venta</h3>
+                    <span class="text-[10px] font-black bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 px-3 py-1 rounded-full"> {{ activeInvoice?.items?.length || 0 }} PRODUCTOS SELECCIONADOS </span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar" style="max-height: 65vh; min-height: 500px">
+                    @if (!activeInvoice || activeInvoice.items.length === 0) {
+                        <div class="flex flex-col items-center justify-center h-full py-32 opacity-20">
+                            <i class="pi pi-shopping-cart text-8xl mb-4"></i>
+                            <p class="text-xl font-black uppercase tracking-tighter">Esperando productos...</p>
+                        </div>
+                    } @else {
+                        <table class="w-full text-left border-separate border-spacing-0">
+                            <thead class="sticky top-0 z-20 bg-white dark:bg-slate-900">
+                                <tr class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                    <th class="px-8 py-5 border-b border-slate-100 dark:border-slate-800">Producto</th>
+                                    <th class="px-4 py-5 text-center border-b border-slate-100 dark:border-slate-800">Cant.</th>
+                                    <th class="px-4 py-5 text-center border-b border-slate-100 dark:border-slate-800 w-32">Desc. %</th>
+                                    <th class="px-4 py-5 text-right border-b border-slate-100 dark:border-slate-800">Precio Unit.</th>
+                                    <th class="px-4 py-5 text-right border-b border-slate-100 dark:border-slate-800">Subtotal</th>
+                                    <th class="px-6 py-5 text-right border-b border-slate-100 dark:border-slate-800"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
+                                @for (item of activeInvoice.items; track item.id) {
+                                    <tr class="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all">
+                                        <td class="px-8 py-6">
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-slate-700 dark:text-slate-200 text-base group-hover:text-emerald-600 transition-colors">{{ item.name }}</span>
+                                                <span class="text-[10px] font-mono text-slate-400 uppercase mt-0.5">{{ item.code }}</span>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-4 py-6">
+                                            <div class="flex justify-center">
+                                                <p-inputNumber
+                                                    [(ngModel)]="item.quantity"
+                                                    [showButtons]="false"
+                                                    [min]="1"
+                                                    [useGrouping]="false"
+                                                    inputStyleClass="
+                                                    w-20
+                                                    text-center
+                                                    text-xl
+                                                    font-black
+                                                    bg-transparent
+                                                    border
+                                                    border-gray-400
+                                                    rounded-lg
+                                                    px-2
+                                                    focus:border-emerald-500
+                                                    focus:ring-0
+                                                    dark:text-white
+                                                "
+                                                    (onFocus)="item.prevQuantity = item.quantity"
+                                                    (onBlur)="onQuantityChange(item, true)"
+                                                    (onKeyDown.enter)="onQuantityChange(item, true)"
+                                                ></p-inputNumber>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-4 py-6">
+                                            <div class="relative flex items-center justify-center">
+                                                <p-inputNumber
+                                                    [(ngModel)]="item.discount"
+                                                    suffix="%"
+                                                    [min]="0"
+                                                    [max]="100"
+                                                    (onInput)="updateTotals(activeInvoice!)"
+                                                    inputStyleClass="w-20 text-center !py-2 !rounded-xl !border-slate-100 dark:!border-slate-700 !bg-slate-50 dark:!bg-slate-800/50 !text-xs !font-bold dark:text-emerald-400 text-emerald-600"
+                                                >
+                                                </p-inputNumber>
+                                            </div>
+                                        </td>
+
+                                        <td class="px-4 py-6 text-right">
+                                            <p-inputNumber
+                                                [(ngModel)]="item.price"
+                                                [mode]="'currency'"
+                                                [currency]="currencyCode"
+                                                [locale]="locale"
+                                                (onInput)="updateTotals(activeInvoice!)"
+                                                inputStyleClass="w-32 text-right !bg-transparent !border-none !font-mono !text-sm text-slate-500 dark:text-slate-400"
+                                            >
+                                            </p-inputNumber>
+                                        </td>
+
+                                        <td class="px-4 py-6 text-right">
+                                            <div class="flex flex-col items-end font-mono">
+                                                <span class="font-black text-slate-800 dark:text-slate-100">{{ item.total | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                                                @if (item.discountValue > 0) {
+                                                    <span class="text-[9px] bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold mt-1">
+                                                        -{{ item.discountValue | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
+                                                    </span>
+                                                }
+                                            </div>
+                                        </td>
+
+                                        <td class="px-6 py-6 text-right">
+                                            <button (click)="removeProduct(item.id)" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all">
+                                                <i class="pi pi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+
+                <div class="px-8 py-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Los cambios de precio/descuento afectan solo esta factura</span>
+                    <div class="flex gap-6">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase">Subtotal:</span>
+                            <span class="text-sm font-mono font-bold text-slate-600 dark:text-slate-300">{{ activeInvoice?.grossSubtotal | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="lg:col-span-4 space-y-6">
+                <div class="bg-slate-900 dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-200/20 text-white relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
+
+                    <h3 class="text-[11px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-8">Liquidación Total</h3>
+
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center opacity-70">
+                            <span class="text-sm font-bold uppercase tracking-widest">Subtotal Bruto</span>
+                            <span class="font-mono">{{ activeInvoice?.grossSubtotal | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                        </div>
+
+                        <div class="group">
+                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Descuento Global (%)</label>
+                            <p-inputNumber
+                                [(ngModel)]="activeInvoice!.generalDiscount"
+                                [min]="0"
+                                [max]="100"
+                                inputStyleClass="!w-full !bg-slate-800 !border-none !text-white !rounded-xl !py-3 !text-center !font-black"
+                                (onInput)="updateTotals(activeInvoice!)"
+                            ></p-inputNumber>
+                        </div>
+
+                        <div class="flex justify-between items-center text-rose-400">
+                            <span class="text-xs font-bold uppercase tracking-widest">Ahorro Total</span>
+                            <span class="font-mono font-black text-lg"
+                                >-{{
+                                    (activeInvoice?.detailDiscount || 0) + (((activeInvoice?.grossSubtotal || 0) - (activeInvoice?.detailDiscount || 0)) * (activeInvoice?.generalDiscount || 0)) / 100
+                                        | currency: currencyCode : 'symbol' : '1.0-0' : locale
+                                }}</span
+                            >
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-800">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Total a Pagar</span>
+                                <div class="text-5xl font-black tracking-tighter text-white">
+                                    {{ activeInvoice?.total | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
+                                </div>
+                                <span class="text-[10px] font-mono text-slate-500 uppercase">Incluye IVA ({{ ivaRate }}%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 space-y-3">
+                        <button
+                            pButton
+                            (click)="showPaymentDialog = true"
+                            label="REGISTRAR PAGO (F3)"
+                            icon="pi pi-credit-card"
+                            class="!w-full !rounded-[1.5rem] !py-6 !bg-emerald-600 !border-none !font-black !text-lg !shadow-xl !shadow-emerald-900/50 hover:!scale-[1.02] transition-transform"
+                        ></button>
+
+                        <button pButton (click)="clearInvoice(activeInvoice!)" label="Anular Orden" icon="pi pi-times" class="p-button-text !w-full !text-slate-500 hover:!text-rose-500 !font-bold"></button>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex flex-col items-center">
+                            <kbd class="px-2 py-1 bg-white dark:bg-slate-700 rounded shadow text-xs font-black">F2</kbd>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase mt-2">Buscar</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex flex-col items-center">
+                            <kbd class="px-2 py-1 bg-white dark:bg-slate-700 rounded shadow text-xs font-black">F3</kbd>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase mt-2">Pagar</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+</div>
+
+<!-- DIALOGOS -->
+@if (showSearchDialog) {
+    <app-search-dialog [visible]="showSearchDialog" (selectProduct)="addProduct($event)" (visibleChange)="showSearchDialog = false; focusBarcodeInput()" [products]="products"></app-search-dialog>
+}
+
+@if (showPaymentDialog) {
+    <app-payment-dialog
+        [visible]="showPaymentDialog"
+        [cartItems]="activeInvoice?.items || []"
+        [paymentMethods]="activeInvoice?.paymentMethods || []"
+        [selectedCustomer]="activeInvoice?.customer ?? null"
+        [generalDiscount]="activeInvoice?.generalDiscount || 0"
+        [grossSubtotal]="activeInvoice?.grossSubtotal || 0"
+        [detailDiscount]="activeInvoice?.detailDiscount || 0"
+        [subtotal]="activeInvoice?.subtotal || 0"
+        [total]="activeInvoice?.total || 0"
+        [customers]="customers"
+        [totalVat]="activeInvoice?.totalVat ?? 0"
+        [viewMode]="'desktop'"
+        (visibleChange)="showPaymentDialog = false"
+        (cartItemsChange)="activeInvoice!.items = $event; updateTotals(activeInvoice!)"
+        (paymentMethodsChange)="activeInvoice!.paymentMethods = $event; updateTotals(activeInvoice!)"
+        (selectedCustomerChange)="activeInvoice!.customer = $event"
+        (generalDiscountChange)="activeInvoice!.generalDiscount = $event; updateTotals(activeInvoice!)"
+        (deliveryInfoChange)="activeInvoice!.deliveryInfo = $event"
+        (checkout)="handleCheckout()"
+    ></app-payment-dialog>
+}
+
+<!--  <p-dialog header="Registrar Pago" [(visible)]="showPaymentDialog" [modal]="true" [style]="{ width: '90vw', maxWidth: '480px' }">
+        <p class="m-0">Contenido del diálogo de pago...</p>
+        <ng-template pTemplate="footer">
+            <p-button label="Cancelar" icon="pi pi-times" (onClick)="showPaymentDialog = false" styleClass="p-button-text"></p-button>
+            <p-button label="Confirmar Pago" icon="pi pi-check" (onClick)="handleCheckout()"></p-button>
+        </ng-template>
+    </p-dialog> -->
+
+@if (showInvoiceDialog && lastSale) {
+    <app-invoice-dialog
+        [visible]="showInvoiceDialog"
+        (visibleChange)="showInvoiceDialog = $event"
+        [invoiceNumber]="lastSale.invoiceNumber"
+        [date]="lastSale.date"
+        [customer]="lastSale.customer"
+        [totalVat]="lastSale.totalVat"
+        [items]="lastSale.items"
+        [subtotal]="lastSale.subtotal"
+        [generalDiscount]="lastSale.generalDiscount || 0"
+        [grossSubtotal]="lastSale.grossSubtotal || 0"
+        [detailDiscount]="lastSale.detailDiscount || 0"
+        [total]="lastSale.total"
+        [paymentMethods]="lastSale.paymentMethods"
+        [deliveryInfo]="lastSale.deliveryInfo"
+    ></app-invoice-dialog>
+}

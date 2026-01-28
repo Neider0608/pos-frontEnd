@@ -1,0 +1,180 @@
+<div class="p-4 md:p-8 space-y-8 bg-slate-50 dark:bg-slate-950 min-h-screen">
+    <p-toast></p-toast>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Activas</span>
+                <div class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600">
+                    <i class="pi pi-tag text-xs"></i>
+                </div>
+            </div>
+            <div class="text-3xl font-black text-emerald-600 tracking-tighter">{{ activePromotions }}</div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-tighter">Vigentes ahora</p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Histórico</span>
+                <div class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-600">
+                    <i class="pi pi-gift text-xs"></i>
+                </div>
+            </div>
+            <div class="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tighter">{{ promotions.length }}</div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-tighter">Creadas en total</p>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Impacto</span>
+                <div class="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600">
+                    <i class="pi pi-chart-line text-xs"></i>
+                </div>
+            </div>
+            <div class="text-3xl font-black text-blue-600 tracking-tighter">{{ totalUsage }}</div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-tighter">Canjes realizados</p>
+        </div>
+
+        <div class="bg-rose-600 p-6 rounded-[2.5rem] shadow-xl shadow-rose-100 dark:shadow-none text-white">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-black uppercase tracking-widest opacity-80">Por Vencer</span>
+                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                    <i class="pi pi-calendar text-xs"></i>
+                </div>
+            </div>
+            <div class="text-3xl font-black tracking-tighter">{{ expiringSoon }}</div>
+            <p class="text-[10px] font-bold uppercase mt-1 tracking-tighter opacity-80">Próximos 7 días</p>
+        </div>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-4 items-center justify-between">
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <div class="relative group">
+                <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-indigo-500"></i>
+                <input
+                    pInputText
+                    type="text"
+                    placeholder="Buscar promociones..."
+                    [(ngModel)]="searchTerm"
+                    class="!pl-11 !pr-4 !py-3 !w-full sm:!w-80 !rounded-2xl !border-slate-200 dark:!border-slate-800 !bg-white dark:!bg-slate-900 !text-sm !shadow-sm"
+                />
+            </div>
+            <p-dropdown
+                [options]="promotionTypes"
+                [(ngModel)]="selectedType"
+                placeholder="Filtrar tipo"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="!w-full sm:!w-48 !rounded-2xl !border-slate-200 dark:!border-slate-800 !shadow-sm"
+            ></p-dropdown>
+        </div>
+
+        <button
+            pButton
+            (click)="showAddDialog = true"
+            class="!rounded-2xl !bg-slate-900 dark:!bg-white dark:!text-slate-900 !text-white !border-none !px-8 !font-black !text-[10px] !uppercase !tracking-widest !shadow-lg hover:!scale-105 transition-transform"
+        >
+            <i class="pi pi-plus-circle mr-2"></i> Nueva Promoción
+        </button>
+    </div>
+
+    <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+        <div class="p-8 border-b border-slate-50 dark:border-slate-800">
+            <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Gestión de Ofertas</h3>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Control de campañas y descuentos</p>
+        </div>
+
+        <p-table [value]="filteredPromotions" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th class="!bg-transparent !py-5 !px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Promoción</th>
+                    <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</th>
+                    <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Valor</th>
+                    <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vigencia</th>
+                    <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</th>
+                    <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acciones</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-promotion>
+                <tr class="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <td class="px-8 py-5">
+                        <div class="font-black text-slate-800 dark:text-slate-100 text-sm tracking-tight">{{ promotion.name }}</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter truncate max-w-[200px]">{{ promotion.description }}</div>
+                    </td>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <i [class]="getPromotionIconClass(promotion.type)" class="text-indigo-500 text-xs opacity-70"></i>
+                            <span class="text-[10px] font-black uppercase text-slate-500">{{ getPromotionTypeBadge(promotion.type) }}</span>
+                        </div>
+                    </td>
+                    <td class="text-center font-black text-slate-900 dark:text-slate-100 tracking-tighter text-sm">
+                        <ng-container [ngSwitch]="promotion.type">
+                            <span *ngSwitchCase="'percentage'" class="text-indigo-600">{{ promotion.value }}%</span>
+                            <span *ngSwitchCase="'fixed_amount'" class="text-emerald-600">${{ promotion.value }}</span>
+                            <span *ngSwitchDefault>${{ promotion.value }}</span>
+                        </ng-container>
+                    </td>
+                    <td class="py-5">
+                        <div class="text-[10px] font-black text-slate-700 dark:text-slate-300">{{ promotion.startDate | date: 'mediumDate' }}</div>
+                        <div class="text-[9px] font-bold text-slate-400 uppercase">al {{ promotion.endDate | date: 'mediumDate' }}</div>
+                    </td>
+                    <td class="text-center">
+                        <span [class]="promotion.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'" class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
+                            {{ promotion.isActive ? 'Activa' : 'Pausa' }}
+                        </span>
+                    </td>
+                    <td class="text-center px-6">
+                        <div class="flex justify-center gap-1">
+                            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text !text-slate-400 hover:!text-indigo-500"></button>
+                            <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text !text-slate-400 hover:!text-rose-500"></button>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <p-dialog [(visible)]="showAddDialog" [modal]="true" [draggable]="false" [resizable]="false" styleClass="!rounded-[2.5rem] !bg-white dark:!bg-slate-950 !border-none !shadow-2xl overflow-hidden" [style]="{ width: '600px' }">
+        <ng-template pTemplate="header">
+            <div class="flex flex-col">
+                <span class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Nueva Promoción</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configuración de oferta comercial</span>
+            </div>
+        </ng-template>
+
+        <p-tabView styleClass="custom-tabs">
+            <p-tabPanel header="Información">
+                <div class="space-y-6 pt-6 pb-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
+                            <input pInputText [(ngModel)]="currentPromotion.name" class="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none" />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Tipo</label>
+                            <p-dropdown [options]="promotionTypes.slice(1)" [(ngModel)]="currentPromotion.type" styleClass="!rounded-xl !border-none !bg-slate-50 dark:!bg-slate-900" optionLabel="label" optionValue="value"></p-dropdown>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Descripción</label>
+                        <textarea pInputTextarea rows="2" [(ngModel)]="currentPromotion.description" class="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none"></textarea>
+                    </div>
+                </div>
+            </p-tabPanel>
+            <p-tabPanel header="Reglas"> </p-tabPanel>
+        </p-tabView>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-between items-center p-4">
+                <div class="flex items-center gap-2">
+                    <p-inputSwitch [(ngModel)]="currentPromotion.isActive"></p-inputSwitch>
+                    <span class="text-[10px] font-black uppercase text-slate-400">Publicar ahora</span>
+                </div>
+                <div class="flex gap-3">
+                    <button pButton label="Cancelar" (click)="showAddDialog = false" class="p-button-text !text-slate-400 !font-bold !text-[10px] !uppercase"></button>
+                    <button pButton label="Crear Promoción" class="!rounded-xl !bg-indigo-600 !border-none !px-6 !font-black !text-[10px] !uppercase !tracking-widest"></button>
+                </div>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

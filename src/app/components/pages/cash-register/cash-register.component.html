@@ -1,0 +1,249 @@
+<div class="p-6 space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold">Arqueo de Caja</h2>
+            <p class="text-gray-600">Gestiona la apertura y cierre de cajas registradoras</p>
+        </div>
+        <div class="flex items-center space-x-4">
+            <p-button *ngIf="!activeCashRegister" label="Abrir Caja" [icon]="getPrimeIcon('DollarSign')" iconPos="left"
+                styleClass="p-button-primary" (onClick)="showOpenDialog = true">
+            </p-button>
+
+            <p-dialog header="Abrir Caja Registradora" [(visible)]="showOpenDialog" [modal]="true"
+                [style]="{ width: '450px' }" [draggable]="false" [resizable]="false">
+                <p class="mb-4">Ingresa el monto inicial en efectivo para abrir la caja.</p>
+                <div class="grid gap-4 py-4">
+                    <div class="flex items-center gap-4">
+                        <label htmlFor="opening-balance" class="w-1/4 text-right">
+                            Monto Inicial
+                        </label>
+              <!--           <p-inputText id="opening-balance" type="number" [(ngModel)]="openingBalance" class="w-3/4"
+                            placeholder="200.00">
+                        </p-inputText> -->
+                    </div>
+                </div>
+                <ng-template pTemplate="footer">
+                    <p-button label="Abrir Caja" (onClick)="handleOpenCashRegister()" [disabled]="!openingBalance">
+                    </p-button>
+                </ng-template>
+            </p-dialog>
+
+            <p-button *ngIf="activeCashRegister" label="Cerrar Caja" [icon]="getPrimeIcon('CheckCircle')" iconPos="left"
+                styleClass="p-button-danger" (onClick)="showCloseDialog = true">
+            </p-button>
+
+            <p-dialog header="Cerrar Caja Registradora" [(visible)]="showCloseDialog" [modal]="true"
+                [style]="{ width: '450px' }" [draggable]="false" [resizable]="false">
+                <p class="mb-4">Ingresa los montos reales para realizar el arqueo.</p>
+                <div class="space-y-4 py-4">
+                    <div class="flex items-center gap-4">
+                        <label htmlFor="actual-cash" class="w-1/4 text-right">
+                            Efectivo Real
+                        </label>
+                        <p-inputText id="actual-cash" type="number" [(ngModel)]="actualCash" class="w-3/4">
+                        </p-inputText>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label htmlFor="actual-card" class="w-1/4 text-right">
+                            Tarjeta Real
+                        </label>
+                        <p-inputText id="actual-card" type="number" [(ngModel)]="actualCard" class="w-3/4">
+                        </p-inputText>
+                    </div>
+
+                    <p-divider></p-divider>
+
+                    <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span>Total Esperado:</span>
+                            <span class="font-medium">${{ activeCashRegister?.expectedBalance}}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span>Total Real:</span>
+                            <span class="font-medium">
+                                ${{ ((actualCash || 0) + (actualCard || 0)).toFixed(2) }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-sm font-bold">
+                            <span>Diferencia:</span>
+                            <span [ngClass]="{
+                    'text-green-600': ((actualCash || 0) + (actualCard || 0)) >= (activeCashRegister?.expectedBalance || 0),
+                    'text-red-600': ((actualCash || 0) + (actualCard || 0)) < (activeCashRegister?.expectedBalance || 0)
+                  }">
+                                ${{ ((actualCash || 0) + (actualCard || 0) - (activeCashRegister?.expectedBalance ||
+                                0)).toFixed(2) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <ng-template pTemplate="footer">
+                    <p-button label="Cerrar Caja" (onClick)="handleCloseCashRegister()"
+                        [disabled]="!actualCash || !actualCard">
+                    </p-button>
+                </ng-template>
+            </p-dialog>
+        </div>
+    </div>
+
+
+    <p-card *ngIf="activeCashRegister" styleClass="border-green-200 bg-green-50">
+        <div class="flex items-center space-x-2 p-card-title">
+            <i [class]="getPrimeIcon('CheckCircle')" class="h-5 w-5 text-green-600"></i>
+            <span>Caja Activa: {{ activeCashRegister.name }}</span>
+        </div>
+        <p class="p-card-subtitle">
+            Operador: {{ activeCashRegister.operator }} | Abierta desde:
+            {{ formatDate(activeCashRegister.openedAt) }}
+        </p>
+        <div class="p-card-content">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">${{ activeCashRegister.openingBalance.toFixed(2) }}
+                    </div>
+                    <div class="text-sm text-gray-600">Balance Inicial</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">${{ todaySales.toFixed(2) }}</div>
+                    <div class="text-sm text-gray-600">Ventas del Día</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">
+                        ${{ activeCashRegister.expectedBalance.toFixed(2) }}
+                    </div>
+                    <div class="text-sm text-gray-600">Balance Esperado</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600">
+                        {{ getOpenTime(activeCashRegister.openedAt) }}
+                    </div>
+                    <div class="text-sm text-gray-600">Tiempo Abierta</div>
+                </div>
+            </div>
+        </div>
+    </p-card>
+
+  
+
+    <div *ngIf="activeCashRegister" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <p-card>
+            <div class="flex items-center space-x-2 p-card-title">
+                <i [class]="getPrimeIcon('Banknote')" class="h-5 w-5"></i>
+                <span>Efectivo</span>
+            </div>
+            <div class="p-card-content space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Balance Inicial:</span>
+                    <span class="font-medium">${{ activeCashRegister.openingBalance.toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Ventas en Efectivo:</span>
+                    <span class="font-medium text-green-600">
+                        +${{ (expectedCash - activeCashRegister.openingBalance).toFixed(2) }}
+                    </span>
+                </div>
+                <p-divider></p-divider>
+                <div class="flex justify-between items-center font-bold">
+                    <span>Total Esperado:</span>
+                    <span class="text-lg">${{ expectedCash.toFixed(2) }}</span>
+                </div>
+            </div>
+        </p-card>
+
+        <p-card>
+            <div class="flex items-center space-x-2 p-card-title">
+                <i [class]="getPrimeIcon('CreditCard')" class="h-5 w-5"></i>
+                <span>Tarjeta</span>
+            </div>
+            <div class="p-card-content space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Balance Inicial:</span>
+                    <span class="font-medium">$0.00</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Ventas con Tarjeta:</span>
+                    <span class="font-medium text-blue-600">+${{ expectedCard.toFixed(2) }}</span>
+                </div>
+                <p-divider></p-divider>
+                <div class="flex justify-between items-center font-bold">
+                    <span>Total Esperado:</span>
+                    <span class="text-lg">${{ expectedCard.toFixed(2) }}</span>
+                </div>
+            </div>
+        </p-card>
+    </div>
+
+
+    <p-card styleClass="mt-3">
+        <div class="p-card-header">
+            <h3 class="p-card-title">Historial de Cajas</h3>
+            <p class="p-card-subtitle">Registro de aperturas y cierres de cajas registradoras</p>
+        </div>
+        <div class="p-card-content">
+            <div class="space-y-4">
+                <div *ngFor="let register of cashRegisters" [attr.key]="register.id" class="border rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <h3 class="font-semibold">{{ register.name }}</h3>
+                            <p-badge [value]="register.status === 'open' ? 'Abierta' : 'Cerrada'"
+                                [severity]="register.status === 'open' ? 'success' : 'secondary'">
+                            </p-badge>
+                        </div>
+                        <div class="text-sm text-gray-500">Operador: {{ register.operator }}</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                            <div class="text-gray-600">Apertura:</div>
+                            <div class="font-medium">{{ formatDate(register.openedAt) }}</div>
+                        </div>
+
+                        <div *ngIf="register.closedAt">
+                            <div class="text-gray-600">Cierre:</div>
+                            <div class="font-medium">{{ formatDate(register.closedAt) }}</div>
+                        </div>
+
+                        <div>
+                            <div class="text-gray-600">Balance Inicial:</div>
+                            <div class="font-medium">${{ register.openingBalance.toFixed(2) }}</div>
+                        </div>
+
+                        <div>
+                            <div class="text-gray-600">Balance Esperado:</div>
+                            <div class="font-medium">${{ register.expectedBalance.toFixed(2) }}</div>
+                        </div>
+
+                        <ng-container *ngIf="register.actualBalance !== undefined">
+                            <div>
+                                <div class="text-gray-600">Balance Real:</div>
+                                <div class="font-medium">${{ register.actualBalance.toFixed(2) }}</div>
+                            </div>
+
+                            <div>
+                                <div class="text-gray-600">Diferencia:</div>
+                                <div [ngClass]="{
+                      'font-medium': true,
+                      'text-green-600': (register.difference || 0) >= 0,
+                      'text-red-600': (register.difference || 0) < 0
+                    }">
+                                    {{ (register.difference || 0) >= 0 ? '+' : '' }}${{ (register.difference ||
+                                    0).toFixed(2) }}
+                                </div>
+                            </div>
+                        </ng-container>
+                    </div>
+
+                    <div *ngIf="register.difference !== undefined && register.difference > 0"
+                        class="mt-3 p-2 rounded bg-yellow-50 border border-yellow-200">
+                        <div class="flex items-center space-x-2 text-yellow-800">
+                            <i [class]="getPrimeIcon('AlertCircle')" class="h-4 w-4"></i>
+                            <span class="text-sm">
+                                {{ register.difference > 0 ? 'Sobrante' : 'Faltante' }} de ${{
+                                register.difference.toFixed(2) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </p-card>
+</div>

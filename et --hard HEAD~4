@@ -1,0 +1,10 @@
+[33ma2244a2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Remove large zip file
+[33m22fcd42[m Refactor inventory management components and services
+[33me780040[m chore: Remove obsolete pos-frontEnd.zip file
+[33m5a06277[m feat: Implement login service and enhance master service with company and role management
+[33m0075cde[m[33m ([m[1;31morigin/main[m[33m)[m se actualiza pos con validaciones de reservas exaustivas ya que se evita consumir o tomar unidades que no existen
+[33mdc82b90[m feat: Load agents by phone number and update agent assignment functionality
+[33m0ee3198[m Add new transparent SVG logo for Neidsoft
+[33m2080c90[m feat: Implement agents management feature
+[33m053f373[m mi second commit
+[33md2c7f2e[m first commit

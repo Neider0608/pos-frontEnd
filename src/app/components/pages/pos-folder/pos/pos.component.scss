@@ -1,0 +1,46 @@
+/* styles.scss o global.css */
+:host ::ng-deep .p-input-icon-left {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+:host ::ng-deep .p-input-icon-left > i {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    color: #6b7280; /* gris neutro */
+}
+
+:host ::ng-deep .p-input-icon-left > input {
+    padding-left: 2rem !important;
+}
+
+/* Efecto de scrollbar suave estilo dark */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 dark:bg-slate-800 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-300 dark:bg-slate-700;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 dark:bg-slate-700 rounded-full;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-emerald-400 dark:bg-emerald-600;
+}

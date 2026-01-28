@@ -1,0 +1,158 @@
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <div class="flex items-center justify-between flex-wrap gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800 transition-all">
+            <div class="flex items-center gap-6">
+                <div class="w-16 h-16 bg-gradient-to-tr from-indigo-600 to-violet-400 text-white rounded-[1.5rem] flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none">
+                    <i class="pi pi-tags text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Categorías</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium italic">Clasifica y organiza tus familias de productos.</p>
+                </div>
+            </div>
+
+            <button
+                pButton
+                label="Nueva Categoría"
+                icon="pi pi-plus"
+                (click)="openNewDialog()"
+                class="!rounded-2xl !py-4 !px-8 !bg-indigo-600 !border-none !shadow-xl !shadow-indigo-100 dark:!shadow-none hover:!scale-105 active:!scale-95 transition-all font-bold"
+            ></button>
+        </div>
+
+        <div class="grid grid-cols-12 gap-4 items-center">
+            <div class="col-span-12 md:col-span-8 relative group">
+                <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                <input
+                    pInputText
+                    [(ngModel)]="searchTerm"
+                    (input)="filterCategories()"
+                    placeholder="Buscar por nombre o descripción técnica..."
+                    class="!pl-14 w-full !rounded-2xl !border-slate-200 dark:!border-slate-800 !bg-white dark:!bg-slate-900 !py-5 !text-base shadow-sm focus:!ring-4 focus:!ring-indigo-500/10 transition-all dark:text-slate-200"
+                />
+            </div>
+            <div class="col-span-12 md:col-span-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl p-5 flex items-center justify-between">
+                <span class="text-[10px] font-black text-indigo-400 dark:text-indigo-500 uppercase tracking-[0.2em]">Total Categorías</span>
+                <span class="text-2xl font-black text-indigo-700 dark:text-indigo-300 leading-none">{{ filteredCategories.length }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+            <p-table [value]="filteredCategories" [paginator]="true" [rows]="8" responsiveLayout="scroll" styleClass="p-datatable-borderless">
+                <ng-template pTemplate="header">
+                    <tr class="!bg-slate-50 dark:!bg-slate-800/50">
+                        <th pSortableColumn="name" class="!py-6 !px-8 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-transparent">Nombre <p-sortIcon field="name"></p-sortIcon></th>
+                        <th class="!py-6 !px-8 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-transparent">Descripción</th>
+                        <th pSortableColumn="active" class="!py-6 !px-8 text-center text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-transparent">Estado</th>
+                        <th class="!py-6 !px-8 text-right text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-transparent">Gestión</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-cat>
+                    <tr class="border-b border-slate-50 dark:border-slate-800/50 last:border-none hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all group">
+                        <td class="px-8 py-6">
+                            <span class="font-bold text-slate-700 dark:text-slate-200 text-lg tracking-tight group-hover:text-indigo-600 transition-colors">{{ cat.name }}</span>
+                        </td>
+                        <td class="px-8 py-6 text-slate-500 dark:text-slate-400 max-w-xs truncate font-medium">
+                            {{ cat.description || 'Sin descripción adicional' }}
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <span
+                                [class]="
+                                    cat.active
+                                        ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                                "
+                                class="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all"
+                            >
+                                <span class="w-2 h-2 rounded-full" [class]="cat.active ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
+                                {{ cat.active ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button (click)="editCategory(cat)" class="w-11 h-11 rounded-2xl flex items-center justify-center text-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all" pTooltip="Editar">
+                                    <i class="pi pi-pencil text-lg"></i>
+                                </button>
+                                <button (click)="deleteCategory(cat)" class="w-11 h-11 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all" pTooltip="Eliminar">
+                                    <i class="pi pi-trash text-lg"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="4" class="text-center py-24">
+                            <div class="flex flex-col items-center">
+                                <div class="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
+                                    <i class="pi pi-search text-4xl text-slate-300"></i>
+                                </div>
+                                <p class="text-xl font-black text-slate-400 uppercase tracking-widest">No hay categorías disponibles</p>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <p-dialog [(visible)]="showDialog" [modal]="true" [draggable]="false" [resizable]="false" [dismissableMask]="true" styleClass="!rounded-[3rem] !border-none !shadow-2xl !bg-white dark:!bg-slate-900 overflow-hidden" [style]="{ width: '480px' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-4 pt-6">
+                <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl flex items-center justify-center">
+                    <i class="pi pi-tag text-2xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter leading-none mb-1">{{ dialogTitle }}</h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Atributos de familia</p>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="space-y-8 pt-6 px-4">
+            <div class="relative">
+                <label class="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Nombre de la Categoría</label>
+                <input
+                    pInputText
+                    [(ngModel)]="newCategory.name"
+                    placeholder="Ej: Electrónica de Consumo"
+                    class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-5 focus:!ring-4 focus:!ring-indigo-500/10 dark:text-white font-bold"
+                />
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Descripción Detallada</label>
+                <textarea
+                    pInputTextarea
+                    [(ngModel)]="newCategory.description"
+                    rows="3"
+                    placeholder="Define el propósito de esta categoría..."
+                    class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 focus:!ring-4 focus:!ring-indigo-500/10 dark:text-white font-medium"
+                ></textarea>
+            </div>
+
+            <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-6 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-700">
+                <div class="flex flex-col gap-1">
+                    <span class="text-base font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight">Categoría Activa</span>
+                    <span class="text-xs text-slate-400 font-medium italic">Permitir vinculación de productos</span>
+                </div>
+                <p-inputSwitch [(ngModel)]="newCategory.active"></p-inputSwitch>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex gap-4 justify-end pb-8 pt-4 px-4">
+                <button pButton label="Descartar" class="p-button-text !text-slate-400 hover:!text-slate-600 !font-bold" (click)="showDialog = false"></button>
+                <button
+                    pButton
+                    label="Guardar Cambios"
+                    icon="pi pi-check-circle"
+                    (click)="saveCategory()"
+                    class="!rounded-2xl !py-5 !px-10 !bg-indigo-600 !border-none !font-black !shadow-2xl !shadow-indigo-200 dark:!shadow-none transition-all hover:-translate-y-1"
+                ></button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

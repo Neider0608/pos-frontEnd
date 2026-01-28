@@ -1,0 +1,94 @@
+<div class="space-y-4">
+    <div class="flex items-center justify-between px-1">
+        <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"> <i class="pi pi-user-plus text-emerald-500"></i> Cliente de la Venta </label>
+        @if (selectedCustomer) {
+            <button (click)="selectedCustomer = null" class="text-[9px] font-black text-rose-500 uppercase tracking-widest hover:underline">Cambiar Cliente</button>
+        }
+    </div>
+
+    <div class="flex gap-3">
+        <p-dropdown
+            [options]="customers"
+            [(ngModel)]="selectedCustomer"
+            (onChange)="onCustomerSelect($event.value)"
+            optionLabel="name"
+            [filter]="true"
+            filterBy="name,email,taxId"
+            placeholder="Buscar por Nombre o Documento..."
+            appendTo="body"
+            styleClass="w-full !rounded-2xl !border-slate-200 dark:!border-slate-700 !bg-white dark:!bg-slate-900 !h-14 flex items-center shadow-sm"
+            panelStyleClass="!rounded-2xl !shadow-2xl !border-none !mt-2 !bg-white dark:!bg-slate-900 !overflow-hidden"
+            [showClear]="true"
+        >
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+                @if (selectedOption && selectedOption.name) {
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center text-xs font-bold shrink-0">
+                            {{ selectedOption.name?.charAt(0) || '?' }}
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-slate-200 truncate">
+                            {{ selectedOption.name }}
+                        </span>
+                    </div>
+                } @else {
+                    <span class="text-slate-400">Seleccionar cliente...</span>
+                }
+            </ng-template>
+
+            <ng-template let-customer pTemplate="item">
+                @if (customer) {
+                    <div class="flex items-center justify-between w-full py-2 border-b border-slate-50 dark:border-slate-800/50">
+                        <div class="flex flex-col gap-0.5 overflow-hidden">
+                            <span class="font-bold text-slate-700 dark:text-slate-200 text-sm tracking-tight truncate">
+                                {{ customer.name }}
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 uppercase shrink-0"> ID: {{ customer.document || 'S/N' }} </span>
+                                @if (customer.email) {
+                                    <span class="text-[10px] text-slate-400 truncate tracking-tighter">{{ customer.email }}</span>
+                                }
+                            </div>
+                        </div>
+
+                        @if (selectedCustomer?.id === customer.id) {
+                            <i class="pi pi-check-circle text-emerald-500 shrink-0 ml-2"></i>
+                        }
+                    </div>
+                }
+            </ng-template>
+        </p-dropdown>
+
+        <button
+            (click)="showNewCustomerDialog = true"
+            class="h-14 w-14 shrink-0 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-200 dark:shadow-none transition-all flex items-center justify-center group"
+            title="Nuevo Cliente"
+        >
+            <i class="pi pi-user-plus text-xl group-hover:scale-110 transition-transform"></i>
+        </button>
+    </div>
+
+    @if (selectedCustomer) {
+        <div class="grid grid-cols-2 gap-3 p-4 bg-emerald-50/30 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/50 rounded-[1.5rem] animate-fade-in">
+            <div class="flex flex-col">
+                <span class="text-[9px] font-black text-emerald-600/60 dark:text-emerald-400/60 uppercase tracking-widest">Correo Electrónico</span>
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">{{ selectedCustomer.email || 'No registrado' }}</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[9px] font-black text-emerald-600/60 dark:text-emerald-400/60 uppercase tracking-widest">Contacto Directo</span>
+                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">{{ selectedCustomer.phone || 'No registrado' }}</span>
+            </div>
+            <div class="flex flex-col col-span-2 pt-2 border-t border-emerald-100 dark:border-emerald-800/50">
+                <span class="text-[9px] font-black text-emerald-600/60 dark:text-emerald-400/60 uppercase tracking-widest">Dirección Principal</span>
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-map-marker text-[10px] text-emerald-500"></i>
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300 italic">{{ selectedCustomer.address || 'Sin dirección registrada' }}</span>
+                </div>
+            </div>
+        </div>
+    } @else {
+        <div class="py-6 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[1.5rem] flex flex-col items-center justify-center opacity-40">
+            <i class="pi pi-users text-2xl mb-2 text-slate-300"></i>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Factura para Cliente Final o Seleccione uno</p>
+        </div>
+    }
+</div>

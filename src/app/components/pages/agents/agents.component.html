@@ -1,0 +1,241 @@
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
+    <div class="max-w-full mx-auto grid grid-cols-12 gap-0 bg-white dark:bg-slate-900 shadow-2xl rounded-[2.5rem] overflow-hidden border border-slate-200 dark:border-slate-800">
+        <aside class="col-span-12 lg:col-span-4 xl:col-span-3 bg-slate-50/50 dark:bg-slate-900/50 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div class="p-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <h2 class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Canales de WhatsApp</h2>
+            </div>
+
+            <div class="flex-grow p-4 space-y-3 overflow-y-auto max-h-[80vh] custom-scrollbar">
+                @for (channel of channels; track channel.rowId) {
+                    <div
+                        (click)="onSelectChannel(channel)"
+                        class="group relative flex items-center gap-4 p-5 rounded-[1.5rem] cursor-pointer transition-all duration-300 border border-transparent"
+                        [class]="
+                            channel.rowId === selectedConfigId
+                                ? 'bg-blue-600 text-white shadow-xl shadow-blue-200 dark:shadow-blue-900/20 translate-x-2'
+                                : 'hover:bg-white dark:hover:bg-slate-800 hover:shadow-md text-slate-700 dark:text-slate-300 bg-transparent hover:border-slate-100 dark:hover:border-slate-700'
+                        "
+                    >
+                        <div
+                            [class]="channel.rowId === selectedConfigId ? 'bg-white/20 text-white' : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'"
+                            class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
+                        >
+                            <i class="pi pi-whatsapp text-2xl"></i>
+                        </div>
+
+                        <div class="flex flex-col flex-grow">
+                            <span class="text-lg font-bold tracking-tight leading-none mb-1 dark:text-slate-100">
+                                {{ channel.displayPhoneNumber }}
+                            </span>
+                            <span
+                                class="text-[10px] px-2 py-0.5 rounded-md uppercase font-black tracking-wider w-fit"
+                                [class]="channel.rowId === selectedConfigId ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'"
+                            >
+                                ID: {{ channel.rowId }}
+                            </span>
+                        </div>
+
+                        @if (channel.rowId === selectedConfigId) {
+                            <i class="pi pi-chevron-right text-sm opacity-50"></i>
+                        }
+                    </div>
+                } @empty {
+                    <div class="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-600 text-center">
+                        <i class="pi pi-search text-4xl mb-3 opacity-20"></i>
+                        <p class="text-sm font-medium italic px-4">No hay canales registrados</p>
+                    </div>
+                }
+            </div>
+        </aside>
+
+        <main class="col-span-12 lg:col-span-8 xl:col-span-9 bg-white dark:bg-slate-900 flex flex-col">
+            @if (selectedConfigId) {
+                <header class="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-6 bg-white dark:bg-slate-900">
+                    <div class="flex items-center gap-5">
+                        <div class="w-2 h-14 bg-blue-600 rounded-full hidden sm:block"></div>
+                        <div>
+                            <h1 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Administrar Agentes</h1>
+                            <p class="text-slate-400 dark:text-slate-500 font-medium text-sm">
+                                Canal activo: <span class="text-blue-600 dark:text-blue-400 font-bold">{{ selectedConfigId }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        pButton
+                        label="Asignar Agente"
+                        icon="pi pi-plus-circle"
+                        class="p-button-lg !rounded-2xl font-bold px-8 py-4 shadow-xl shadow-blue-100 dark:shadow-none transition-all hover:-translate-y-1"
+                        (click)="openAssignModal()"
+                    ></button>
+                </header>
+
+                <div class="p-8 flex-grow overflow-x-auto dark:bg-slate-900">
+                    <p-table [value]="assignedAgents" [loading]="isLoading" styleClass="p-datatable-borderless" responsiveLayout="scroll">
+                        <ng-template pTemplate="header">
+                            <tr>
+                                <th class="py-5 px-4 text-left text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-transparent">Agente</th>
+                                <th class="py-5 px-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-transparent">Prioridad</th>
+                                <th class="py-5 px-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-transparent">Capacidad</th>
+                                <th class="py-5 px-4 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] bg-transparent">Estado</th>
+                                <th class="py-5 px-4 w-16 bg-transparent"></th>
+                            </tr>
+                        </ng-template>
+
+                        <ng-template pTemplate="body" let-agent>
+                            <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-all duration-200 border-b border-slate-50 dark:border-slate-800/50">
+                                <td class="py-6 px-4">
+                                    <div class="flex items-center gap-4">
+                                        <p-avatar [label]="agent.fullNameUser.substring(0, 1)" shape="circle" size="large" styleClass="!bg-gradient-to-br from-blue-500 to-indigo-600 !text-white !font-black !shadow-lg"> </p-avatar>
+                                        <div class="flex flex-col">
+                                            <span class="text-base font-bold text-slate-700 dark:text-slate-200">{{ agent.fullNameUser }}</span>
+                                            <span class="text-[10px] text-slate-400 dark:text-slate-500 font-black uppercase tracking-widest">{{ agent.fullNameUser }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-6 px-4 text-center">
+                                    <div class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-black border border-blue-100 dark:border-blue-800">
+                                        {{ agent.priority }}
+                                    </div>
+                                </td>
+                                <td class="py-6 px-4 text-center">
+                                    <span class="text-xl font-black text-slate-800 dark:text-slate-200 tracking-tighter">{{ agent.maxConversation }}</span>
+                                    <p class="text-[9px] text-slate-400 dark:text-slate-600 font-black uppercase m-0 leading-none">Chats</p>
+                                </td>
+                                <td class="py-6 px-4 text-center">
+                                    <span
+                                        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest border transition-all"
+                                        [class]="
+                                            agent.activo
+                                                ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800'
+                                                : 'bg-slate-50 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                                        "
+                                    >
+                                        <span class="w-2 h-2 rounded-full" [class]="agent.activo ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300 dark:bg-slate-600'"></span>
+                                        {{ agent.status ? 'EN LÍNEA' : 'OFFLINE' }}
+                                    </span>
+                                </td>
+                                <td class="py-6 px-4">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button
+                                            (click)="editAgent(agent)"
+                                            pTooltip="Editar Agente"
+                                            tooltipPosition="top"
+                                            class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200 active:scale-90"
+                                        >
+                                            <i class="pi pi-edit text-lg"></i>
+                                        </button>
+
+                                        <button
+                                            (click)="onRemoveAgent(agent)"
+                                            pTooltip="Eliminar Agente"
+                                            tooltipPosition="top"
+                                            class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-200 active:scale-90"
+                                        >
+                                            <i class="pi pi-trash text-lg"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </p-table>
+                </div>
+            } @else {
+                <div class="flex-grow flex flex-col items-center justify-center p-12 text-center bg-slate-50/20 dark:bg-slate-900/40">
+                    <div class="relative mb-8 group">
+                        <div class="absolute -inset-10 bg-blue-500/10 dark:bg-blue-500/5 blur-[60px] rounded-full group-hover:blur-[80px] transition-all"></div>
+                        <div class="relative w-44 h-44 bg-white dark:bg-slate-800 rounded-[3.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 flex items-center justify-center overflow-hidden">
+                            <i class="pi pi-whatsapp text-slate-50 dark:text-slate-900/20 text-[12rem] absolute -bottom-10 -right-10 rotate-12"></i>
+                            <i class="pi pi-users text-blue-600 dark:text-blue-400 text-6xl relative z-10"></i>
+                        </div>
+                    </div>
+                    <h2 class="text-4xl font-black text-slate-800 dark:text-slate-100 mb-4 tracking-tighter uppercase">Gestión de Canales</h2>
+                    <p class="text-slate-400 dark:text-slate-500 max-w-sm mx-auto font-medium text-lg leading-relaxed">Selecciona un número de teléfono para asignar tus agentes de soporte.</p>
+                </div>
+            }
+        </main>
+    </div>
+</div>
+
+<p-dialog header="Configurar Nuevo Agente" [(visible)]="isAssignModalVisible" [modal]="true" [style]="{ width: '500px' }" [draggable]="false" [resizable]="false" styleClass="rounded-[2.5rem] border-none shadow-2xl overflow-hidden dark:bg-slate-900">
+    <div class="mb-8 p-5 bg-blue-50 dark:bg-blue-900/20 rounded-3xl border border-blue-100 dark:border-blue-800 flex items-center gap-4">
+        <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200 dark:shadow-none">
+            <i class="pi pi-user-plus text-2xl"></i>
+        </div>
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-0">Configuración</p>
+            <p class="text-sm text-blue-900/70 dark:text-blue-100/60 font-medium leading-tight">Víncula un agente a este canal.</p>
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-8 px-2">
+        <div class="flex flex-col gap-3">
+            <label class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] ml-1">Seleccionar Agente</label>
+            <p-dropdown
+                [options]="systemUsers"
+                [(ngModel)]="assignmentForm.agentId"
+                optionLabel="fullName"
+                optionValue="id"
+                placeholder="Busca un miembro del equipo..."
+                [filter]="true"
+                appendTo="body"
+                styleClass="w-full !h-16 !rounded-2xl !border-none !bg-slate-100 dark:!bg-slate-800 flex items-center px-4 !font-bold !text-slate-700 dark:!text-slate-100 shadow-inner"
+                panelStyleClass="!rounded-2xl !shadow-2xl !border-slate-100 dark:!border-slate-700 !bg-white dark:!bg-slate-800 p-2"
+            >
+                <ng-template let-user pTemplate="item">
+                    <div class="flex items-center gap-3 py-1">
+                        <div class="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase">
+                            {{ user.fullName.substring(0, 2) }}
+                        </div>
+                        <span class="font-bold text-slate-700 dark:text-slate-200">{{ user.fullName }}</span>
+                    </div>
+                </ng-template>
+            </p-dropdown>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6">
+            <div class="flex flex-col gap-3">
+                <label class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] text-center">Prioridad (1-10)</label>
+                <p-inputNumber
+                    [(ngModel)]="assignmentForm.priority"
+                    [showButtons]="true"
+                    [min]="1"
+                    [max]="10"
+                    buttonLayout="horizontal"
+                    spinnerMode="horizontal"
+                    decrementButtonClass="!p-button-secondary !p-button-text !rounded-l-2xl !border-none dark:!text-slate-400"
+                    incrementButtonClass="!p-button-secondary !p-button-text !rounded-r-2xl !border-none dark:!text-slate-400"
+                    incrementButtonIcon="pi pi-plus"
+                    decrementButtonIcon="pi pi-minus"
+                    inputStyleClass="w-full !h-16 !text-center !border-none !bg-slate-100 dark:!bg-slate-800 !font-black !text-2xl !text-blue-600 dark:!text-blue-400 focus:ring-0"
+                    styleClass="w-full overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800"
+                ></p-inputNumber>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <label class="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.15em] text-center">Máx. Chats</label>
+                <div class="relative group">
+                    <p-inputNumber
+                        [(ngModel)]="assignmentForm.maxConversations"
+                        [min]="1"
+                        inputStyleClass="w-full !h-16 !text-center !border-none !bg-slate-100 dark:!bg-slate-800 !font-black !text-2xl !text-slate-700 dark:!text-slate-200 focus:ring-0"
+                        styleClass="w-full overflow-hidden rounded-2xl border border-slate-100 dark:border-slate-800 shadow-inner"
+                    ></p-inputNumber>
+                    <i class="pi pi-comments absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 pointer-events-none transition-colors group-hover:text-blue-500"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex gap-4 justify-end pt-8 px-2">
+            <button pButton label="Cancelar" class="p-button-text !font-bold !text-slate-400 hover:!text-slate-600 dark:hover:!text-slate-200" (click)="isAssignModalVisible = false"></button>
+            <button
+                pButton
+                label="Vincular Ahora"
+                icon="pi pi-check-circle"
+                class="!rounded-2xl !font-black !px-10 !py-4 !shadow-xl !shadow-blue-100 dark:!shadow-none transition-all hover:-translate-y-1 active:scale-95"
+                (click)="onAssignAgent()"
+            ></button>
+        </div>
+    </ng-template>
+</p-dialog>

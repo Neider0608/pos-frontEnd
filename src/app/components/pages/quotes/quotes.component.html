@@ -1,0 +1,571 @@
+<div class="p-6 space-y-6">
+    <p-toast></p-toast> <!-- Componente Toast para mensajes -->
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <p-card styleClass="p-0 border rounded-lg shadow-sm">
+        <div class="p-4">
+          <div class="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div class="text-sm font-medium">Total Cotizaciones</div>
+            <!-- Icono PrimeIcons pi-file -->
+            <i class="pi pi-file h-5 w-5 text-muted-foreground"></i>
+          </div>
+          <div class="text-2xl font-bold">{{ totalQuotes }}</div>
+          <p class="text-xs text-muted-foreground">este mes</p>
+        </div>
+      </p-card>
+
+      <p-card styleClass="p-0 border rounded-lg shadow-sm">
+        <div class="p-4">
+          <div class="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div class="text-sm font-medium">Enviadas</div>
+            <!-- Icono PrimeIcons pi-send -->
+            <i class="pi pi-send h-5 w-5 text-blue-600"></i>
+          </div>
+          <div class="text-2xl font-bold text-blue-600">{{ sentQuotes }}</div>
+          <p class="text-xs text-muted-foreground">pendientes respuesta</p>
+        </div>
+      </p-card>
+
+      <p-card styleClass="p-0 border rounded-lg shadow-sm">
+        <div class="p-4">
+          <div class="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div class="text-sm font-medium">Aceptadas</div>
+            <!-- Icono PrimeIcons pi-check-circle -->
+            <i class="pi pi-check-circle h-5 w-5 text-green-600"></i>
+          </div>
+          <div class="text-2xl font-bold text-green-600">{{ acceptedQuotes }}</div>
+          <p class="text-xs text-muted-foreground">cotizaciones cerradas</p>
+        </div>
+      </p-card>
+
+      <p-card styleClass="p-0 border rounded-lg shadow-sm">
+        <div class="p-4">
+          <div class="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div class="text-sm font-medium">Valor Total</div>
+            <!-- Icono PrimeIcons pi-file -->
+            <i class="pi pi-file h-5 w-5 text-muted-foreground"></i>
+          </div>
+          <div class="text-2xl font-bold">${{ totalValue | number : '1.2-2' }}</div>
+          <p class="text-xs text-muted-foreground">en cotizaciones</p>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Controles -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <div class="relative flex-1 max-w-sm w-full">
+        <!-- Icono PrimeIcons pi-search -->
+        <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"></i>
+        <input
+          pInputText
+          placeholder="Buscar cotizaciones..."
+          [(ngModel)]="searchTerm"
+          class="pl-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        />
+      </div>
+
+      <p-button (click)="showAddDialog = true" styleClass="w-full sm:w-auto">
+        <!-- Icono PrimeIcons pi-plus -->
+        <i class="pi pi-plus mr-2 h-5 w-5"></i>
+        Nueva Cotización
+      </p-button>
+
+      <p-dialog
+        header="Nueva Cotización"
+        [(visible)]="showAddDialog"
+        [modal]="true"
+        [style]="{ width: '75vw' }"
+        [breakpoints]="{ '960px': '90vw', '640px': '100vw' }"
+        (onHide)="resetCurrentQuote()"
+        styleClass="rounded-lg shadow-xl"
+      >
+        <ng-template pTemplate="header">
+          <div class="flex flex-col space-y-1.5 p-4 sm:p-6 pb-2">
+              <span class="text-lg font-semibold leading-none tracking-tight">Nueva Cotización</span>
+              <span class="text-sm text-muted-foreground">Crea una nueva cotización para enviar a tus clientes.</span>
+          </div>
+        </ng-template>
+
+        <p-tabView styleClass="w-full">
+          <p-tabPanel header="Información">
+            <ng-template pTemplate="header">
+              Información
+            </ng-template>
+            <div class="space-y-4 p-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <label htmlFor="quote-number" class="block text-sm font-medium text-gray-700">N° Cotización</label>
+                  <input
+                    pInputText
+                    id="quote-number"
+                    [(ngModel)]="currentQuote.quoteNumber"
+                    placeholder="COT-001"
+                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label htmlFor="customer" class="block text-sm font-medium text-gray-700">Cliente</label>
+                  <p-dropdown
+                    id="customer"
+                    [options]="customers"
+                    optionLabel="name"
+                    optionValue="id"
+                    placeholder="Seleccionar cliente"
+                    [(ngModel)]="currentQuote.customerId"
+                    (onChange)="onCustomerChange($event.value)"
+                    [filter]="true"
+                    [showClear]="true"
+                    styleClass="w-full p-dropdown-input rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    inputStyleClass="w-full rounded-md"
+                    panelStyleClass="rounded-md shadow-lg"
+                  ></p-dropdown>
+                </div>
+                <div class="space-y-2">
+                  <label htmlFor="quote-date" class="block text-sm font-medium text-gray-700">Fecha de Cotización</label>
+                  <input
+                    pInputText
+                    id="quote-date"
+                    type="date"
+                    [(ngModel)]="currentQuote.quoteDate"
+                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label htmlFor="valid-until" class="block text-sm font-medium text-gray-700">Válida Hasta</label>
+                  <input
+                    pInputText
+                    id="valid-until"
+                    type="date"
+                    [(ngModel)]="currentQuote.validUntil"
+                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label htmlFor="discount" class="block text-sm font-medium text-gray-700">Descuento General</label>
+                  <input
+                    pInputText
+                    id="discount"
+                    type="number"
+                    step="0.01"
+                    [(ngModel)]="currentQuote.discount"
+                    (ngModelChange)="calculateQuoteTotals()"
+                    class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div class="space-y-2">
+                  <label htmlFor="status" class="block text-sm font-medium text-gray-700">Estado</label>
+                  <p-dropdown
+                    id="status"
+                    [options]="quoteStatuses"
+                    optionLabel="label"
+                    optionValue="value"
+                    [(ngModel)]="currentQuote.status"
+                    styleClass="w-full rounded-md border border-input bg-background text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    inputStyleClass="w-full rounded-md"
+                    panelStyleClass="rounded-md shadow-lg"
+                  ></p-dropdown>
+                </div>
+              </div>
+
+              <div
+                *ngIf="currentQuote.customerEmail"
+                class="bg-blue-50 border border-blue-200 rounded-lg p-3"
+              >
+                <p class="text-sm text-blue-800">
+                  <strong>Email del cliente:</strong> {{ currentQuote.customerEmail }}
+                </p>
+              </div>
+
+              <!-- Resumen de Totales -->
+              <div class="bg-gray-50 p-4 rounded-lg">
+                <h4 class="font-medium mb-3">Resumen de Totales</h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>${{ currentQuote.subtotal | number : '1.2-2' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Impuestos (10%):</span>
+                    <span>${{ currentQuote.tax | number : '1.2-2' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Descuento:</span>
+                    <span>-${{ currentQuote.discount | number : '1.2-2' }}</span>
+                  </div>
+                  <div class="border-t border-gray-200 my-2"></div>
+                  <div class="flex justify-between font-bold text-base">
+                    <span>Total:</span>
+                    <span>${{ currentQuote.total | number : '1.2-2' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel header="Productos ({{currentQuote.items.length}})">
+            <ng-template pTemplate="header">
+              Productos ({{ currentQuote.items.length }})
+            </ng-template>
+            <div class="space-y-4 p-4">
+              <!-- Formulario para Añadir Nuevo Producto -->
+              <p-card styleClass="p-0 border rounded-lg shadow-sm">
+                <div class="p-4">
+                  <div class="text-lg font-semibold mb-4">Agregar Producto</div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="space-y-2">
+                      <label htmlFor="product-name" class="block text-sm font-medium text-gray-700">Nombre del Producto</label>
+                      <input
+                        pInputText
+                        id="product-name"
+                        [(ngModel)]="newItem.productName"
+                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                    <div class="space-y-2">
+                      <label htmlFor="description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                      <input
+                        pInputText
+                        id="description"
+                        [(ngModel)]="newItem.description"
+                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="space-y-2">
+                      <label htmlFor="quantity" class="block text-sm font-medium text-gray-700">Cantidad</label>
+                      <input
+                        pInputText
+                        id="quantity"
+                        type="number"
+                        min="1"
+                        [(ngModel)]="newItem.quantity"
+                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                    <div class="space-y-2">
+                      <label htmlFor="unit-price" class="block text-sm font-medium text-gray-700">Precio Unitario</label>
+                      <input
+                        pInputText
+                        id="unit-price"
+                        type="number"
+                        step="0.01"
+                        [(ngModel)]="newItem.unitPrice"
+                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                    <div class="space-y-2">
+                      <label htmlFor="discount-item" class="block text-sm font-medium text-gray-700">Descuento (%)</label>
+                      <input
+                        pInputText
+                        id="discount-item"
+                        type="number"
+                        min="0"
+                        max="100"
+                        [(ngModel)]="newItem.discount"
+                        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                    </div>
+                    <div class="space-y-2">
+                      <label class="block text-sm font-medium text-gray-700">Total</label>
+                      <div class="h-10 px-3 py-2 border rounded-md bg-gray-50 flex items-center text-sm">
+                        ${{ calculateNewItemTotal() | number : '1.2-2' }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mt-4">
+                    <p-button (click)="addItemToQuote()" styleClass="p-button-sm">
+                      <!-- Icono PrimeIcons pi-plus -->
+                      <i class="pi pi-plus mr-2 h-5 w-5"></i>
+                      Agregar Producto
+                    </p-button>
+                  </div>
+                </div>
+              </p-card>
+
+              <!-- Lista de Productos -->
+              <p-card
+                *ngIf="currentQuote.items.length > 0"
+                styleClass="p-0 border rounded-lg shadow-sm"
+              >
+                <div class="p-4">
+                  <div class="text-lg font-semibold mb-4">Productos en Cotización</div>
+                  <p-table [value]="currentQuote.items">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Producto</th>
+                        <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Cantidad</th>
+                        <th class="text-right py-3 px-4 text-sm font-semibold text-gray-700">Precio Unit.</th>
+                        <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Desc. %</th>
+                        <th class="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total</th>
+                        <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Acciones</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                      <tr>
+                        <td class="py-2 px-4">
+                          <div>
+                            <div class="font-medium text-sm">{{ item.productName }}</div>
+                            <div *ngIf="item.description" class="text-xs text-gray-500">
+                              {{ item.description }}
+                            </div>
+                          </div>
+                        </td>
+                        <td class="text-center py-2 px-4 text-sm">{{ item.quantity }}</td>
+                        <td class="text-right py-2 px-4 text-sm">${{ item.unitPrice | number : '1.2-2' }}</td>
+                        <td class="text-center py-2 px-4 text-sm">{{ item.discount }}%</td>
+                        <td class="text-right font-medium py-2 px-4 text-sm">${{ item.totalPrice | number : '1.2-2' }}</td>
+                        <td class="text-center py-2 px-4">
+                          <p-button
+                            styleClass="p-button-text p-button-danger p-button-sm text-red-500 w-9 h-9 rounded-md hover:bg-red-50"
+                            (onClick)="removeItemFromQuote(item.id)"
+                          >
+                            <!-- Icono PrimeIcons pi-trash -->
+                            <i class="pi pi-trash h-5 w-5"></i>
+                          </p-button>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </div>
+              </p-card>
+            </div>
+          </p-tabPanel>
+
+          <p-tabPanel header="Términos">
+            <ng-template pTemplate="header">
+              Términos
+            </ng-template>
+            <div class="space-y-4 p-4">
+              <div class="space-y-2">
+                <label htmlFor="notes" class="block text-sm font-medium text-gray-700">Notas Adicionales</label>
+                <textarea
+                  pInputTextarea
+                  id="notes"
+                  rows="4"
+                  [(ngModel)]="currentQuote.notes"
+                  placeholder="Información adicional sobre la cotización..."
+                  class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                ></textarea>
+              </div>
+              <div class="space-y-2">
+                <label htmlFor="terms" class="block text-sm font-medium text-gray-700">Términos y Condiciones</label>
+                <textarea
+                  pInputTextarea
+                  id="terms"
+                  rows="6"
+                  [(ngModel)]="currentQuote.terms"
+                  placeholder="Términos y condiciones de la cotización..."
+                  class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                ></textarea>
+              </div>
+            </div>
+          </p-tabPanel>
+        </p-tabView>
+
+        <ng-template pTemplate="footer">
+          <div class="flex justify-end gap-2 p-4 pt-0">
+            <p-button
+              label="Cancelar"
+              styleClass="p-button-outlined"
+              (onClick)="showAddDialog = false; resetCurrentQuote()"
+            ></p-button>
+            <p-button (onClick)="saveQuote()">
+              <!-- Icono PrimeIcons pi-file -->
+              <i class="pi pi-file mr-2 h-5 w-5"></i>
+              Guardar Cotización
+            </p-button>
+          </div>
+        </ng-template>
+      </p-dialog>
+    </div>
+
+    <!-- Tabla de Cotizaciones -->
+    <p-card styleClass="p-0 border rounded-lg shadow-sm">
+      <div class="p-4">
+        <div class="text-xl font-semibold mb-2">Lista de Cotizaciones</div>
+        <div class="text-sm text-gray-500 mb-4">Gestiona las cotizaciones enviadas a clientes</div>
+        <p-table [value]="filteredQuotes" [paginator]="true" [rows]="10" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entradas" [rowsPerPageOptions]="[10,25,50]" styleClass="rounded-md overflow-hidden">
+          <ng-template pTemplate="header">
+            <tr class="bg-gray-100">
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">N° Cotización</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Cliente</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Fecha</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Válida Hasta</th>
+              <th class="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total</th>
+              <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Estado</th>
+              <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-quote>
+            <tr>
+              <td class="font-medium py-2 px-4 text-sm">{{ quote.quoteNumber }}</td>
+              <td class="py-2 px-4">
+                <div>
+                  <div class="font-medium text-sm">{{ quote.customerName }}</div>
+                  <div class="text-xs text-gray-500">{{ quote.customerEmail }}</div>
+                </div>
+              </td>
+              <td class="py-2 px-4 text-sm">{{ quote.quoteDate | date : 'shortDate' }}</td>
+              <td class="py-2 px-4 text-sm">{{ quote.validUntil | date : 'shortDate' }}</td>
+              <td class="text-right font-medium py-2 px-4 text-sm">${{ quote.total | number : '1.2-2' }}</td>
+              <td class="text-center py-2 px-4">
+                <div class="flex items-center justify-center space-x-1">
+                  <i [class]="'pi ' + getStatusIconClass(quote.status) + ' ' + getStatusIconColorClass(quote.status) + ' h-5 w-5'"></i>
+                  <p-tag [value]="getStatusBadgeValue(quote.status)" [severity]="getStatusBadgeSeverity(quote.status)" class="ml-1 text-xs px-2 py-0.5 rounded-full"></p-tag>
+                </div>
+              </td>
+              <td class="text-center py-2 px-4">
+                <div class="flex items-center justify-center space-x-1">
+                  <p-button
+                    styleClass="p-button-text p-button-secondary p-button-sm w-9 h-9 rounded-md hover:bg-gray-100"
+                    (onClick)="viewQuoteDetails(quote)"
+                  >
+                    <!-- Icono PrimeIcons pi-eye -->
+                    <i class="pi pi-eye h-5 w-5"></i>
+                  </p-button>
+                  <p-button
+                    styleClass="p-button-text p-button-secondary p-button-sm w-9 h-9 rounded-md hover:bg-gray-100"
+                  >
+                    <!-- Icono PrimeIcons pi-pencil -->
+                    <i class="pi pi-pencil h-5 w-5"></i>
+                  </p-button>
+                  <p-button
+                    styleClass="p-button-text p-button-secondary p-button-sm w-9 h-9 rounded-md hover:bg-gray-100"
+                  >
+                    <!-- Icono PrimeIcons pi-copy -->
+                    <i class="pi pi-copy h-5 w-5"></i>
+                  </p-button>
+                  <p-button
+                    styleClass="p-button-text p-button-secondary p-button-sm w-9 h-9 rounded-md hover:bg-gray-100"
+                  >
+                    <!-- Icono PrimeIcons pi-send -->
+                    <i class="pi pi-send h-5 w-5"></i>
+                  </p-button>
+                  <p-button
+                    styleClass="p-button-text p-button-secondary p-button-sm w-9 h-9 rounded-md hover:bg-gray-100"
+                  >
+                    <!-- Icono PrimeIcons pi-download -->
+                    <i class="pi pi-download h-5 w-5"></i>
+                  </p-button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-card>
+
+    <!-- Diálogo de Detalle de Cotización -->
+    <p-dialog
+      header="Detalle de Cotización"
+      [(visible)]="showDetailDialog"
+      [modal]="true"
+      [style]="{ width: '75vw' }"
+      [breakpoints]="{ '960px': '90vw', '640px': '100vw' }"
+      styleClass="rounded-lg shadow-xl"
+    >
+      <ng-template pTemplate="header">
+          <div class="flex flex-col space-y-1.5 p-4 sm:p-6 pb-2">
+              <span class="text-lg font-semibold leading-none tracking-tight">Detalle de Cotización: {{ selectedQuote?.quoteNumber }}</span>
+          </div>
+      </ng-template>
+      <div *ngIf="selectedQuote" class="space-y-6 p-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="font-bold text-sm">Cliente:</p>
+            <p class="text-sm">{{ selectedQuote.customerName }} ({{ selectedQuote.customerEmail }})</p>
+          </div>
+          <div>
+            <p class="font-bold text-sm">Fecha de Cotización:</p>
+            <p class="text-sm">{{ selectedQuote.quoteDate | date : 'shortDate' }}</p>
+          </div>
+          <div>
+            <p class="font-bold text-sm">Válida Hasta:</p>
+            <p class="text-sm">{{ selectedQuote.validUntil | date : 'shortDate' }}</p>
+          </div>
+          <div>
+            <p class="font-bold text-sm">Estado:</p>
+            <div class="flex items-center space-x-2">
+              <i [class]="'pi ' + getStatusIconClass(selectedQuote.status) + ' ' + getStatusIconColorClass(selectedQuote.status) + ' h-5 w-5'"></i>
+              <p-tag [value]="getStatusBadgeValue(selectedQuote.status)" [severity]="getStatusBadgeSeverity(selectedQuote.status)" class="text-xs px-2 py-0.5 rounded-full"></p-tag>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-200 my-4"></div>
+
+        <h3 class="text-lg font-bold">Productos</h3>
+        <p-table [value]="selectedQuote.items" styleClass="w-full rounded-md overflow-hidden">
+          <ng-template pTemplate="header">
+            <tr class="bg-gray-100">
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-700">Producto</th>
+              <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Cantidad</th>
+              <th class="text-right py-3 px-4 text-sm font-semibold text-gray-700">Precio Unit.</th>
+              <th class="text-center py-3 px-4 text-sm font-semibold text-gray-700">Desc. %</th>
+              <th class="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item>
+            <tr>
+              <td class="py-2 px-4">
+                <div>
+                  <div class="font-medium text-sm">{{ item.productName }}</div>
+                  <div *ngIf="item.description" class="text-xs text-gray-500">
+                    {{ item.description }}
+                  </div>
+                </div>
+              </td>
+              <td class="text-center py-2 px-4 text-sm">{{ item.quantity }}</td>
+              <td class="text-right py-2 px-4 text-sm">${{ item.unitPrice | number : '1.2-2' }}</td>
+              <td class="text-center py-2 px-4 text-sm">{{ item.discount }}%</td>
+              <td class="text-right font-medium py-2 px-4 text-sm">${{ item.totalPrice | number : '1.2-2' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h4 class="font-medium mb-3">Totales</h4>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span>Subtotal:</span>
+                <span>${{ selectedQuote.subtotal | number : '1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Impuestos (10%):</span>
+                <span>${{ selectedQuote.tax | number : '1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Descuento:</span>
+                <span>-${{ selectedQuote.discount | number : '1.2-2' }}</span>
+              </div>
+              <div class="border-t border-gray-200 my-2"></div>
+              <div class="flex justify-between font-bold text-base">
+                <span>Total:</span>
+                <span>${{ selectedQuote.total | number : '1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p *ngIf="selectedQuote.notes" class="mt-4 text-sm">
+              <span class="font-bold">Notas Adicionales:</span>
+              <br />
+              {{ selectedQuote.notes }}
+            </p>
+            <p *ngIf="selectedQuote.terms" class="mt-4 text-sm">
+              <span class="font-bold">Términos y Condiciones:</span>
+              <br />
+              {{ selectedQuote.terms }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2 p-4 pt-0">
+          <p-button label="Cerrar" styleClass="p-button-text" (onClick)="showDetailDialog = false"></p-button>
+        </div>
+      </ng-template>
+    </p-dialog>
+  </div>

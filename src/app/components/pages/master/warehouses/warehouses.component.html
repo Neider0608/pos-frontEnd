@@ -1,0 +1,163 @@
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <div class="flex items-center justify-between flex-wrap gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-5">
+                <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center shadow-inner">
+                    <i class="pi pi-building text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Bodegas</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Administra sucursales, inventarios y puntos de almacenamiento.</p>
+                </div>
+            </div>
+
+            <button
+                pButton
+                label="Nueva Bodega"
+                icon="pi pi-plus"
+                (click)="openNewDialog()"
+                class="!rounded-2xl !py-4 !px-8 !bg-emerald-600 !border-none !shadow-lg !shadow-emerald-200 dark:!shadow-none hover:!scale-105 transition-transform font-bold"
+            ></button>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-5 flex flex-col md:row items-center justify-between gap-4">
+            <div class="relative w-full md:w-2/3">
+                <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input
+                    pInputText
+                    [(ngModel)]="searchTerm"
+                    (input)="filterWarehouses()"
+                    placeholder="Buscar por nombre, ciudad o código..."
+                    class="!pl-12 w-full !rounded-xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 !text-base focus:!ring-2 focus:!ring-emerald-500 transition-all dark:text-slate-200"
+                />
+            </div>
+
+            <div class="flex items-center gap-3 px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Registros</span>
+                <span class="text-xl font-black text-emerald-600">{{ filteredWarehouses.length }}</span>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+            <p-table [value]="filteredWarehouses" [paginator]="true" [rows]="8" responsiveLayout="scroll" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                    <tr class="!bg-slate-50 dark:!bg-slate-800/50">
+                        <th pSortableColumn="name" class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Nombre <p-sortIcon field="name"></p-sortIcon></th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Código</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Ciudad</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">Estado</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-right">Acciones</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-bodega>
+                    <tr class="border-b border-slate-50 dark:border-slate-800 last:border-none hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-base">{{ bodega.name }}</span>
+                                <span class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{{ bodega.address || 'Sin dirección' }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-600 dark:text-slate-400 font-mono text-xs font-bold">{{ bodega.code }}</span>
+                        </td>
+                        <td class="px-6 py-5 text-slate-600 dark:text-slate-400 font-medium">{{ bodega.city || '-' }}</td>
+                        <td class="px-6 py-5 text-center">
+                            <span
+                                [class]="
+                                    bodega.active
+                                        ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800'
+                                        : 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-800'
+                                "
+                                class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border"
+                            >
+                                {{ bodega.active ? 'Activa' : 'Inactiva' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <button (click)="editWarehouse(bodega)" class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" pTooltip="Editar">
+                                    <i class="pi pi-pencil"></i>
+                                </button>
+                                <button (click)="deleteWarehouse(bodega)" class="w-10 h-10 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all" pTooltip="Eliminar">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="5" class="text-center py-20 bg-slate-50/30 dark:bg-slate-900/30">
+                            <div class="flex flex-col items-center opacity-30">
+                                <i class="pi pi-box text-6xl mb-4"></i>
+                                <p class="text-lg font-bold uppercase tracking-widest">Sin resultados encontrados</p>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <p-dialog [(visible)]="showDialog" [modal]="true" [draggable]="false" [resizable]="false" [dismissableMask]="true" styleClass="!rounded-[2.5rem] !border-none !shadow-2xl !bg-white dark:!bg-slate-900 overflow-hidden" [style]="{ width: '450px' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-3 pt-4">
+                <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-xl flex items-center justify-center">
+                    <i class="pi pi-pencil"></i>
+                </div>
+                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">{{ dialogTitle }}</h2>
+            </div>
+        </ng-template>
+
+        <div class="space-y-6 pt-4 px-2">
+            <div class="group">
+                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 ml-1">Nombre Comercial</label>
+                <input
+                    pInputText
+                    [(ngModel)]="newWarehouse.name"
+                    placeholder="Ej: Hub Logístico Norte"
+                    class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 focus:!ring-emerald-500 dark:text-white"
+                />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Código ID</label>
+                    <input pInputText [(ngModel)]="newWarehouse.code" placeholder="BDG-01" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Ciudad</label>
+                    <input pInputText [(ngModel)]="newWarehouse.city" placeholder="Medellín" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Dirección Exacta</label>
+                <textarea
+                    pInputTextarea
+                    [(ngModel)]="newWarehouse.address"
+                    rows="2"
+                    placeholder="Calle, Carrera, Edificio..."
+                    class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 focus:!ring-emerald-500 dark:text-white"
+                ></textarea>
+            </div>
+
+            <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Disponibilidad</span>
+                    <span class="text-[10px] text-slate-400 uppercase">Estado actual de la bodega</span>
+                </div>
+                <p-inputSwitch [(ngModel)]="newWarehouse.active"></p-inputSwitch>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex gap-3 justify-end pb-4 px-2">
+                <button pButton label="Cancelar" class="p-button-text !text-slate-400 !font-bold" (click)="showDialog = false"></button>
+                <button pButton label="Guardar Bodega" icon="pi pi-save" (click)="saveWarehouse()" class="!rounded-2xl !py-4 !px-8 !bg-emerald-600 !border-none !font-black !shadow-lg !shadow-emerald-100 dark:!shadow-none"></button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

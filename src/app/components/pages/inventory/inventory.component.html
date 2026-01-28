@@ -1,0 +1,216 @@
+<p-toast></p-toast>
+
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
+    <div class="max-w-[1700px] mx-auto space-y-8">
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[2.5rem] shadow-sm">
+            <div class="flex items-center gap-6">
+                <div class="w-20 h-20 bg-indigo-600 text-white rounded-[2.2rem] flex items-center justify-center shadow-2xl shadow-indigo-200 dark:shadow-none rotate-3 hover:rotate-0 transition-transform duration-300">
+                    <i class="pi pi-box text-4xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-5xl font-black tracking-tighter text-slate-800 dark:text-white uppercase leading-none">Inventario</h2>
+                    <p class="text-slate-400 dark:text-slate-500 font-medium mt-1">Control de activos y valorización de bodega central</p>
+                </div>
+            </div>
+
+            <button
+                pButton
+                icon="pi pi-plus"
+                label="Añadir Producto"
+                (click)="openAddDialog()"
+                class="!rounded-2xl !px-10 !py-5 !bg-slate-900 dark:!bg-white dark:!text-slate-900 !border-none !font-black !text-lg hover:!scale-105 transition-all shadow-xl"
+            ></button>
+        </header>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 shadow-sm group hover:border-indigo-400 transition-all">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Variedad SKU</span>
+                    <i class="pi pi-tag text-slate-300 group-hover:text-indigo-500 transition-colors"></i>
+                </div>
+                <div class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">{{ inventory.length }}</div>
+                <p class="text-xs text-slate-400 font-bold uppercase mt-2">Productos únicos</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Total Unidades</span>
+                    <i class="pi pi-database text-slate-300"></i>
+                </div>
+                <div class="text-5xl font-black text-slate-800 dark:text-white tracking-tighter">{{ totalItems }}</div>
+                <p class="text-xs text-slate-400 font-bold uppercase mt-2">Stock físico global</p>
+            </div>
+
+            <div class="bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-100 dark:border-indigo-800 rounded-[2.5rem] p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400">Valorización</span>
+                    <i class="pi pi-dollar text-indigo-500"></i>
+                </div>
+                <div class="text-4xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">${{ totalValue | number: '1.0-0' }}</div>
+                <p class="text-xs text-indigo-400/80 font-bold uppercase mt-2">Capital en bodega</p>
+            </div>
+
+            <div [class]="lowStockItems.length > 0 ? 'bg-rose-600 shadow-rose-200' : 'bg-slate-100'" class="rounded-[2rem] p-8 transition-all shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <span [class]="lowStockItems.length > 0 ? 'text-rose-100' : 'text-slate-400'" class="text-[10px] font-black uppercase tracking-[0.2em]">Riesgo Stock</span>
+                    <i class="pi pi-exclamation-circle" [class]="lowStockItems.length > 0 ? 'text-white' : 'text-slate-300'"></i>
+                </div>
+                <div [class]="lowStockItems.length > 0 ? 'text-white' : 'text-slate-800'" class="text-5xl font-black tracking-tighter">{{ lowStockItems.length }}</div>
+                <p [class]="lowStockItems.length > 0 ? 'text-rose-100' : 'text-slate-400'" class="text-xs font-bold uppercase mt-2 italic">Críticos por agotar</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div class="relative lg:col-span-2">
+                    <i class="pi pi-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+                    <input
+                        pInputText
+                        [(ngModel)]="filters.nameOrReference"
+                        (input)="filterProducts()"
+                        placeholder="Buscar por nombre, código o referencia..."
+                        class="w-full !pl-14 !py-5 !bg-slate-50 dark:!bg-slate-800 !border-none !rounded-2xl !text-base font-medium focus:!ring-4 !ring-indigo-500/10 transition-all"
+                    />
+                </div>
+
+                <p-dropdown
+                    [options]="categories"
+                    [(ngModel)]="filters.category"
+                    (onChange)="filterProducts()"
+                    placeholder="Categoría de Producto"
+                    styleClass="w-full !bg-slate-50 dark:!bg-slate-800 !border-none !rounded-2xl !h-[60px] flex items-center px-4"
+                ></p-dropdown>
+
+                <div class="flex items-center justify-between px-6 py-2 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-transparent h-[60px]">
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-500">Solo Activos</span>
+                    <p-toggleswitch [(ngModel)]="filters.active" (onChange)="filterProducts()"></p-toggleswitch>
+                </div>
+
+                <div class="flex gap-2 h-[60px]">
+                    <button pButton icon="pi pi-filter-slash" (click)="resetFilters()" class="p-button-secondary !bg-slate-200 !text-slate-600 !border-none !rounded-2xl w-full hover:!bg-slate-300 transition-colors"></button>
+                    <button pButton label="Filtrar" icon="pi pi-sliders-h" class="!bg-indigo-600 !border-none !rounded-2xl w-full font-bold shadow-lg shadow-indigo-100"></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <p-table [value]="filteredInventory" [paginator]="true" [rows]="10" responsiveLayout="scroll">
+                <ng-template pTemplate="header">
+                    <tr class="!bg-slate-50 dark:!bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                        <th class="py-6 px-8 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] bg-transparent">Activo</th>
+                        <th class="py-6 px-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] bg-transparent">Categoría</th>
+                        <th class="py-6 px-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] bg-transparent text-center">Disponibilidad</th>
+                        <th class="py-6 px-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] bg-transparent text-right">Precio Unitario</th>
+                        <th class="py-6 px-8 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] bg-transparent text-center">Acciones</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-item>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-none">
+                        <td class="py-6 px-8">
+                            <div class="flex items-center gap-5">
+                                <div class="w-14 h-14 rounded-2xl overflow-hidden border-2 border-slate-100 bg-white shadow-sm flex-shrink-0">
+                                    <img *ngIf="item.imageUrl" [src]="item.imageUrl" class="w-full h-full object-cover" />
+                                    <div *ngIf="!item.imageUrl" class="w-full h-full flex items-center justify-center bg-slate-50 text-slate-200">
+                                        <i class="pi pi-image text-xl"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p class="font-black text-slate-800 dark:text-slate-100 text-base leading-none mb-1 tracking-tight">{{ item.name }}</p>
+                                    <span class="text-[10px] font-mono font-bold text-indigo-500 uppercase tracking-widest">{{ item.barcode || 'REF-' + item.reference }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-6">
+                            <span class="px-4 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700">
+                                {{ item.category || 'Sin Categoría' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-6 text-center">
+                            <div class="flex flex-col items-center">
+                                <span [class]="item.stock <= 5 ? 'text-rose-500' : 'text-slate-800 dark:text-white'" class="text-xl font-black tracking-tighter">
+                                    {{ item.stock }}
+                                </span>
+                                <span class="text-[9px] font-black text-slate-400 uppercase">Unidades</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-6 text-right font-black text-slate-800 dark:text-slate-100 text-lg tracking-tighter">${{ item.price | number: '1.0-0' }}</td>
+                        <td class="px-8 py-6">
+                            <div class="flex gap-2 justify-center">
+                                <button pButton icon="pi pi-pencil" (click)="editProduct(item)" class="!bg-slate-100 dark:!bg-slate-800 !text-slate-600 !border-none !rounded-xl hover:!bg-indigo-500 hover:!text-white transition-all"></button>
+                                <button pButton icon="pi pi-trash" (click)="deleteProduct(item)" class="!bg-rose-50 dark:!bg-rose-900/20 !text-rose-500 !border-none !rounded-xl hover:!bg-rose-500 hover:!text-white transition-all"></button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <p-dialog [visible]="showAddDialog || showEditDialog" [modal]="true" [draggable]="false" [resizable]="false" styleClass="!rounded-[3rem] !border-none !shadow-2xl dark:!bg-slate-900 overflow-hidden" [style]="{ width: '900px' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-4 pt-4">
+                <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-2xl flex items-center justify-center">
+                    <i class="pi pi-tag text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tighter">Ficha de Activo</h2>
+            </div>
+        </ng-template>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-10 py-6">
+            <div class="md:col-span-4 space-y-6">
+                <div
+                    class="relative group aspect-square bg-slate-50 dark:bg-slate-800 rounded-[2.5rem] border-4 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden transition-all hover:border-indigo-400"
+                >
+                    <img *ngIf="newProduct.imageUrl" [src]="newProduct.imageUrl" class="w-full h-full object-cover" />
+                    <div *ngIf="!newProduct.imageUrl" class="text-center p-6 cursor-pointer" (click)="fileInput.click()">
+                        <i class="pi pi-cloud-upload text-3xl text-slate-300 mb-2"></i>
+                        <p class="text-[9px] font-black uppercase text-slate-400 tracking-widest leading-tight">Subir Imagen HD</p>
+                    </div>
+                    <input #fileInput type="file" (change)="onImageSelected($event)" hidden />
+                </div>
+
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 p-5 rounded-[1.8rem] border border-indigo-100 dark:border-indigo-800">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black text-indigo-600 uppercase tracking-widest">Control Stock</span>
+                        <p-toggleswitch [(ngModel)]="newProduct.manageStock"></p-toggleswitch>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-8 grid grid-cols-2 gap-6">
+                <div class="col-span-2">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1">Nombre del Producto</label>
+                    <input pInputText [(ngModel)]="newProduct.name" class="w-full !rounded-2xl !bg-slate-50 dark:!bg-slate-800 !border-none !py-4 !px-5 font-bold" />
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1">SKU / Referencia</label>
+                    <input pInputText [(ngModel)]="newProduct.reference" class="w-full !rounded-2xl !bg-slate-50 dark:!bg-slate-800 !border-none !py-4 !px-5 font-mono" />
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1">Código de Barras</label>
+                    <input pInputText [(ngModel)]="newProduct.barcode" class="w-full !rounded-2xl !bg-slate-50 dark:!bg-slate-800 !border-none !py-4 !px-5 font-mono" />
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1 text-indigo-500">Precio Venta</label>
+                    <p-inputNumber [(ngModel)]="newProduct.price" mode="currency" currency="COP" inputStyleClass="w-full !rounded-2xl !bg-indigo-50 dark:!bg-indigo-900/30 !border-none !py-4 !px-5 font-black text-indigo-600 text-xl"></p-inputNumber>
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 px-1">Stock Inicial</label>
+                    <p-inputNumber [(ngModel)]="newProduct.stock" inputStyleClass="w-full !rounded-2xl !bg-slate-50 dark:!bg-slate-800 !border-none !py-4 !px-5 font-black text-xl"></p-inputNumber>
+                </div>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-between items-center w-full pt-6 border-t border-slate-50 dark:border-slate-800">
+                <button pButton label="Descartar" class="p-button-text !text-slate-400 !font-bold" (click)="closeDialog()"></button>
+                <button pButton label="Registrar Activo" icon="pi pi-check-circle" (click)="saveProduct()" class="!rounded-2xl !py-4 !px-10 !bg-slate-900 dark:!bg-white dark:!text-slate-900 !border-none !font-black !shadow-xl"></button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

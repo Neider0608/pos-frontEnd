@@ -1,0 +1,221 @@
+<p-dialog
+    [(visible)]="visible"
+    [modal]="true"
+    (onHide)="closeDialog()"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="!rounded-[2.5rem] !border-none !shadow-2xl !bg-slate-50 dark:!bg-slate-950 overflow-hidden"
+    [style]="{ width: '95vw', maxWidth: '1100px' }"
+>
+    <ng-template pTemplate="header">
+        <div class="flex justify-between items-center w-full bg-white dark:bg-slate-900 p-8 border-b border-slate-100 dark:border-slate-800 -m-5 mb-0">
+            <div>
+                <h2 class="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Finalizar Venta</h2>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Configura el cliente, entrega y métodos de pago</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1 text-emerald-500">Total a Recaudar</p>
+                <span class="text-4xl font-black text-slate-800 dark:text-slate-100 tracking-tighter">
+                    {{ total | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
+                </span>
+            </div>
+        </div>
+    </ng-template>
+
+    <div class="flex flex-col lg:grid lg:grid-cols-12 gap-8 p-8 h-[70vh] overflow-y-auto custom-scrollbar">
+        <div class="lg:col-span-5 space-y-6">
+            <div class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2"><i class="pi pi-user text-emerald-500"></i> Información del Cliente</h3>
+                <app-customer-selector [customers]="customers" (selectCustomer)="onCustomerSelect($event)"></app-customer-selector>
+            </div>
+
+            <div [class]="deliveryInfo.isDelivery ? 'ring-2 ring-emerald-500 bg-emerald-50/20' : 'bg-white dark:bg-slate-900'" class="p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm transition-all">
+                <div class="flex items-center justify-between mb-4">
+                    <label for="is-delivery" class="flex items-center gap-3 cursor-pointer group">
+                        <div class="relative flex items-center">
+                            <p-checkbox [binary]="true" [ngModel]="deliveryInfo?.isDelivery || false" (ngModelChange)="updateDeliveryInfoField('isDelivery', $event)" inputId="is-delivery"> </p-checkbox>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tighter group-hover:text-emerald-500 transition-colors"> Es Domicilio </span>
+                            <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Activar logística de entrega</span>
+                        </div>
+                    </label>
+
+                    <div class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
+                        <i class="pi pi-truck" [class.text-emerald-500]="deliveryInfo.isDelivery"></i>
+                    </div>
+                </div>
+
+                @if (deliveryInfo.isDelivery) {
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-emerald-100/50 dark:border-slate-800 animate-fade-in">
+                        <div class="col-span-2 space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Dirección Exacta *</label>
+                            <input
+                                pInputText
+                                class="w-full !rounded-xl !border-slate-200 dark:!border-slate-700 dark:!bg-slate-800 !py-3"
+                                [ngModel]="deliveryInfo.address"
+                                (ngModelChange)="updateDeliveryInfoField('address', $event)"
+                                placeholder="Ej: Calle 10 #20-30"
+                            />
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Ciudad *</label>
+                            <input pInputText class="w-full !rounded-xl !border-slate-200 dark:!border-slate-700 dark:!bg-slate-800 !py-3" [ngModel]="deliveryInfo.city" (ngModelChange)="updateDeliveryInfoField('city', $event)" placeholder="Ciudad" />
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Teléfono *</label>
+                            <input
+                                pInputText
+                                class="w-full !rounded-xl !border-slate-200 dark:!border-slate-700 dark:!bg-slate-800 !py-3"
+                                [ngModel]="deliveryInfo.phone"
+                                (ngModelChange)="updateDeliveryInfoField('phone', $event)"
+                                placeholder="300 123 4567"
+                            />
+                        </div>
+
+                        <div class="col-span-2 space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Notas de Entrega</label>
+                            <textarea
+                                pInputTextarea
+                                [rows]="2"
+                                class="w-full !rounded-xl !border-slate-200 dark:!border-slate-700 dark:!bg-slate-800 !resize-none"
+                                [ngModel]="deliveryInfo.notes"
+                                (ngModelChange)="updateDeliveryInfoField('notes', $event)"
+                                placeholder="Instrucciones adicionales..."
+                            >
+                            </textarea>
+                        </div>
+                    </div>
+                } @else {
+                    <div class="py-4 text-center border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">Retira en Tienda / Mostrador</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+            <div class="bg-slate-100/50 dark:bg-slate-800/30 p-6 rounded-[2rem] border border-slate-200/50 dark:border-slate-800">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Revisión de Carrito ({{ cartItems.length }})</h3>
+                </div>
+                <div class="max-h-32 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+                    @for (item of cartItems; track item.id) {
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="font-bold text-slate-600 dark:text-slate-300"
+                                >{{ item.quantity }}x <span class="font-normal">{{ item.name }}</span></span
+                            >
+                            <span class="font-mono font-bold">{{ item.subtotal | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest italic">Formas de Pago</h3>
+                    <button (click)="fillExactAmount()" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:underline cursor-pointer">Cargar monto exacto</button>
+                </div>
+
+                @for (payment of paymentMethods; track $index) {
+                    <div class="grid grid-cols-12 gap-3 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm items-end animate-fade-in-up mb-3">
+                        <div [class]="payment.type === 'financed' ? 'col-span-4' : 'col-span-5'" class="space-y-1 transition-all">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Medio</label>
+                            <p-dropdown
+                                [options]="paymentTypeOptions"
+                                appendTo="body"
+                                [ngModel]="payment.type"
+                                (onChange)="updatePaymentMethod($index, 'type', $event.value)"
+                                styleClass="w-full !rounded-xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50"
+                            ></p-dropdown>
+                        </div>
+
+                        <div [class]="payment.type === 'financed' ? 'col-span-4' : 'col-span-5'" class="space-y-1 transition-all">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto a pagar</label>
+                            <p-inputNumber
+                                mode="currency"
+                                [currency]="currencyCode"
+                                [locale]="locale"
+                                [ngModel]="payment.amount"
+                                (ngModelChange)="updatePaymentMethod($index, 'amount', $event)"
+                                inputStyleClass="w-full !text-lg !font-black !rounded-xl !border-none !bg-slate-50 dark:!bg-slate-800/50 dark:text-white text-emerald-600 text-right"
+                            ></p-inputNumber>
+                        </div>
+
+                        @if (payment.type === 'financed') {
+                            <div class="col-span-2 space-y-1 animate-fade-in">
+                                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Meses</label>
+                                <p-dropdown
+                                    [options]="financingMonthsOptions"
+                                    [ngModel]="payment.months"
+                                    appendTo="body"
+                                    (onChange)="updatePaymentMethod($index, 'months', $event.value)"
+                                    styleClass="w-full !rounded-xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50"
+                                    placeholder="0"
+                                >
+                                </p-dropdown>
+                            </div>
+                        }
+
+                        <div class="col-span-2 flex justify-end">
+                            <button
+                                (click)="removePaymentMethod($index)"
+                                class="w-11 h-11 rounded-xl flex items-center justify-center text-rose-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all border border-transparent hover:border-rose-100 dark:hover:border-rose-900"
+                            >
+                                <i class="pi pi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                <button
+                    (click)="addPaymentMethod()"
+                    class="w-full py-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 font-bold uppercase text-[10px] tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all"
+                >
+                    <i class="pi pi-plus-circle mr-2"></i> Agregar otro medio de pago
+                </button>
+            </div>
+
+            <div class="p-8 rounded-[2.5rem] bg-slate-900 dark:bg-emerald-950 text-white shadow-xl space-y-4">
+                <div class="flex justify-between items-center opacity-60 text-xs font-bold uppercase tracking-[0.2em]">
+                    <span>Subtotal Bruto</span>
+                    <span>{{ total - totalVat | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                </div>
+                <div class="flex justify-between items-center opacity-60 text-xs font-bold uppercase tracking-[0.2em]">
+                    <span>Impuestos (IVA)</span>
+                    <span>{{ totalVat | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                </div>
+                <p-divider styleClass="!border-slate-700"></p-divider>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-1">Diferencia / Cambio</p>
+                        <h4 [class]="difference >= 0 ? 'text-emerald-400' : 'text-rose-400'" class="text-3xl font-black tracking-tighter">
+                            {{ Math.abs(difference) | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
+                        </h4>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Total Pagado</p>
+                        <h4 class="text-2xl font-black tracking-tighter">{{ totalPayments | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-between items-center w-full p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 -m-5 mt-0">
+            <button (click)="visibleChange.emit(false)" class="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Volver al carrito</button>
+
+            <button
+                (click)="checkout.emit()"
+                [disabled]="Math.abs(difference) > 0.1 || cartItems.length === 0"
+                class="group flex items-center gap-4 px-10 py-5 bg-emerald-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white rounded-[1.5rem] shadow-xl shadow-emerald-200 dark:shadow-none transition-all hover:scale-105 active:scale-95 disabled:scale-100"
+            >
+                <span class="text-sm font-black uppercase tracking-widest">Procesar Factura</span>
+                <i class="pi pi-arrow-right font-bold group-hover:translate-x-2 transition-transform"></i>
+            </button>
+        </div>
+    </ng-template>
+</p-dialog>

@@ -1,0 +1,186 @@
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
+    <div class="max-w-7xl mx-auto space-y-8">
+        <div class="flex items-center justify-between flex-wrap gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800">
+            <div class="flex items-center gap-5">
+                <div class="w-14 h-14 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center shadow-inner">
+                    <i class="pi pi-users text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Clientes</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Gestiona la base de datos de personas naturales y registros empresariales.</p>
+                </div>
+            </div>
+
+            <button
+                pButton
+                label="Nuevo Cliente"
+                icon="pi pi-user-plus"
+                (click)="openAddDialog()"
+                class="!rounded-2xl !py-4 !px-8 !bg-indigo-600 !border-none !shadow-lg !shadow-indigo-200 dark:!shadow-none hover:!scale-105 transition-transform font-bold"
+            ></button>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="relative w-full md:flex-1">
+                <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input
+                    pInputText
+                    [(ngModel)]="searchTerm"
+                    (input)="filterCustomers()"
+                    placeholder="Buscar por nombre, NIT, documento o empresa..."
+                    class="!pl-12 w-full !rounded-xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 !text-base focus:!ring-2 focus:!ring-indigo-500 transition-all dark:text-slate-200"
+                />
+            </div>
+
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <p-dropdown [options]="identificationTypes" [(ngModel)]="identificationTypes" placeholder="Tipo de ID" styleClass="!w-full md:!w-48 !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-1"></p-dropdown>
+
+                <div class="flex items-center gap-3 px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl whitespace-nowrap">
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Total</span>
+                    <span class="text-xl font-black text-indigo-600">{{ filteredCustomers.length }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+            <p-table [value]="filteredCustomers" [paginator]="true" [rows]="8" responsiveLayout="scroll" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                    <tr class="!bg-slate-50 dark:!bg-slate-800/50">
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Cliente / Empresa</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Identificación</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Contacto</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Ubicación</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-right">Acciones</th>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-customer>
+                    <tr class="border-b border-slate-50 dark:border-slate-800 last:border-none hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-700 dark:text-slate-200 text-base"> {{ customer.firstName }} {{ customer.lastName }} </span>
+                                @if (customer.isCompany) {
+                                    <span class="text-[10px] text-indigo-500 font-black uppercase tracking-tighter flex items-center gap-1"> <i class="pi pi-building text-[9px]"></i> {{ customer.businessName }} </span>
+                                }
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-400 font-mono">{{ customer.document }}</span>
+                                @if (customer.nit) {
+                                    <span class="text-[9px] text-slate-400 uppercase">NIT: {{ customer.nit }}</span>
+                                }
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400"><i class="pi pi-envelope text-[10px]"></i> {{ customer.email }}</div>
+                                <div class="flex items-center gap-2 text-xs text-slate-500"><i class="pi pi-phone text-[10px]"></i> {{ customer.phone || 'N/A' }}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-slate-600 dark:text-slate-400 font-medium">
+                            <div class="flex flex-col">
+                                <span class="text-sm">{{ customer.city || '-' }}</span>
+                                <span class="text-[10px] text-slate-400 truncate max-w-[150px]">{{ customer.address }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <button (click)="editCustomer(customer)" class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" pTooltip="Editar">
+                                    <i class="pi pi-pencil"></i>
+                                </button>
+                                <button (click)="deleteCustomer(customer)" class="w-10 h-10 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all" pTooltip="Eliminar">
+                                    <i class="pi pi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+        </div>
+    </div>
+
+    <p-dialog [(visible)]="showDialog" [modal]="true" [draggable]="false" [resizable]="false" [dismissableMask]="true" styleClass="!rounded-[2.5rem] !border-none !shadow-2xl !bg-white dark:!bg-slate-900 overflow-hidden" [style]="{ width: '600px' }">
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-3 pt-4">
+                <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 rounded-xl flex items-center justify-center">
+                    <i class="pi pi-user-edit"></i>
+                </div>
+                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">{{ isEditing ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
+            </div>
+        </ng-template>
+
+        <div class="space-y-6 pt-4 px-2 max-h-[65vh] overflow-y-auto custom-scroll">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Primer Nombre *</label>
+                    <input pInputText [(ngModel)]="currentCustomer.firstName" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Primer Apellido *</label>
+                    <input pInputText [(ngModel)]="currentCustomer.lastName" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Documento / ID</label>
+                    <input pInputText [(ngModel)]="currentCustomer.document" placeholder="Número identificación" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Tipo de ID</label>
+                    <p-dropdown [options]="identificationTypes" [(ngModel)]="currentCustomer.identificationTypeId" styleClass="!w-full !rounded-2xl !bg-slate-50 dark:!bg-slate-800/50 !border-none"></p-dropdown>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between bg-indigo-50/50 dark:bg-indigo-900/10 p-5 rounded-3xl border border-dashed border-indigo-200 dark:border-indigo-800">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm text-indigo-600">
+                        <i class="pi pi-building"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Perfil Corporativo</span>
+                        <span class="text-[10px] text-slate-400 uppercase">Activar si es una empresa / NIT</span>
+                    </div>
+                </div>
+                <p-inputSwitch [(ngModel)]="currentCustomer.isCompany"></p-inputSwitch>
+            </div>
+
+            @if (currentCustomer.isCompany) {
+                <div class="grid grid-cols-2 gap-4 animate-fadein">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Razón Social</label>
+                        <input pInputText [(ngModel)]="currentCustomer.businessName" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">NIT</label>
+                        <input pInputText [(ngModel)]="currentCustomer.nit" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                    </div>
+                </div>
+            }
+
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Correo Electrónico</label>
+                <input pInputText [(ngModel)]="currentCustomer.email" type="email" placeholder="ejemplo@correo.com" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Ciudad</label>
+                    <input pInputText [(ngModel)]="currentCustomer.city" placeholder="Ej: Bogotá" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Teléfono</label>
+                    <input pInputText [(ngModel)]="currentCustomer.phone" placeholder="+57 ..." class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                </div>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex gap-3 justify-end pb-4 px-2">
+                <button pButton label="Cancelar" class="p-button-text !text-slate-400 !font-bold" (click)="showDialog = false"></button>
+                <button pButton label="Guardar Cliente" icon="pi pi-save" (click)="saveCustomer()" class="!rounded-2xl !py-4 !px-8 !bg-indigo-600 !border-none !font-black !shadow-lg !shadow-indigo-100 dark:!shadow-none"></button>
+            </div>
+        </ng-template>
+    </p-dialog>
+</div>

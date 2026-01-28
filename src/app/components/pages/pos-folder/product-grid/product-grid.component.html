@@ -1,0 +1,15 @@
+@if (products.length === 0) {
+  <div class="flex items-center justify-center h-64 text-muted-foreground">
+    <p>No se encontraron productos</p>
+  </div>
+} @else {
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    @for (product of products; track trackByProductId($index, product); let index = $index) {
+      <app-product-card 
+        [product]="product" 
+        [viewMode]="viewMode"
+        (select)="onProductSelected($event)" 
+      />
+    }
+  </div>
+}
