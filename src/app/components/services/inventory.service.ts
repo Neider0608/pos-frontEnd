@@ -21,6 +21,10 @@ export class InventoryService {
         return this.http.post<ApiResponse<any>>(`${this.apiUrl}Inventory/CreateProduct`, model);
     }
 
+    createProductBulk(model: ProductCreateRequest[]): Observable<ApiResponse<any>> {
+        return this.http.post<ApiResponse<any>>(`${this.apiUrl}Inventory/CreateProductBulk`, model);
+    }
+
     deleteProduct(model: ProductCreateRequest): Observable<ApiResponse<any>> {
         return this.http.request<ApiResponse<any>>('delete', `${this.apiUrl}Inventory/DeleteProduct`, { body: model });
     }

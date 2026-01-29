@@ -20,8 +20,9 @@ import { InventoryService } from '../../services/inventory.service';
 import { Category, Product, UnitOfMeasure } from '../api/shared';
 import { AuthService } from '../core/guards/auth.service';
 import { AuthSession } from '../api/login';
-import { ISupplier } from '../api/suppliers';
+
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { ISupplier } from '../api/master';
 
 interface PurchaseDetail {
     productId?: number;
@@ -107,44 +108,7 @@ export class PurchaseComponent implements OnInit {
     selectedProduct: any; // Producto seleccionado en el buscador
 
     // Datos de ejemplo para los dropdowns
-    suppliers: ISupplier[] = [
-        {
-            id: 1,
-            name: 'Coca Cola Company',
-            contact: 'Juan Pérez',
-            phone: '+57 300 123 4567',
-            email: 'ventas@cocacola.com',
-            address: 'Calle 100 #15-20, Bogotá',
-            taxId: '900123456-1',
-            status: 'active',
-            productsCount: 15,
-            lastOrder: '2024-01-10'
-        },
-        {
-            id: 2,
-            name: 'Grupo Bimbo',
-            contact: 'María González',
-            phone: '+57 301 234 5678',
-            email: 'pedidos@bimbo.com',
-            address: 'Carrera 50 #25-30, Medellín',
-            taxId: '900234567-2',
-            status: 'active',
-            productsCount: 25,
-            lastOrder: '2024-01-12'
-        },
-        {
-            id: 3,
-            name: 'Alpina S.A.',
-            contact: 'Carlos Rodríguez',
-            phone: '+57 302 345 6789',
-            email: 'comercial@alpina.com',
-            address: 'Zona Industrial, Cali',
-            taxId: '900345678-3',
-            status: 'inactive',
-            productsCount: 8,
-            lastOrder: '2023-12-15'
-        }
-    ];
+    suppliers: ISupplier[] = [];
 
     constructor(
         private messageService: MessageService,
@@ -162,6 +126,7 @@ export class PurchaseComponent implements OnInit {
         this.loadUnitOfMeasure();
         this.loadInventory();
         this.loadCategories();
+        this.loadSuppliers();
     }
 
     filterProducts(event: any) {
@@ -176,6 +141,19 @@ export class PurchaseComponent implements OnInit {
                 p.extension2?.toLowerCase().includes(query) ||
                 p.description?.toLowerCase().includes(query)
         );
+    }
+
+    loadSuppliers() {
+        this.masterService.getSuppliers(this.companiaId).subscribe({
+            next: (res) => {
+                this.suppliers = res.data || [];
+            },
+
+            error: (err) => {
+                console.error('Error cargando proveedores:', err);
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error de conexión' });
+            }
+        });
     }
 
     // Acción al seleccionar un producto del buscador
