@@ -1,114 +1,149 @@
 import { Component, OnInit } from '@angular/core';
-import { ISupplier } from '../../api/suppliers';
-import { MessageService } from 'primeng/api';
-import { AuthSession } from '../../api/login';
-import { AuthService } from '../../core/guards/auth.service';
-import { SuppliersService } from '../../../services/suppliers.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MessageService } from 'primeng/api';
+
+// PrimeNG Modules
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
+import { InputSwitchModule } from 'primeng/inputswitch'; // Añadido para el diseño nuevo
+
+import { MasterService } from '../../../services/master.service';
+import { AuthService } from '../../core/guards/auth.service';
+import { AuthSession } from '../../api/login';
+import { ISupplier } from '../../api/master';
 
 @Component({
-  selector: 'app-suppliers',
-  templateUrl: './suppliers.component.html',
-  styleUrl: './suppliers.component.scss',
-  providers: [MessageService],
-  imports: [
-    CommonModule,
-    FormsModule,      // <--- Esto soluciona el error de ngModel
-    TableModule,      // <--- Esto soluciona el error de p-table
-    DialogModule,     // <--- Esto soluciona el error de p-dialog
-    InputTextModule,  // <--- Necesario para el estilo de los inputs de Prime
-    ButtonModule,
-    ToastModule
-  ],
+    selector: 'app-suppliers',
+    standalone: true,
+    imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TableModule, DialogModule, ToastModule, InputSwitchModule],
+    providers: [MessageService, MasterService],
+    templateUrl: './suppliers.component.html'
 })
 export class SuppliersComponent implements OnInit {
-  companiaId: number = 0;
-  suppliers: ISupplier[] = [];
-  loading: boolean = true;
-  searchTerm: string = '';
-  showAddDialog: boolean = false;
+    // Estado de la UI
+    searchTerm: string = '';
+    showAddDialog: boolean = false;
+    isEditing: boolean = false;
+    filteredSuppliers: ISupplier[] = [];
 
-  newSupplier: ISupplier = this.getEmptySupplier();
+    // Datos
+    suppliers: ISupplier[] = [];
+    companiaId: number = 0;
+    userId: number = 0;
 
-  constructor(
-    private authService: AuthService,
-    private suppliersService: SuppliersService,
-    private messageService: MessageService
-  ) {}
+    // Objeto reactivo para el formulario
+    newSupplier: ISupplier = this.initializeSupplier();
 
-  ngOnInit() {
-    // Obtenemos la sesión igual que en Low Stock
-    const session = this.authService.getSession() as AuthSession;
-    if (session) {
-      this.companiaId = session.companiaId;
-      this.loadData();
-    }
-  }
+    constructor(
+        private messageService: MessageService,
+        private masterService: MasterService,
+        private authService: AuthService
+    ) {}
 
-  loadData() {
-    this.loading = true;
-    this.suppliersService.getSuppliers(this.companiaId).subscribe({
-      next: (res) => {
-        // Validamos con 'code === 0' como en tu componente de referencia
-        if (res.code === 0) {
-          this.suppliers = res.data;
+    ngOnInit() {
+        debugger;
+        const session = this.authService.getSession() as AuthSession;
+        if (session) {
+            this.companiaId = session.companiaId;
+            this.userId = session.userId;
         }
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error("Error al obtener proveedores", err);
-        this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'No se pudo conectar con el servidor'
+        this.loadSuppliers();
+    }
+
+    // --- LÓGICA DE DATOS ---
+
+    loadSuppliers() {
+        this.masterService.getSuppliers(this.companiaId).subscribe({
+            next: (res) => {
+                this.suppliers = res.data || [];
+                this.filteredSuppliers = [...this.suppliers];
+            },
+
+            error: (err) => {
+                console.error('Error cargando proveedores:', err);
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error de conexión' });
+            }
         });
-        this.loading = false;
-      }
-    });
-  }
+    }
 
-  // Getters para las tarjetas de estadísticas
-  get activeSuppliers(): number {
-    return this.suppliers.filter(s => s.status === 'active').length;
-  }
+    initializeSupplier(): ISupplier {
+        return {
+            id: 0,
+            companiaId: this.companiaId,
+            userId: this.userId,
+            taxId: '',
+            businessName: '',
+            phone: '',
+            mobile: '',
+            email: '',
+            city: '',
+            contactName: '',
+            paymentTerm: 0,
+            status: true
+        };
+    }
 
-  get totalProducts(): number {
-    return this.suppliers.reduce((sum, s) => sum + (s.productsCount || 0), 0);
-  }
+    // --- ACCIONES DE UI ---
 
-  get filteredSuppliers(): ISupplier[] {
-  if (!this.suppliers) return [];
+    openNew() {
+        this.isEditing = false;
+        this.newSupplier = this.initializeSupplier();
+        this.showAddDialog = true;
+    }
 
-  return this.suppliers.filter(s => {
-    // Usamos ?. y || '' para que si el dato es null, no rompa el sistema
-    const name = s.name?.toLowerCase() || '';
-    const taxId = s.taxId || '';
-    const contact = s.contact?.toLowerCase() || '';
-    const search = this.searchTerm.toLowerCase();
+    editSupplier(supplier: ISupplier) {
+        this.isEditing = true;
+        this.newSupplier = { ...supplier }; // Clonamos para no editar la tabla en vivo
+        this.showAddDialog = true;
+    }
 
-    return name.includes(search) ||
-           taxId.includes(search) ||
-           contact.includes(search);
-  });
-}
+    saveSupplier(): void {
+        if (!this.isSupplierValid()) return;
 
-  private getEmptySupplier(): ISupplier {
-    return {
-      id: 0, name: '', taxId: '', contact: '',
-      phone: '', email: '', address: '',
-      status: 'active', productsCount: 0
-    };
-  }
+        console.log('Guardar proveedor:', this.newSupplier);
 
-  saveNewSupplier() {
-    // Aquí iría la lógica para enviar al servidor
-    this.showAddDialog = false;
-    this.newSupplier = this.getEmptySupplier();
-  }
+        // Si id > 0 podrías llamar a un update, pero aquí seguimos tu lógica de create
+        this.masterService.createSupplier(this.newSupplier).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Completado',
+                    detail: this.isEditing ? 'Proveedor actualizado' : 'Proveedor registrado'
+                });
+                this.showAddDialog = false;
+                this.loadSuppliers();
+                this.newSupplier = this.initializeSupplier();
+            },
+            error: () => this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al procesar la solicitud' })
+        });
+    }
+
+    deleteSupplier(supplier: ISupplier) {
+        // Aquí iría tu lógica de borrado (usualmente otro endpoint en masterService)
+        console.log('Eliminar:', supplier.id);
+    }
+
+    // --- GETTERS PARA FILTROS ---
+
+    isSupplierValid(): boolean {
+        const s = this.newSupplier;
+        return !!(s.businessName && s.taxId && s.contactName && s.mobile && s.email && s.city && s.paymentTerm >= 0);
+    }
+
+    filterSuppliers() {
+        if (!this.searchTerm) {
+            this.filteredSuppliers = [...this.suppliers];
+            return;
+        }
+
+        const search = this.searchTerm.toLowerCase().trim();
+
+        this.filteredSuppliers = this.suppliers.filter(
+            (s) => s.businessName.toLowerCase().includes(search) || s.taxId.toLowerCase().includes(search) || s.contactName.toLowerCase().includes(search) || s.city.toLowerCase().includes(search) || s.email.toLowerCase().includes(search)
+        );
+    }
 }

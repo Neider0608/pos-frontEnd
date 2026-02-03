@@ -6,7 +6,7 @@ import { ApiResponse, Category, Customer, Product, UnitOfMeasure, Warehouse } fr
 import { FinancingRequest, GetFinancing } from '../pages/api/financing';
 import { Conversation, Message, MessageSend, PhoneNumbers } from '../pages/api/whatsappagents';
 import { Module, Permission, Role, User } from '../pages/api/permissions';
-import { Company } from '../pages/api/master';
+import { Company, ISupplier } from '../pages/api/master';
 
 @Injectable({ providedIn: 'root' })
 export class MasterService {
@@ -142,6 +142,22 @@ export class MasterService {
 
     deleteRolePermissions(roleId: number): Observable<ApiResponse<boolean>> {
         return this.http.delete<ApiResponse<boolean>>(`${this.apiUrl}Master/DeleteRolePermissions/${roleId}`);
+    }
+
+    // =====================================================
+    // 🧩 Proveedor
+    // =====================================================
+
+    getSuppliers(companiaId: number): Observable<ApiResponse<ISupplier[]>> {
+        return this.http.get<ApiResponse<ISupplier[]>>(`${this.apiUrl}Master/GetSuppliers/${companiaId}`);
+    }
+
+    createSupplier(model: ISupplier): Observable<ApiResponse<any>> {
+        return this.http.post<ApiResponse<any>>(`${this.apiUrl}Master/CreateSupplier`, model);
+    }
+
+    deleteSupplier(model: ISupplier): Observable<ApiResponse<any>> {
+        return this.http.request<ApiResponse<any>>('delete', `${this.apiUrl}Master/DeleteSupplier`, { body: model });
     }
 
     /**

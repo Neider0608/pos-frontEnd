@@ -17,8 +17,9 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { InventoryService } from '../../services/inventory.service';
 import { MasterService } from '../../services/master.service';
 import { AuthService } from '../core/guards/auth.service';
-import { Product, ProductCreateRequest, ProductWarehouseRequest, UnitOfMeasure, Warehouse } from '../api/shared';
+import { Category, Product, ProductCreateRequest, ProductWarehouseRequest, UnitOfMeasure, Warehouse } from '../api/shared';
 import { AuthSession } from '../api/login';
+import * as XLSX from 'xlsx';
 
 interface WarehouseUI extends ProductWarehouseRequest {
     name: string; // Para mostrar el nombre en la lista del modal
@@ -34,13 +35,13 @@ interface WarehouseUI extends ProductWarehouseRequest {
 export class InventoryComponent implements OnInit {
     inventory: Product[] = [];
     filteredInventory: Product[] = [];
-    categories: any[] = [];
+    categories: Category[] = [];
     masterWarehouses: Warehouse[] = [];
     unitsMeasure: UnitOfMeasure[] = [];
 
     // UI unificada para el formulario de bodegas
     warehousesUI: WarehouseUI[] = [];
-
+    loading: boolean = false;
     companiaId: number = 0;
     userId: number = 0;
 
@@ -108,7 +109,7 @@ export class InventoryComponent implements OnInit {
 
     loadCategories() {
         this.masterService.getCategories(this.companiaId).subscribe((res) => {
-            this.categories = res.data?.map((c) => ({ label: c.name, value: c.id })) || [];
+            this.categories = res.data;
         });
     }
 
@@ -245,5 +246,127 @@ export class InventoryComponent implements OnInit {
 
     deleteProduct(item: Product) {
         // Implementar lógica de eliminación
+    }
+
+    exportToExcel() {
+        // 1. Preparamos los datos "aplanados" para que el Excel sea legible
+        const dataToExport = this.filteredInventory.map((p) => {
+            const row: any = {
+                ID: p.id,
+                Código: p.code,
+                Nombre: p.name,
+                Referencia: p.reference || '',
+                'Código Barras': p.barcode || '',
+                'Categoría ID': p.categoryId,
+                'Extension 1': p.extension1 || '',
+                'Extension 2': p.extension2 || '',
+                Precio: p.price,
+                'Unidad Medida ID': p.unitMeasureId,
+                'Maneja Stock': p.manageStock ? 'SI' : 'NO',
+                Activo: p.active ? 'SI' : 'NO'
+            };
+
+            // Añadimos columnas dinámicas por cada bodega para el stock actual
+            this.masterWarehouses.forEach((wh) => {
+                const stock = p.existencias?.find((e) => e.wareHouseId === wh.id)?.stock || 0;
+                const min = p.maximosMinimos?.find((m) => m.wareHouseId === wh.id)?.minStock || 0;
+                const max = p.maximosMinimos?.find((m) => m.wareHouseId === wh.id)?.maxStock || 0;
+
+                row[`Stock - ${wh.name}`] = stock;
+                row[`Min - ${wh.name}`] = min;
+                row[`Max - ${wh.name}`] = max;
+            });
+
+            return row;
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
+
+        // Descargar
+        XLSX.writeFile(workbook, `Inventario_Compania_${this.companiaId}.xlsx`);
+    }
+
+    /**
+     * IMPORTAR: Lee el archivo y prepara los objetos ProductCreateRequest
+     */
+    importExcel(event: any) {
+        this.loading = true;
+        try {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e: any) => {
+                const bstr = e.target.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data: any[] = XLSX.utils.sheet_to_json(ws);
+
+                this.processBulkData(data);
+            };
+            reader.readAsBinaryString(file);
+        } catch (error) {
+            this.loading = false;
+        }
+    }
+    processBulkData(rows: any[]) {
+        if (!rows || rows.length === 0) return;
+
+        // 1. Mapeamos cada fila del Excel al formato ProductCreateRequest
+        const requests: ProductCreateRequest[] = rows.map((row) => {
+            // Mapeo de bodegas dinámico basado en las columnas del Excel
+            const warehousesForThisProduct = this.masterWarehouses.map((wh) => ({
+                warehouseId: wh.id!,
+                // Buscamos en el Excel columnas como "Stock - NombreBodega"
+                stock: Number(row[`Stock - ${wh.name}`] || 0),
+                minStock: Number(row[`Min - ${wh.name}`] || 0),
+                maxStock: Number(row[`Max - ${wh.name}`] || 0)
+            }));
+
+            return {
+                id: Number(row['ID'] || 0), // Si es 0 o no existe, el API crea uno nuevo
+                userId: this.userId,
+                companiaId: this.companiaId,
+                name: row['Nombre'],
+                description: row['Descripción'] || '',
+                barcode: String(row['Código Barras'] || ''),
+                reference: String(row['Referencia'] || ''),
+                extension1: row['Extension 1'] || '',
+                extension2: row['Extension 2'] || '',
+                price: Number(row['Precio'] || 0),
+                imageUrl: row['Imagen URL'] || '',
+                categoryId: Number(row['Categoría ID']),
+                unitMeasureId: Number(row['Unidad Medida ID']),
+                active: row['Activo'] === 'SI',
+                manageStock: row['Maneja Stock'] === 'SI',
+                warehouses: warehousesForThisProduct
+            };
+        });
+
+        // 2. Ejecución (Recomendación: Enviar uno por uno o usar un forkJoin)
+        // Aquí lo haremos uno por uno para asegurar que el MessageService muestre el progreso
+
+        this.inventoryService.createProductBulk(requests).subscribe({
+            next: () => {
+                this.loading = false;
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Carga Masiva',
+                    detail: `Se procesaron ${requests.length} productos exitosamente.`
+                });
+                this.loadInventory(); // Recargar la tabla
+            },
+            error: (err) => {
+                this.loading = false;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error en fila',
+                    detail: `No se pudo cargar el archivo: ${err.message}`
+                });
+            }
+        });
     }
 }

@@ -16,3 +16,18 @@ export interface Company {
     createdAt: string; // ISO string desde API
     updatedAt?: string | null;
 }
+export interface ISupplier {
+    id: number;
+    companiaId: number;
+    userId: number;
+    taxId: string;
+    businessName: string;
+    phone: string;
+    mobile: string;
+    email: string;
+    city: string;
+    contactName: string;
+    paymentTerm: number;
+    status: boolean;
+    productsCount?: number;
+}
