@@ -1,138 +1,114 @@
-import { CommonModule, NgClass } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ISupplier } from '../../api/suppliers';
 import { MessageService } from 'primeng/api';
-import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
+import { AuthSession } from '../../api/login';
+import { AuthService } from '../../core/guards/auth.service';
+import { SuppliersService } from '../../../services/suppliers.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { TableModule } from 'primeng/table';
-import { TagModule } from 'primeng/tag';
+import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
-import { ISupplier } from '../../api/suppliers';
 
 @Component({
-    selector: 'app-suppliers',
-    imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, TableModule, DialogModule, TagModule, ToastModule],
-    providers: [MessageService],
-    templateUrl: './suppliers.component.html',
-    styleUrl: './suppliers.component.scss'
+  selector: 'app-suppliers',
+  templateUrl: './suppliers.component.html',
+  styleUrl: './suppliers.component.scss',
+  providers: [MessageService],
+  imports: [
+    CommonModule,
+    FormsModule,      // <--- Esto soluciona el error de ngModel
+    TableModule,      // <--- Esto soluciona el error de p-table
+    DialogModule,     // <--- Esto soluciona el error de p-dialog
+    InputTextModule,  // <--- Necesario para el estilo de los inputs de Prime
+    ButtonModule,
+    ToastModule
+  ],
 })
 export class SuppliersComponent implements OnInit {
-    searchTerm: string = '';
-    showAddDialog: boolean = false;
+  companiaId: number = 0;
+  suppliers: ISupplier[] = [];
+  loading: boolean = true;
+  searchTerm: string = '';
+  showAddDialog: boolean = false;
 
-    // Initial state for new supplier form
-    newSupplier: ISupplier = {
-        id: 0,
-        name: '',
-        contact: '',
-        phone: '',
-        email: '',
-        address: '',
-        taxId: '',
-        status: 'active', // Default status
-        productsCount: 0,
-        lastOrder: new Date().toISOString().split('T')[0] // Default to today
-    };
+  newSupplier: ISupplier = this.getEmptySupplier();
 
-    suppliers: ISupplier[] = [
-        {
-            id: 1,
-            name: 'Coca Cola Company',
-            contact: 'Juan Pérez',
-            phone: '+57 300 123 4567',
-            email: 'ventas@cocacola.com',
-            address: 'Calle 100 #15-20, Bogotá',
-            taxId: '900123456-1',
-            status: 'active',
-            productsCount: 15,
-            lastOrder: '2024-01-10'
-        },
-        {
-            id: 2,
-            name: 'Grupo Bimbo',
-            contact: 'María González',
-            phone: '+57 301 234 5678',
-            email: 'pedidos@bimbo.com',
-            address: 'Carrera 50 #25-30, Medellín',
-            taxId: '900234567-2',
-            status: 'active',
-            productsCount: 25,
-            lastOrder: '2024-01-12'
-        },
-        {
-            id: 3,
-            name: 'Alpina S.A.',
-            contact: 'Carlos Rodríguez',
-            phone: '+57 302 345 6789',
-            email: 'comercial@alpina.com',
-            address: 'Zona Industrial, Cali',
-            taxId: '900345678-3',
-            status: 'inactive',
-            productsCount: 8,
-            lastOrder: '2023-12-15'
+  constructor(
+    private authService: AuthService,
+    private suppliersService: SuppliersService,
+    private messageService: MessageService
+  ) {}
+
+  ngOnInit() {
+    // Obtenemos la sesión igual que en Low Stock
+    const session = this.authService.getSession() as AuthSession;
+    if (session) {
+      this.companiaId = session.companiaId;
+      this.loadData();
+    }
+  }
+
+  loadData() {
+    this.loading = true;
+    this.suppliersService.getSuppliers(this.companiaId).subscribe({
+      next: (res) => {
+        // Validamos con 'code === 0' como en tu componente de referencia
+        if (res.code === 0) {
+          this.suppliers = res.data;
         }
-    ];
-
-    constructor(private messageService: MessageService) {}
-
-    ngOnInit() {}
-
-    get filteredSuppliers(): ISupplier[] {
-        return this.suppliers.filter(
-            (supplier) => supplier.name.toLowerCase().includes(this.searchTerm.toLowerCase()) || supplier.contact.toLowerCase().includes(this.searchTerm.toLowerCase()) || supplier.email.toLowerCase().includes(this.searchTerm.toLowerCase())
-        );
-    }
-
-    get activeSuppliers(): number {
-        return this.suppliers.filter((s) => s.status === 'active').length;
-    }
-
-    get totalProducts(): number {
-        return this.suppliers.reduce((sum, s) => sum + s.productsCount, 0);
-    }
-
-    saveNewSupplier(): void {
-        if (!this.newSupplier.name || !this.newSupplier.contact || !this.newSupplier.email) {
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Por favor, complete los campos obligatorios del proveedor (Nombre, Contacto, Email).'
-            });
-            return;
-        }
-
-        const newId = this.suppliers.length + 1; // Simple ID generation
-        const supplierToAdd: ISupplier = {
-            ...this.newSupplier,
-            id: newId,
-            productsCount: 0, // Assuming new suppliers start with 0 products
-            lastOrder: new Date().toISOString().split('T')[0] // Set current date as last order
-        };
-
-        this.suppliers = [...this.suppliers, supplierToAdd];
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error("Error al obtener proveedores", err);
         this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: `Proveedor ${supplierToAdd.name} agregado exitosamente.`
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo conectar con el servidor'
         });
-        this.showAddDialog = false;
-        this.resetNewSupplier();
-    }
+        this.loading = false;
+      }
+    });
+  }
 
-    resetNewSupplier(): void {
-        this.newSupplier = {
-            id: 0,
-            name: '',
-            contact: '',
-            phone: '',
-            email: '',
-            address: '',
-            taxId: '',
-            status: 'active',
-            productsCount: 0,
-            lastOrder: new Date().toISOString().split('T')[0]
-        };
-    }
+  // Getters para las tarjetas de estadísticas
+  get activeSuppliers(): number {
+    return this.suppliers.filter(s => s.status === 'active').length;
+  }
+
+  get totalProducts(): number {
+    return this.suppliers.reduce((sum, s) => sum + (s.productsCount || 0), 0);
+  }
+
+  get filteredSuppliers(): ISupplier[] {
+  if (!this.suppliers) return [];
+
+  return this.suppliers.filter(s => {
+    // Usamos ?. y || '' para que si el dato es null, no rompa el sistema
+    const name = s.name?.toLowerCase() || '';
+    const taxId = s.taxId || '';
+    const contact = s.contact?.toLowerCase() || '';
+    const search = this.searchTerm.toLowerCase();
+
+    return name.includes(search) ||
+           taxId.includes(search) ||
+           contact.includes(search);
+  });
+}
+
+  private getEmptySupplier(): ISupplier {
+    return {
+      id: 0, name: '', taxId: '', contact: '',
+      phone: '', email: '', address: '',
+      status: 'active', productsCount: 0
+    };
+  }
+
+  saveNewSupplier() {
+    // Aquí iría la lógica para enviar al servidor
+    this.showAddDialog = false;
+    this.newSupplier = this.getEmptySupplier();
+  }
 }

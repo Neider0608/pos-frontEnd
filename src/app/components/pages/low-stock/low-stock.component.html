@@ -10,7 +10,6 @@
                     <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Control de inventario crítico y alertas de reabastecimiento en tiempo real.</p>
                 </div>
             </div>
-
             <div class="flex gap-3">
                 <button pButton icon="pi pi-cog" (click)="showSettingsDialog = true" class="!rounded-2xl !p-4 !bg-slate-100 dark:!bg-slate-800 !text-slate-600 dark:!text-slate-300 !border-none hover:!bg-slate-200 transition-colors"></button>
                 <button pButton label="Exportar Reporte" icon="pi pi-download" class="!rounded-2xl !py-4 !px-8 !bg-slate-900 dark:!bg-white dark:!text-slate-900 !border-none !font-bold hover:!scale-105 transition-transform"></button>
@@ -58,9 +57,8 @@
         <div class="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 p-5 flex flex-wrap gap-4 items-center">
             <div class="relative flex-1 min-w-[300px]">
                 <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input pInputText [(ngModel)]="searchTerm" placeholder="Buscar producto por nombre o SKU..." class="!pl-12 w-full !rounded-xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4" />
+                <input pInputText [(ngModel)]="searchTerm" placeholder="Buscar producto por nombre o código..." class="!pl-12 w-full !rounded-xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4" />
             </div>
-            <p-dropdown [options]="categories" [(ngModel)]="selectedCategory" placeholder="Categoría" styleClass="!rounded-xl !border-none !bg-slate-50 dark:!bg-slate-800/50 !py-1 w-48"></p-dropdown>
             <p-dropdown [options]="statuses" [(ngModel)]="selectedStatus" placeholder="Estado" styleClass="!rounded-xl !border-none !bg-slate-50 dark:!bg-slate-800/50 !py-1 w-48"></p-dropdown>
         </div>
 
@@ -71,7 +69,7 @@
                         <th class="!py-5 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Producto Detalle</th>
                         <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">Nivel de Stock</th>
                         <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">Estado</th>
-                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Pronóstico</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Detalle DB</th>
                         <th class="!py-5 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-right">Gestión</th>
                     </tr>
                 </ng-template>
@@ -88,79 +86,33 @@
                             <div class="flex flex-col items-center gap-2">
                                 <div class="w-24 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                     <div
-                                        [style.width]="item.stockPercentage + '%'"
-                                        [class]="item.stockPercentage < 20 ? 'bg-rose-500' : item.stockPercentage < 50 ? 'bg-orange-500' : 'bg-emerald-500'"
+                                        [style.width.%]="(item.available / item.maxStock) * 100"
+                                        [class]="(item.available <= alertSettings.criticalThreshold) ? 'bg-rose-500' : 'bg-orange-500'"
                                         class="h-full transition-all duration-1000"
                                     ></div>
                                 </div>
-                                <span class="text-xs font-black text-slate-600 dark:text-slate-400">{{ item.currentStock }} / {{ item.maxStock }} units</span>
+                                <span class="text-xs font-black text-slate-600 dark:text-slate-400">{{ item.available }} / {{ item.maxStock }} unidades</span>
                             </div>
                         </td>
                         <td class="px-6 py-5 text-center">
-                            <span [class]="getStatusBadge(item.status).tailwindClass" class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border">
-                                {{ getStatusBadge(item.status).label }}
+                            <span [class]="getStatusBadge(calculateStatus(item)).tailwindClass" class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border">
+                                {{ getStatusBadge(calculateStatus(item)).label }}
                             </span>
                         </td>
                         <td class="px-6 py-5">
                             <div class="flex flex-col">
-                                <span class="text-sm font-bold" [ngClass]="item.daysUntilEmpty < 2 ? 'text-rose-500' : 'text-slate-600 dark:text-slate-300'">
-                                    {{ item.daysUntilEmpty < 1 ? 'Agotado' : (item.daysUntilEmpty | number: '1.0-0') + ' días restantes' }}
+                                <span class="text-sm font-bold text-slate-600 dark:text-slate-300">
+                                    Ref: {{ item.reference }}
                                 </span>
-                                <span class="text-[10px] text-slate-400 uppercase font-medium">Venta: {{ item.avgDailySales }}/día</span>
+                                <span class="text-[10px] text-slate-400 uppercase font-medium">Entradas: {{ item.inbound }}</span>
                             </div>
                         </td>
                         <td class="px-8 py-5 text-right">
-                            <button
-                                pButton
-                                label="Reabastecer"
-                                icon="pi pi-shopping-cart"
-                                class="!rounded-xl !py-2 !px-4 !bg-slate-900 dark:!bg-white dark:!text-slate-900 !text-xs !font-black !border-none hover:!scale-105 transition-transform"
-                            ></button>
+                            <button pButton label="Reabastecer" icon="pi pi-shopping-cart" class="!rounded-xl !py-2 !px-4 !bg-slate-900 dark:!bg-white dark:!text-slate-900 !text-xs !font-black !border-none hover:!scale-105 transition-transform"></button>
                         </td>
                     </tr>
                 </ng-template>
             </p-table>
         </div>
     </div>
-
-    <p-dialog [(visible)]="showSettingsDialog" [modal]="true" [draggable]="false" [resizable]="false" styleClass="!rounded-[2.5rem] !border-none !shadow-2xl !bg-white dark:!bg-slate-900" [style]="{ width: '450px' }">
-        <ng-template pTemplate="header">
-            <div class="flex items-center gap-3 pt-4">
-                <div class="w-10 h-10 bg-slate-100 dark:bg-slate-800 text-slate-600 rounded-xl flex items-center justify-center">
-                    <i class="pi pi-cog"></i>
-                </div>
-                <h2 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Umbrales de Stock</h2>
-            </div>
-        </ng-template>
-
-        <div class="space-y-6 pt-4 px-2">
-            <div class="bg-rose-50 dark:bg-rose-900/10 p-4 rounded-2xl border border-rose-100 dark:border-rose-900/30">
-                <label class="block text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3">Nivel Crítico (Unidades)</label>
-                <input type="number" pInputText [(ngModel)]="alertSettings.criticalThreshold" class="w-full !rounded-xl !border-none !bg-white dark:!bg-slate-800 !py-3 font-bold" />
-            </div>
-
-            <div class="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-100 dark:border-orange-900/30">
-                <label class="block text-[10px] font-black text-orange-600 uppercase tracking-widest mb-3">Nivel Bajo (Unidades)</label>
-                <input type="number" pInputText [(ngModel)]="alertSettings.lowThreshold" class="w-full !rounded-xl !border-none !bg-white dark:!bg-slate-800 !py-3 font-bold" />
-            </div>
-
-            <div class="space-y-3 px-2">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Alertas por Email</span>
-                    <p-inputSwitch [(ngModel)]="alertSettings.emailNotifications"></p-inputSwitch>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Reorden Automático</span>
-                    <p-inputSwitch [(ngModel)]="alertSettings.autoReorder"></p-inputSwitch>
-                </div>
-            </div>
-        </div>
-
-        <ng-template pTemplate="footer">
-            <div class="flex gap-3 justify-end pb-4 px-2">
-                <button pButton label="Cancelar" class="p-button-text !text-slate-400 !font-bold" (click)="showSettingsDialog = false"></button>
-                <button pButton label="Guardar Configuración" (click)="saveSettings()" class="!rounded-2xl !py-4 !px-8 !bg-rose-600 !border-none !font-black !shadow-lg !shadow-rose-100 dark:!shadow-none"></button>
-            </div>
-        </ng-template>
-    </p-dialog>
-</div>
+    </div>

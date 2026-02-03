@@ -1,5 +1,6 @@
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
     <div class="max-w-7xl mx-auto space-y-8">
+
         <div class="flex items-center justify-between flex-wrap gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-5">
                 <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center shadow-inner">
@@ -7,7 +8,7 @@
                 </div>
                 <div>
                     <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Proveedores</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Cadena de suministro, alianzas comerciales y catálogo de origen.</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Gestión de cadena de suministro y aliados estratégicos.</p>
                 </div>
             </div>
 
@@ -50,7 +51,7 @@
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-5">
+        <div class="bg-white dark:bg-slate-900 rounded-[1.5rem] border border-slate-200 dark:border-slate-800 shadow-xl p-5">
             <div class="relative w-full">
                 <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <input
@@ -63,7 +64,14 @@
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
-            <p-table [value]="filteredSuppliers" [paginator]="true" [rows]="8" responsiveLayout="scroll">
+            <p-table
+                [value]="filteredSuppliers"
+                [paginator]="true"
+                [rows]="8"
+                [loading]="loading"
+                responsiveLayout="scroll"
+                styleClass="p-datatable-sm"
+            >
                 <ng-template pTemplate="header">
                     <tr class="!bg-slate-50 dark:!bg-slate-800/50">
                         <th class="!py-5 !px-8 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Proveedor</th>
@@ -85,11 +93,15 @@
                         <td class="px-6 py-5">
                             <div class="flex flex-col gap-1">
                                 <span class="text-sm font-bold text-slate-600 dark:text-slate-300 leading-none">{{ supplier.contact }}</span>
-                                <div class="flex items-center gap-2 text-[11px] text-slate-400"><i class="pi pi-phone text-[9px]"></i> {{ supplier.phone }}</div>
+                                <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                                    <i class="pi pi-phone text-[9px]"></i> {{ supplier.phone }}
+                                </div>
                             </div>
                         </td>
                         <td class="px-6 py-5 text-center">
-                            <span class="px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-black"> {{ supplier.productsCount }} items </span>
+                            <span class="px-3 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-black">
+                                {{ supplier.productsCount || 0 }} items
+                            </span>
                         </td>
                         <td class="px-6 py-5 text-center">
                             <span
@@ -111,6 +123,15 @@
                         </td>
                     </tr>
                 </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="5" class="text-center p-12 text-slate-400 font-medium">
+                            <i class="pi pi-filter-slash text-2xl mb-2 block"></i>
+                            No se encontraron proveedores registrados.
+                        </td>
+                    </tr>
+                </ng-template>
             </p-table>
         </div>
     </div>
@@ -127,13 +148,13 @@
 
         <div class="space-y-6 pt-4 px-2">
             <div>
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Razón Social / Nombre Comercial</label>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Razón Social</label>
                 <input pInputText [(ngModel)]="newSupplier.name" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">NIT / ID Tributario</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">NIT / Identificación</label>
                     <input pInputText [(ngModel)]="newSupplier.taxId" placeholder="900.000.000-1" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
                 </div>
                 <div>
@@ -144,17 +165,17 @@
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Teléfono Directo</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Teléfono</label>
                     <input pInputText [(ngModel)]="newSupplier.phone" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
                 </div>
                 <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Correo Corporativo</label>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Email Corporativo</label>
                     <input pInputText [(ngModel)]="newSupplier.email" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
                 </div>
             </div>
 
             <div>
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Dirección de Operaciones</label>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Dirección Física</label>
                 <input pInputText [(ngModel)]="newSupplier.address" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
             </div>
         </div>

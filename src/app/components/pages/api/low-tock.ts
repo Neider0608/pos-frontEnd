@@ -27,3 +27,14 @@ export interface LowStockItem {
     isRead: boolean
   }
   
+  export interface Stock {
+  id: number;
+  name: string;
+  reference: string;
+  barcode: string;
+  maxStock: number;
+  minStock: number;
+  available: number;
+  inbound: number;
+  initial: number;
+}
