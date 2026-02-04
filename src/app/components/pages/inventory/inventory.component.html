@@ -22,6 +22,7 @@
                     type="button"
                     icon="pi pi-file-excel"
                     label="Exportar"
+                    *ngIf="canExport"
                     (click)="exportToExcel()"
                     [disabled]="loading || filteredInventory.length === 0"
                     class="p-button-outlined !border-emerald-500 !text-emerald-600 hover:!bg-emerald-50 !rounded-xl !px-6 !py-3 !font-bold transition-all"
@@ -34,6 +35,7 @@
                         type="button"
                         icon="pi pi-upload"
                         label="Importar"
+                        *ngIf="canExport"
                         (click)="excelUpload.click()"
                         [disabled]="loading"
                         class="p-button-outlined !border-indigo-500 !text-indigo-600 hover:!bg-indigo-50 !rounded-xl !px-6 !py-3 !font-bold transition-all"
@@ -44,6 +46,7 @@
                     pButton
                     icon="pi pi-plus"
                     label="Añadir Producto"
+                    *ngIf="canCreate"
                     (click)="openAddDialog()"
                     [disabled]="loading"
                     class="!rounded-xl !px-8 !py-4 !bg-slate-900 dark:!bg-white dark:!text-slate-900 !border-none !font-bold hover:scale-105 transition-transform shadow-md"
@@ -132,7 +135,7 @@
                         </td>
                         <td class="px-4 py-4 text-right text-lg font-bold text-slate-900 dark:text-white tracking-tight">${{ item.price | number: '1.0-0' }}</td>
                         <td class="px-8 py-4 text-center">
-                            <button pButton icon="pi pi-pencil" (click)="editProduct(item)" class="p-button-rounded p-button-text !text-indigo-600"></button>
+                            <button pButton icon="pi pi-pencil" *ngIf="canEdit" (click)="editProduct(item)" class="p-button-rounded p-button-text !text-indigo-600"></button>
                         </td>
                     </tr>
                 </ng-template>

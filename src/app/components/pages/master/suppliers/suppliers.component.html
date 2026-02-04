@@ -13,7 +13,7 @@
                 </div>
             </div>
 
-            <button (click)="openNew()" class="flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-white py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg shadow-amber-100 hover:scale-[1.02] active:scale-95">
+            <button (click)="openNew()" *ngIf="canCreate" class="flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-white py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg shadow-amber-100 hover:scale-[1.02] active:scale-95">
                 <i class="pi pi-plus font-bold"></i>
                 <span class="font-bold uppercase tracking-tight">Nuevo Registro</span>
             </button>
@@ -79,10 +79,10 @@
                         </td>
                         <td class="px-6 py-5 text-right">
                             <div class="flex items-center justify-end gap-1">
-                                <button (click)="editSupplier(supplier)" class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-400 hover:bg-blue-50 transition-all">
+                                <button (click)="editSupplier(supplier)" *ngIf="canEdit" class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-400 hover:bg-blue-50 transition-all">
                                     <i class="pi pi-pencil"></i>
                                 </button>
-                                <button (click)="deleteSupplier(supplier)" class="w-10 h-10 rounded-xl flex items-center justify-center text-rose-400 hover:bg-rose-50 transition-all">
+                                <button (click)="deleteSupplier(supplier)" *ngIf="canDelete" class="w-10 h-10 rounded-xl flex items-center justify-center text-rose-400 hover:bg-rose-50 transition-all">
                                     <i class="pi pi-trash"></i>
                                 </button>
                             </div>

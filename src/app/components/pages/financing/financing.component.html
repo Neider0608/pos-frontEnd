@@ -123,6 +123,7 @@
                                 </button>
                                 <button
                                     (click)="openPaymentDialog(row)"
+                                    *ngIf="canView"
                                     [disabled]="row.currentBalance === 0"
                                     class="w-10 h-10 rounded-xl flex items-center justify-center text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all disabled:opacity-30"
                                     pTooltip="Nuevo Abono"

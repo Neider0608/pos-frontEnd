@@ -15,6 +15,7 @@
                 pButton
                 label="Nuevo Cliente"
                 icon="pi pi-user-plus"
+                *ngIf="canCreate"
                 (click)="openAddDialog()"
                 class="!rounded-2xl !py-4 !px-8 !bg-indigo-600 !border-none !shadow-lg !shadow-indigo-200 dark:!shadow-none hover:!scale-105 transition-transform font-bold"
             ></button>
@@ -86,10 +87,10 @@
                         </td>
                         <td class="px-6 py-5 text-right">
                             <div class="flex items-center justify-end gap-1">
-                                <button (click)="editCustomer(customer)" class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" pTooltip="Editar">
+                                <button (click)="editCustomer(customer)" *ngIf="canEdit" class="w-10 h-10 rounded-xl flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all" pTooltip="Editar">
                                     <i class="pi pi-pencil"></i>
                                 </button>
-                                <button (click)="deleteCustomer(customer)" class="w-10 h-10 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all" pTooltip="Eliminar">
+                                <button (click)="deleteCustomer(customer)" *ngIf="canCreate" class="w-10 h-10 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all" pTooltip="Eliminar">
                                     <i class="pi pi-trash"></i>
                                 </button>
                             </div>

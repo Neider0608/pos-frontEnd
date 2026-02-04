@@ -60,13 +60,15 @@
                             </p>
                         </div>
                     </div>
-                    <button
-                        pButton
-                        label="Asignar Agente"
-                        icon="pi pi-plus-circle"
-                        class="p-button-lg !rounded-2xl font-bold px-8 py-4 shadow-xl shadow-blue-100 dark:shadow-none transition-all hover:-translate-y-1"
-                        (click)="openAssignModal()"
-                    ></button>
+                    @if (canCreate) {
+                        <button
+                            pButton
+                            label="Asignar Agente"
+                            icon="pi pi-plus-circle"
+                            class="p-button-lg !rounded-2xl font-bold px-8 py-4 shadow-xl shadow-blue-100 dark:shadow-none transition-all hover:-translate-y-1"
+                            (click)="openAssignModal()"
+                        ></button>
+                    }
                 </header>
 
                 <div class="p-8 flex-grow overflow-x-auto dark:bg-slate-900">
@@ -116,23 +118,26 @@
                                 </td>
                                 <td class="py-6 px-4">
                                     <div class="flex items-center justify-end gap-2">
-                                        <button
-                                            (click)="editAgent(agent)"
-                                            pTooltip="Editar Agente"
-                                            tooltipPosition="top"
-                                            class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200 active:scale-90"
-                                        >
-                                            <i class="pi pi-edit text-lg"></i>
-                                        </button>
-
-                                        <button
-                                            (click)="onRemoveAgent(agent)"
-                                            pTooltip="Eliminar Agente"
-                                            tooltipPosition="top"
-                                            class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-200 active:scale-90"
-                                        >
-                                            <i class="pi pi-trash text-lg"></i>
-                                        </button>
+                                        @if (canEdit) {
+                                            <button
+                                                (click)="editAgent(agent)"
+                                                pTooltip="Editar Agente"
+                                                tooltipPosition="top"
+                                                class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-200 active:scale-90"
+                                            >
+                                                <i class="pi pi-edit text-lg"></i>
+                                            </button>
+                                        }
+                                        @if (canDelete) {
+                                            <button
+                                                (click)="onRemoveAgent(agent)"
+                                                pTooltip="Eliminar Agente"
+                                                tooltipPosition="top"
+                                                class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-all duration-200 active:scale-90"
+                                            >
+                                                <i class="pi pi-trash text-lg"></i>
+                                            </button>
+                                        }
                                     </div>
                                 </td>
                             </tr>

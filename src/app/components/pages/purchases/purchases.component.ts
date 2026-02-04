@@ -29,6 +29,8 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ISupplier } from '../api/master';
 import { GetPurchase, GetPurchaseDetail, Purchase, PurchaseDetail, PurchaseHistory, WarehouseUI } from '../api/inventory';
+import { Permission } from '../api/permissions';
+import { LoginService } from '../../services/login.service';
 
 @Component({
     selector: 'app-purchases',
@@ -109,6 +111,13 @@ export class PurchaseComponent implements OnInit {
     // Datos de ejemplo para los dropdowns
     suppliers: ISupplier[] = [];
 
+    permissions: Permission[] = [];
+
+    canView = false;
+    canCreate = false;
+    canEdit = false;
+    canDelete = false;
+    canExport = false;
     // Variables para controlar el proceso de vinculación
     displayLinker: boolean = false;
     selectedItemToLink: any = null;
@@ -118,11 +127,27 @@ export class PurchaseComponent implements OnInit {
         private messageService: MessageService,
         private masterService: MasterService,
         private inventoryService: InventoryService,
-        private authService: AuthService
+        private authService: AuthService,
+        private loginService: LoginService
     ) {}
 
     ngOnInit(): void {
         const session = this.authService.getSession() as AuthSession;
+
+        if (!session) {
+            this.resetPermissions();
+            return;
+        }
+
+        const { userId, companiaId } = session;
+
+        this.loginService.getPermissions(userId, companiaId).subscribe({
+            next: (permissions) => {
+                this.permissions = permissions.data ?? [];
+                this.applyPermissions();
+            },
+            error: () => this.resetPermissions()
+        });
         if (session) {
             this.companiaId = session.companiaId;
             this.userId = session.userId;
@@ -132,6 +157,31 @@ export class PurchaseComponent implements OnInit {
         this.loadCategories();
         this.loadSuppliers();
         this.loadMasterWarehouses();
+    }
+
+    private applyPermissions(): void {
+        const moduleName = 'Compras';
+
+        const permission = this.permissions.find((p) => p.module === moduleName);
+
+        if (!permission) {
+            this.resetPermissions();
+            return;
+        }
+
+        this.canView = permission.canView;
+        this.canCreate = permission.canCreate;
+        this.canEdit = permission.canEdit;
+        this.canDelete = permission.canDelete;
+        this.canExport = permission.canExport;
+    }
+
+    private resetPermissions(): void {
+        this.canView = false;
+        this.canCreate = false;
+        this.canEdit = false;
+        this.canDelete = false;
+        this.canExport = false;
     }
 
     filterProducts(event: any) {
@@ -244,6 +294,7 @@ export class PurchaseComponent implements OnInit {
         const file = event.target.files[0];
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('companiaId', this.companiaId.toString());
 
         this.inventoryService.getDetailPurchases(formData).subscribe({
             next: (res) => {

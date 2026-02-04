@@ -9,114 +9,222 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { InputTextModule } from 'primeng/inputtext';
 import { TabViewModule } from 'primeng/tabview';
 import { ToastModule } from 'primeng/toast';
-import { CompanyData, NotificationsSettings, PrinterSettings } from '../../api/settings';
+import { CompanyData, ConfigurationRequest, NotificationsSettings } from '../../api/settings';
+import { MasterService } from '../../../services/master.service';
+import { AuthSession } from '../../api/login';
+import { AuthService } from '../../core/guards/auth.service';
+import { Permission } from '../../api/permissions';
+import { LoginService } from '../../../services/login.service';
+
+interface PrinterSettings {
+    width: number;
+    marginTop: number;
+    copies: number;
+    port: string;
+}
+
+interface AISettings {
+    geminiKey: string;
+    autoCategorize: boolean;
+    salesAnalysis: boolean;
+}
 
 @Component({
     selector: 'app-settings',
     imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputSwitchModule, DropdownModule, TabViewModule, ToastModule],
-    providers: [MessageService],
+    providers: [MessageService, MasterService, AuthService],
     templateUrl: './settings.component.html',
     styleUrl: './settings.component.scss'
 })
 export class SettingsComponent implements OnInit {
-    companyData: CompanyData = {
-        companyName: '',
-        businessType: '',
-        address: '',
-        phone: '',
-        email: '',
-        taxId: '',
-        ownerName: '',
-        currency: 'USD',
-        timezone: 'America/Bogota'
-    };
-
-    notifications: NotificationsSettings = {
-        lowStock: true,
-        dailyReports: false,
-        salesAlerts: true,
-        systemUpdates: true
-    };
-
-    printerSettings: PrinterSettings = {
-        receiptPrinter: 'default',
-        paperSize: '80mm',
-        printLogo: true,
-        printFooter: true
-    };
-
-    // For the 'Users' tab example
+    // --- Estados de UI ---
+    showApiKey: boolean = false;
     userMariaActive: boolean = true;
     userCarlosActive: boolean = false;
+    companiaId: number = 0;
+    userId: number = 0;
+    // --- Datos de Empresa ---
+    companyData = {
+        companyName: 'Mi Empresa S.A.S',
+        taxId: '900.123.456-7',
+        email: 'admin@empresa.com',
+        phone: '+57 300 123 4567',
+        address: 'Calle 10 #43-21, Medellín'
+    };
 
-    currencyOptions = [
-        { label: 'USD - Dólar', value: 'USD' },
-        { label: 'COP - Peso Colombiano', value: 'COP' },
-        { label: 'EUR - Euro', value: 'EUR' }
-    ];
+    // --- Notificaciones ---
+    notifications = {
+        lowStock: true,
+        dailyReports: false
+    };
 
-    timezoneOptions = [
-        { label: 'Bogotá (GMT-5)', value: 'America/Bogota' },
-        { label: 'México (GMT-6)', value: 'America/Mexico_City' },
-        { label: 'Nueva York (GMT-5)', value: 'America/New_York' }
-    ];
+    // --- NUEVO: Configuración de Impresora ---
+    printerSettings: PrinterSettings = {
+        width: 80,
+        marginTop: 0,
+        copies: 1,
+        port: 'USB001'
+    };
 
-    receiptPrinterOptions = [
-        { label: 'Impresora Predeterminada', value: 'default' },
-        { label: 'Impresora Térmica', value: 'thermal' },
-        { label: 'Impresora de Red', value: 'network' }
-    ];
+    // --- NUEVO: Configuración de Gemini AI ---
+    aiSettings: AISettings = {
+        geminiKey: '',
+        autoCategorize: true,
+        salesAnalysis: true
+    };
 
-    paperSizeOptions = [
-        { label: '58mm', value: '58mm' },
-        { label: '80mm', value: '80mm' },
-        { label: 'A4', value: 'A4' }
-    ];
+    permissions: Permission[] = [];
 
-    constructor(private messageService: MessageService) {}
+    canView = false;
+    canCreate = false;
+    canEdit = false;
+    canDelete = false;
+    canExport = false;
+    constructor(
+        private masterService: MasterService,
+        private messageService: MessageService,
+        private authService: AuthService,
+        private loginService: LoginService
+    ) {}
 
-    ngOnInit() {
-        // Cargar configuración guardada al inicializar el componente
-        const savedCompanyConfig = localStorage.getItem('pos-company');
-        if (savedCompanyConfig) {
-            this.companyData = JSON.parse(savedCompanyConfig);
+    ngOnInit(): void {
+        const session = this.authService.getSession() as AuthSession;
+
+        if (!session) {
+            this.resetPermissions();
+            return;
         }
 
-        const savedNotificationsConfig = localStorage.getItem('pos-notifications');
-        if (savedNotificationsConfig) {
-            this.notifications = JSON.parse(savedNotificationsConfig);
-        }
+        const { userId, companiaId } = session;
 
-        const savedPrinterConfig = localStorage.getItem('pos-printer');
-        if (savedPrinterConfig) {
-            this.printerSettings = JSON.parse(savedPrinterConfig);
-        }
+        this.loginService.getPermissions(userId, companiaId).subscribe({
+            next: (permissions) => {
+                this.permissions = permissions.data ?? [];
+                this.applyPermissions();
+            },
+            error: () => this.resetPermissions()
+        });
+
+        this.companiaId = session.companiaId;
+        this.userId = session.userId;
+        this.loadSettings();
     }
 
-    handleSaveCompany(): void {
-        localStorage.setItem('pos-company', JSON.stringify(this.companyData));
+    private applyPermissions(): void {
+        const moduleName = 'Configuración';
+
+        const permission = this.permissions.find((p) => p.module === moduleName);
+
+        if (!permission) {
+            this.resetPermissions();
+            return;
+        }
+
+        this.canView = permission.canView;
+        this.canCreate = permission.canCreate;
+        this.canEdit = permission.canEdit;
+        this.canDelete = permission.canDelete;
+        this.canExport = permission.canExport;
+    }
+
+    private resetPermissions(): void {
+        this.canView = false;
+        this.canCreate = false;
+        this.canEdit = false;
+        this.canDelete = false;
+        this.canExport = false;
+    }
+
+    private buildRequest(): ConfigurationRequest {
+        return {
+            companyId: this.companiaId,
+            printerWidthMM: this.printerSettings.width,
+            printerTopMargin: this.printerSettings.marginTop,
+            printerCopies: this.printerSettings.copies,
+            printerPort: this.printerSettings.port,
+            geminiApiKey: this.aiSettings.geminiKey,
+            notifyLowStock: this.notifications.lowStock,
+            notifyDailyReports: this.notifications.dailyReports
+        };
+    }
+
+    private showSuccess(detail: string) {
         this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: 'Configuración de empresa guardada.'
+            detail,
+            life: 3000
         });
     }
 
-    handleSaveNotifications(): void {
-        localStorage.setItem('pos-notifications', JSON.stringify(this.notifications));
+    private showError(detail: string) {
         this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Configuración de notificaciones guardada.'
+            severity: 'error',
+            summary: 'Error',
+            detail
         });
     }
 
-    handleSavePrinter(): void {
-        localStorage.setItem('pos-printer', JSON.stringify(this.printerSettings));
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Éxito',
-            detail: 'Configuración de impresora guardada.'
+    handleSavePrinter() {
+        console.log('Guardando configuración de IA:', this.buildRequest());
+        this.masterService.saveConfiguration(this.buildRequest()).subscribe({
+            next: (res) => {
+                if (res.code === 0) {
+                    this.showSuccess('Configuración de impresora guardada.');
+                } else {
+                    this.showError(res.message);
+                }
+            },
+            error: () => {
+                this.showError('Error al guardar configuración de impresora.');
+            }
+        });
+    }
+
+    loadSettings() {
+        this.masterService.getConfiguration(this.companiaId).subscribe({
+            next: (res) => {
+                if (res.code === 0 && res.data) {
+                    this.printerSettings = {
+                        width: res.data.printerWidthMM,
+                        marginTop: res.data.printerTopMargin,
+                        copies: res.data.printerCopies,
+                        port: res.data.printerPort
+                    };
+
+                    this.aiSettings.geminiKey = res.data.geminiApiKey;
+
+                    this.notifications = {
+                        lowStock: res.data.notifyLowStock,
+                        dailyReports: res.data.notifyDailyReports
+                    };
+                }
+            },
+            error: () => {
+                this.showError('No se pudo cargar la configuración.');
+            }
+        });
+    }
+
+    handleSaveAI() {
+        if (!this.aiSettings.geminiKey || this.aiSettings.geminiKey.length < 20) {
+            this.showError('La API Key de Gemini no es válida.');
+            return;
+        }
+
+        console.log('Guardando configuración de IA:', this.buildRequest());
+
+        this.masterService.saveConfiguration(this.buildRequest()).subscribe({
+            next: (res) => {
+                if (res.code === 0) {
+                    this.showSuccess('Configuración de IA guardada correctamente.');
+                } else {
+                    this.showError(res.message);
+                }
+            },
+            error: () => {
+                this.showError('Error al guardar configuración de IA.');
+            }
         });
     }
 }

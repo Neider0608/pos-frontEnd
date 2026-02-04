@@ -15,6 +15,7 @@
                 pButton
                 label="Nueva Categoría"
                 icon="pi pi-plus"
+                ngif="canCreate"
                 (click)="openNewDialog()"
                 class="!rounded-2xl !py-4 !px-8 !bg-indigo-600 !border-none !shadow-xl !shadow-indigo-100 dark:!shadow-none hover:!scale-105 active:!scale-95 transition-all font-bold"
             ></button>
@@ -71,10 +72,10 @@
                         </td>
                         <td class="px-8 py-6 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button (click)="editCategory(cat)" class="w-11 h-11 rounded-2xl flex items-center justify-center text-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all" pTooltip="Editar">
+                                <button (click)="editCategory(cat)" *ngIf="canEdit" class="w-11 h-11 rounded-2xl flex items-center justify-center text-indigo-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all" pTooltip="Editar">
                                     <i class="pi pi-pencil text-lg"></i>
                                 </button>
-                                <button (click)="deleteCategory(cat)" class="w-11 h-11 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all" pTooltip="Eliminar">
+                                <button (click)="deleteCategory(cat)" *ngIf="canDelete" class="w-11 h-11 rounded-2xl flex items-center justify-center text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all" pTooltip="Eliminar">
                                     <i class="pi pi-trash text-lg"></i>
                                 </button>
                             </div>

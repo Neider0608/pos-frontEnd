@@ -25,6 +25,8 @@ import { InventoryService } from '../../../services/inventory.service';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthService } from '../../core/guards/auth.service';
 import { AuthSession } from '../../api/login';
+import { Permission } from '../../api/permissions';
+import { LoginService } from '../../../services/login.service';
 
 @Component({
     selector: 'app-pos',
@@ -58,6 +60,14 @@ export class PosComponent implements OnInit {
     companiaId: number = 0;
     userId: number = 0;
 
+    permissions: Permission[] = [];
+
+    canView = false;
+    canCreate = false;
+    canEdit = false;
+    canDelete = false;
+    canExport = false;
+
     private barcodeBuffer = '';
     private barcodeTimer: any;
     currencyCode: string = 'COP';
@@ -68,11 +78,27 @@ export class PosComponent implements OnInit {
         private masterService: MasterService,
         private inventoryService: InventoryService,
         private authService: AuthService,
+        private loginService: LoginService,
         @Inject(LOCALE_ID) public locale: string
     ) {}
 
     ngOnInit(): void {
         const session = this.authService.getSession() as AuthSession;
+
+        if (!session) {
+            this.resetPermissions();
+            return;
+        }
+
+        const { userId, companiaId } = session;
+
+        this.loginService.getPermissions(userId, companiaId).subscribe({
+            next: (permissions) => {
+                this.permissions = permissions.data ?? [];
+                this.applyPermissions();
+            },
+            error: () => this.resetPermissions()
+        });
         this.companiaId = session.companiaId;
         this.userId = session.userId;
 
@@ -80,6 +106,31 @@ export class PosComponent implements OnInit {
         this.loadCustomers();
         this.createNewInvoice(0);
         this.focusBarcodeInput();
+    }
+
+    private applyPermissions(): void {
+        const moduleName = 'Punto de Venta';
+
+        const permission = this.permissions.find((p) => p.module === moduleName);
+
+        if (!permission) {
+            this.resetPermissions();
+            return;
+        }
+
+        this.canView = permission.canView;
+        this.canCreate = permission.canCreate;
+        this.canEdit = permission.canEdit;
+        this.canDelete = permission.canDelete;
+        this.canExport = permission.canExport;
+    }
+
+    private resetPermissions(): void {
+        this.canView = false;
+        this.canCreate = false;
+        this.canEdit = false;
+        this.canDelete = false;
+        this.canExport = false;
     }
 
     loadInventory() {

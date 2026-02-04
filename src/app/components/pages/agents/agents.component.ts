@@ -17,8 +17,10 @@ import { InputNumberModule } from 'primeng/inputnumber';
 // Services & Interfaces
 import { MasterService } from '../../services/master.service';
 import { WhatsappService } from '../../services/whatsapp.service';
-import { User } from '../api/permissions';
+import { Permission, User } from '../api/permissions';
 import { PhoneNumbers } from '../api/whatsappagents';
+import { AuthService } from '../core/guards/auth.service';
+import { LoginService } from '../../services/login.service';
 
 @Component({
     selector: 'app-agents',
@@ -48,14 +50,66 @@ export class AgentsComponent implements OnInit {
         maxConversations: 10
     };
 
+    permissions: Permission[] = [];
+
+    canView = false;
+    canCreate = false;
+    canEdit = false;
+    canDelete = false;
+    canExport = false;
+
     constructor(
         private masterService: MasterService,
         private messageService: MessageService,
-        private whatsappService: WhatsappService
+        private whatsappService: WhatsappService,
+        private authService: AuthService,
+        private loginService: LoginService
     ) {}
 
     ngOnInit(): void {
+        const session = this.authService.getSession();
+
+        if (!session) {
+            this.resetPermissions();
+            return;
+        }
+
+        const { userId, companiaId } = session;
+
+        this.loginService.getPermissions(userId, companiaId).subscribe({
+            next: (permissions) => {
+                this.permissions = permissions.data ?? [];
+                this.applyPermissions();
+            },
+            error: () => this.resetPermissions()
+        });
+
         this.fetchInitialData();
+    }
+
+    private applyPermissions(): void {
+        const moduleName = 'Agentes';
+
+        const permission = this.permissions.find((p) => p.module === moduleName);
+
+        if (!permission) {
+            this.resetPermissions();
+            return;
+        }
+
+        this.canView = permission.canView;
+        this.canCreate = permission.canCreate;
+        this.canEdit = permission.canEdit;
+        this.canDelete = permission.canDelete;
+        this.canExport = permission.canExport;
+    }
+
+    private resetPermissions(): void {
+        this.canView = false;
+        this.canCreate = false;
+        this.canEdit = false;
+        this.canDelete = false;
+        this.canExport = false;
     }
 
     private fetchInitialData(): void {

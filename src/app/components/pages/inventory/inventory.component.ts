@@ -20,6 +20,8 @@ import { AuthService } from '../core/guards/auth.service';
 import { Category, Product, ProductCreateRequest, ProductWarehouseRequest, UnitOfMeasure, Warehouse } from '../api/shared';
 import { AuthSession } from '../api/login';
 import * as XLSX from 'xlsx';
+import { Permission } from '../api/permissions';
+import { LoginService } from '../../services/login.service';
 
 interface WarehouseUI extends ProductWarehouseRequest {
     name: string; // Para mostrar el nombre en la lista del modal
@@ -65,11 +67,20 @@ export class InventoryComponent implements OnInit {
 
     newProduct: any = {};
 
+    permissions: Permission[] = [];
+
+    canView = false;
+    canCreate = false;
+    canEdit = false;
+    canDelete = false;
+    canExport = false;
+
     constructor(
         private inventoryService: InventoryService,
         private masterService: MasterService,
         private messageService: MessageService,
-        private authService: AuthService
+        private authService: AuthService,
+        private loginService: LoginService
     ) {}
 
     ngOnInit() {
@@ -79,10 +90,50 @@ export class InventoryComponent implements OnInit {
             this.userId = session.userId;
         }
 
+        if (!session) {
+            this.resetPermissions();
+            return;
+        }
+
+        const { userId, companiaId } = session;
+
+        this.loginService.getPermissions(userId, companiaId).subscribe({
+            next: (permissions) => {
+                this.permissions = permissions.data ?? [];
+                this.applyPermissions();
+            },
+            error: () => this.resetPermissions()
+        });
+
         this.loadInventory();
         this.loadCategories();
         this.loadMasterWarehouses();
         this.loadUnitOfMeasure();
+    }
+
+    private applyPermissions(): void {
+        const moduleName = 'Inventario';
+
+        const permission = this.permissions.find((p) => p.module === moduleName);
+
+        if (!permission) {
+            this.resetPermissions();
+            return;
+        }
+
+        this.canView = permission.canView;
+        this.canCreate = permission.canCreate;
+        this.canEdit = permission.canEdit;
+        this.canDelete = permission.canDelete;
+        this.canExport = permission.canExport;
+    }
+
+    private resetPermissions(): void {
+        this.canView = false;
+        this.canCreate = false;
+        this.canEdit = false;
+        this.canDelete = false;
+        this.canExport = false;
     }
 
     loadMasterWarehouses() {

@@ -10,6 +10,7 @@ import { ToastModule } from 'primeng/toast';
 
 import { Router } from '@angular/router';
 import { SetupData } from '../../api/initial-setup';
+import { Permission } from '../../api/permissions';
 
 @Component({
     selector: 'app-initial-setup',
@@ -45,6 +46,14 @@ export class InitialSetupComponent implements OnInit {
         { label: 'México (GMT-6)', value: 'America/Mexico_City' },
         { label: 'Nueva York (GMT-5)', value: 'America/New_York' }
     ];
+
+    permissions: Permission[] = [];
+
+    canView = false;
+    canCreate = false;
+    canEdit = false;
+    canDelete = false;
+    canExport = false;
 
     constructor(
         private messageService: MessageService,

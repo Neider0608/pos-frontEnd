@@ -7,6 +7,7 @@ import { FinancingRequest, GetFinancing } from '../pages/api/financing';
 import { Conversation, Message, MessageSend, PhoneNumbers } from '../pages/api/whatsappagents';
 import { Module, Permission, Role, User } from '../pages/api/permissions';
 import { Company, ISupplier } from '../pages/api/master';
+import { ConfigurationRequest } from '../pages/api/settings';
 
 @Injectable({ providedIn: 'root' })
 export class MasterService {
@@ -160,6 +161,17 @@ export class MasterService {
         return this.http.request<ApiResponse<any>>('delete', `${this.apiUrl}Master/DeleteSupplier`, { body: model });
     }
 
+    // =====================================================
+    // 🧩 Configuración
+    // =====================================================
+
+    getConfiguration(companiaId: number) {
+        return this.http.get<ApiResponse<ConfigurationRequest>>(`${this.apiUrl}Master/GetConfiguration/${companiaId}`);
+    }
+
+    saveConfiguration(model: ConfigurationRequest) {
+        return this.http.post<ApiResponse<any>>(`${this.apiUrl}Master/SaveConfiguration`, model);
+    }
     /**
      * Método de ayuda para manejar respuestas API genéricas
      * (por ejemplo, si quieres procesar logs, mostrar toasts, etc.)
