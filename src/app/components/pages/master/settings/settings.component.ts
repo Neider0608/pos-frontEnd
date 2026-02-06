@@ -29,6 +29,13 @@ interface AISettings {
     salesAnalysis: boolean;
 }
 
+interface DigitalOceanSettings {
+    accessKey: string;
+    secretKey: string;
+    serviceUrl: string;
+    bucketName: string;
+}
+
 @Component({
     selector: 'app-settings',
     imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputSwitchModule, DropdownModule, TabViewModule, ToastModule],
@@ -43,6 +50,7 @@ export class SettingsComponent implements OnInit {
     userCarlosActive: boolean = false;
     companiaId: number = 0;
     userId: number = 0;
+    showSecretKey: boolean = false;
     // --- Datos de Empresa ---
     companyData = {
         companyName: 'Mi Empresa S.A.S',
@@ -71,6 +79,13 @@ export class SettingsComponent implements OnInit {
         geminiKey: '',
         autoCategorize: true,
         salesAnalysis: true
+    };
+
+    digitalOcean: DigitalOceanSettings = {
+        accessKey: '',
+        secretKey: '',
+        serviceUrl: '',
+        bucketName: ''
     };
 
     permissions: Permission[] = [];
@@ -144,7 +159,11 @@ export class SettingsComponent implements OnInit {
             printerPort: this.printerSettings.port,
             geminiApiKey: this.aiSettings.geminiKey,
             notifyLowStock: this.notifications.lowStock,
-            notifyDailyReports: this.notifications.dailyReports
+            notifyDailyReports: this.notifications.dailyReports,
+            accessKey: this.digitalOcean.accessKey,
+            secretKey: this.digitalOcean.secretKey,
+            serviceUrl: this.digitalOcean.serviceUrl,
+            bucketName: this.digitalOcean.bucketName
         };
     }
 
@@ -193,6 +212,13 @@ export class SettingsComponent implements OnInit {
                     };
 
                     this.aiSettings.geminiKey = res.data.geminiApiKey;
+
+                    this.digitalOcean = {
+                        accessKey: res.data.accessKey,
+                        secretKey: res.data.secretKey,
+                        serviceUrl: res.data.serviceUrl,
+                        bucketName: res.data.bucketName
+                    };
 
                     this.notifications = {
                         lowStock: res.data.notifyLowStock,

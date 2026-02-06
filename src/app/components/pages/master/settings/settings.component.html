@@ -2,72 +2,59 @@
 
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8 font-sans transition-colors duration-500">
     <div class="max-w-[1200px] mx-auto space-y-8">
-        <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800">
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-800">
             <div class="flex items-center gap-5">
-                <div class="w-14 h-14 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-2xl flex items-center justify-center shadow-inner">
+                <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-none">
                     <i class="pi pi-cog text-3xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Configuración</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium italic">Ajustes generales, periféricos e inteligencia artificial</p>
+                    <h2 class="text-4xl font-black text-slate-900 dark:text-slate-100 tracking-tighter uppercase leading-none mb-2">Configuración</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 font-medium italic">Gestión de periféricos, IA y almacenamiento</p>
                 </div>
             </div>
             <div class="hidden md:block">
-                <span class="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black rounded-xl border border-indigo-100 dark:border-indigo-800 uppercase tracking-widest"> v2.4.0 Stable </span>
+                <span class="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-black rounded-xl border border-blue-100 dark:border-blue-800 uppercase tracking-widest"> v2.4.0 Stable </span>
             </div>
         </header>
 
         <p-tabView styleClass="modern-tabs">
             <p-tabPanel>
                 <ng-template pTemplate="header">
-                    <div class="flex items-center gap-2 px-2">
+                    <div class="flex items-center gap-2 px-4 py-2">
                         <i class="pi pi-print"></i>
-                        <span>Impresora</span>
+                        <span class="font-bold tracking-tight">Hardware POS</span>
                     </div>
                 </ng-template>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
                     <div class="lg:col-span-1">
-                        <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200">Hardware POS</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm mt-2">Configura los parámetros técnicos para la impresión de tickets y etiquetas.</p>
-
-                        <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl">
-                            <div class="flex gap-3">
-                                <i class="pi pi-info-circle text-blue-600 mt-1"></i>
-                                <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">Verifica el puerto de conexión (ej. USB001) antes de realizar una prueba.</p>
-                            </div>
+                        <h3 class="text-xl font-black text-slate-800 dark:text-slate-200 tracking-tighter uppercase">Dispositivos</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mt-2 leading-relaxed">Configuración técnica para tickets y etiquetas.</p>
+                        <div class="mt-6 p-5 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-2xl">
+                            <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed font-medium"><i class="pi pi-info-circle mr-1"></i> Verifica el puerto de conexión antes de imprimir.</p>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="flex flex-col gap-2">
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Ancho del Papel (mm)</label>
+                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Ancho (mm)</label>
                                 <p-dropdown
                                     [options]="[
                                         { label: '58mm', value: 58 },
                                         { label: '80mm', value: 80 }
                                     ]"
                                     [(ngModel)]="printerSettings.width"
-                                    styleClass="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-1"
+                                    styleClass="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-1 shadow-sm"
                                 ></p-dropdown>
                             </div>
                             <div class="flex flex-col gap-2">
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Margen Superior</label>
-                                <input pInputText type="number" [(ngModel)]="printerSettings.marginTop" class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-3" />
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Copias Automáticas</label>
-                                <input pInputText type="number" [(ngModel)]="printerSettings.copies" class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-3" />
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Puerto de Conexión</label>
-                                <input pInputText [(ngModel)]="printerSettings.port" class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-3" />
+                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Puerto</label>
+                                <input pInputText [(ngModel)]="printerSettings.port" class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-4 shadow-sm" />
                             </div>
                         </div>
-                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                            <button pButton label="Probar Impresión" icon="pi pi-external-link" class="p-button-text !text-slate-500 !font-bold"></button>
-                            <button pButton label="Guardar Configuración" icon="pi pi-save" (click)="handleSavePrinter()" class="!rounded-xl !py-3 !px-8 !bg-indigo-600 !border-none !font-bold shadow-lg shadow-indigo-100"></button>
+                        <div class="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                            <button pButton label="Guardar Impresora" (click)="handleSavePrinter()" class="!rounded-2xl !py-4 !px-10 !bg-blue-600 !border-none !font-bold shadow-lg shadow-blue-200"></button>
                         </div>
                     </div>
                 </div>
@@ -75,48 +62,99 @@
 
             <p-tabPanel>
                 <ng-template pTemplate="header">
-                    <div class="flex items-center gap-2 px-2">
+                    <div class="flex items-center gap-2 px-4 py-2">
                         <i class="pi pi-sparkles"></i>
-                        <span>IA y Alertas</span>
+                        <span class="font-bold tracking-tight">IA & Alertas</span>
                     </div>
                 </ng-template>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-6">
-                    <div class="lg:col-span-1 space-y-4">
-                        <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200">Notificaciones</h3>
-                        <p class="text-slate-500 dark:text-slate-400 text-sm">Gestiona qué avisos quieres recibir en el sistema.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
+                    <div class="lg:col-span-1 space-y-6">
+                        <h3 class="text-xl font-black text-slate-800 dark:text-slate-200 tracking-tighter uppercase">Google Gemini</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm">Potencia tu negocio con análisis automático de ventas.</p>
 
-                        <div class="space-y-3 pt-4">
-                            <div class="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                <span class="text-[11px] font-black uppercase text-slate-400">Notificar Stock Bajo</span>
-                                <p-inputSwitch [(ngModel)]="notifications.lowStock"></p-inputSwitch>
-                            </div>
-
-                            <div class="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                <span class="text-[11px] font-black uppercase text-slate-400">Reportes Diarios</span>
-                                <p-inputSwitch [(ngModel)]="notifications.dailyReports"></p-inputSwitch>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+                                <span class="text-[11px] font-black uppercase text-slate-400">Auto Categorizar</span>
+                                <p-inputSwitch [(ngModel)]="aiSettings.autoCategorize"></p-inputSwitch>
                             </div>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-                        <div class="flex flex-col gap-4">
-                            <h4 class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">Google Gemini API</h4>
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 space-y-6">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Gemini API Key</label>
                             <div class="relative">
                                 <input
                                     [type]="showApiKey ? 'text' : 'password'"
                                     [(ngModel)]="aiSettings.geminiKey"
-                                    class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-4 !pl-5 !pr-12 text-slate-700 dark:text-slate-200"
-                                    placeholder="Clave secreta..."
+                                    class="w-full !rounded-2xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-5 !pl-6 !pr-14 text-slate-700 dark:text-slate-200 font-mono shadow-inner"
                                 />
-                                <button (click)="showApiKey = !showApiKey" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600">
+                                <button (click)="showApiKey = !showApiKey" class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
                                     <i [class]="showApiKey ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
                                 </button>
                             </div>
                         </div>
+                        <div class="pt-2 flex justify-end">
+                            <button pButton label="Actualizar IA" (click)="handleSaveAI()" class="!rounded-2xl !py-4 !px-10 !bg-slate-900 dark:!bg-blue-600 !border-none !font-bold shadow-xl"></button>
+                        </div>
+                    </div>
+                </div>
+            </p-tabPanel>
 
-                        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                            <button pButton label="Actualizar Preferencias" icon="pi pi-bolt" (click)="handleSaveAI()" class="!rounded-xl !py-3 !px-8 !bg-slate-900 dark:!bg-indigo-600 !border-none !font-bold shadow-lg shadow-indigo-100"></button>
+            <p-tabPanel>
+                <ng-template pTemplate="header">
+                    <div class="flex items-center gap-2 px-4 py-2">
+                        <i class="pi pi-cloud"></i>
+                        <span class="font-bold tracking-tight">DigitalOcean</span>
+                    </div>
+                </ng-template>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
+                    <div class="lg:col-span-1">
+                        <h3 class="text-xl font-black text-slate-800 dark:text-slate-200 tracking-tighter uppercase">Cloud Storage</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mt-2 leading-relaxed">Gestiona tus archivos y backups en Spaces de DigitalOcean.</p>
+
+                        <div class="mt-6 flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div class="p-3 bg-blue-50 rounded-xl text-blue-600"><i class="pi pi-lock"></i></div>
+                            <div>
+                                <p class="text-[10px] font-black text-slate-400 uppercase">Seguridad</p>
+                                <p class="text-xs font-bold text-slate-600">Conexión Encriptada</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Access Key</label>
+                                <input pInputText [(ngModel)]="digitalOcean.accessKey" class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-4 shadow-inner" placeholder="DO00..." />
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Secret Key</label>
+                                <div class="relative">
+                                    <input
+                                        [type]="showSecretKey ? 'text' : 'password'"
+                                        [(ngModel)]="digitalOcean.secretKey"
+                                        class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-4 !pl-4 !pr-12 shadow-inner text-slate-700 dark:text-slate-200 font-mono"
+                                        placeholder="••••••••••••"
+                                    />
+                                    <button type="button" (click)="showSecretKey = !showSecretKey" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
+                                        <i [class]="showSecretKey ? 'pi pi-eye-slash' : 'pi pi-eye'" class="text-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Service URL</label>
+                                <input pInputText [(ngModel)]="digitalOcean.serviceUrl" class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-4 shadow-inner" placeholder="https://nyc3.digitaloceanspaces.com" />
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Bucket Name</label>
+                                <input pInputText [(ngModel)]="digitalOcean.bucketName" class="w-full !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-4 shadow-inner" placeholder="mi-bucket-app" />
+                            </div>
+                        </div>
+                        <div class="pt-4 flex justify-end">
+                            <button pButton label="Conectar Storage" icon="pi pi-check" (click)="handleSaveAI()" class="!rounded-2xl !py-4 !px-10 !bg-blue-600 !border-none !font-bold shadow-lg shadow-blue-200"></button>
                         </div>
                     </div>
                 </div>

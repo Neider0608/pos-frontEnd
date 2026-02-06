@@ -33,4 +33,8 @@ export interface ConfigurationRequest {
     geminiApiKey: string;
     notifyLowStock: boolean;
     notifyDailyReports: boolean;
+    accessKey: string;
+    secretKey: string;
+    serviceUrl: string;
+    bucketName: string;
 }

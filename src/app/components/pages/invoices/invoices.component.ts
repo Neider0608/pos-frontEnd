@@ -54,8 +54,9 @@ export class InvoicesComponent implements OnInit {
         { label: 'RECHAZADA', value: 'RECHAZADA' },
         { label: 'ANULADA', value: 'ANULADA' }
     ];
-    startDate: Date = new Date();
-    endDate: Date = new Date();
+    startDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
+
+    endDate: Date = new Date(new Date().setHours(0, 0, 0, 0));
 
     permissions: Permission[] = [];
 
