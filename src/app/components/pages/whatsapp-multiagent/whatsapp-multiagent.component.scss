@@ -77,3 +77,33 @@
     border: none !important;
     box-shadow: none !important;
 }
+
+/* 1. Elevamos toda la zona superior (Buscador + Fechas) */
+/* Usa la clase del contenedor que envuelve desde "Inbox" hasta los calendarios */
+.flex.flex-col.bg-white.z-index-high {
+    position: relative !important;
+    z-index: 100 !important; /* Por encima de la lista */
+}
+
+/* 2. El panel del calendario debe ser el rey del Z-index */
+:host ::ng-deep .fixed-calendar-panel {
+    position: absolute !important;
+    z-index: 999999 !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: white !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 3. ¡ESTO ES LO MÁS IMPORTANTE! */
+/* Tu lista de chats tiene overflow-y-auto. 
+   Necesitamos que el contenedor que la precede NO corte el contenido. */
+:host ::ng-deep .p-calendar {
+    position: static !important; /* Cambiamos a static para que no cree un nuevo contexto */
+}
+
+.relative.flex-col {
+    /* Ajusta a la clase de tu contenedor de filtros */
+    overflow: visible !important;
+}

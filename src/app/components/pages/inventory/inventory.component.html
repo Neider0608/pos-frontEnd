@@ -107,7 +107,7 @@
                         <td class="py-4 px-8">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-white">
-                                    <img *ngIf="item.imageUrl" [src]="item.imageUrl" class="w-full h-full object-cover" />
+                                    <img *ngIf="item.imageUrl" [src]="digitalOcean.url + '/' + item.imageUrl" class="w-full h-full object-cover" />
                                     <div *ngIf="!item.imageUrl" class="w-full h-full flex items-center justify-center text-slate-200"><i class="pi pi-image text-lg"></i></div>
                                 </div>
                                 <div>
@@ -150,7 +150,8 @@
                     class="relative aspect-square bg-slate-50 dark:bg-slate-800 rounded-[2rem] border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden cursor-pointer group"
                     (click)="fileInput.click()"
                 >
-                    <img *ngIf="newProduct.imageUrl" [src]="newProduct.imageUrl" class="w-full h-full object-cover" />
+                    <img *ngIf="getImageUrl()" [src]="getImageUrl()" class="w-full h-full object-cover" />
+
                     <div *ngIf="!newProduct.imageUrl" class="text-center p-4">
                         <i class="pi pi-camera text-3xl text-slate-300 mb-2"></i>
                         <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Foto Producto</p>

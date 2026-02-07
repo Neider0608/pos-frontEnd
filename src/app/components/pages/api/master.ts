@@ -31,3 +31,24 @@ export interface ISupplier {
     status: boolean;
     productsCount?: number;
 }
+
+export interface PrinterSettings {
+    width: number;
+    marginTop: number;
+    copies: number;
+    port: string;
+}
+
+export interface AISettings {
+    geminiKey: string;
+    autoCategorize: boolean;
+    salesAnalysis: boolean;
+}
+
+export interface DigitalOceanSettings {
+    accessKey: string;
+    secretKey: string;
+    serviceUrl: string;
+    bucketName: string;
+    url: string;
+}

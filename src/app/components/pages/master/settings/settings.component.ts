@@ -15,26 +15,7 @@ import { AuthSession } from '../../api/login';
 import { AuthService } from '../../core/guards/auth.service';
 import { Permission } from '../../api/permissions';
 import { LoginService } from '../../../services/login.service';
-
-interface PrinterSettings {
-    width: number;
-    marginTop: number;
-    copies: number;
-    port: string;
-}
-
-interface AISettings {
-    geminiKey: string;
-    autoCategorize: boolean;
-    salesAnalysis: boolean;
-}
-
-interface DigitalOceanSettings {
-    accessKey: string;
-    secretKey: string;
-    serviceUrl: string;
-    bucketName: string;
-}
+import { AISettings, DigitalOceanSettings, PrinterSettings } from '../../api/master';
 
 @Component({
     selector: 'app-settings',
@@ -85,7 +66,8 @@ export class SettingsComponent implements OnInit {
         accessKey: '',
         secretKey: '',
         serviceUrl: '',
-        bucketName: ''
+        bucketName: '',
+        url: ''
     };
 
     permissions: Permission[] = [];
@@ -163,7 +145,8 @@ export class SettingsComponent implements OnInit {
             accessKey: this.digitalOcean.accessKey,
             secretKey: this.digitalOcean.secretKey,
             serviceUrl: this.digitalOcean.serviceUrl,
-            bucketName: this.digitalOcean.bucketName
+            bucketName: this.digitalOcean.bucketName,
+            url: this.digitalOcean.url
         };
     }
 
@@ -217,7 +200,8 @@ export class SettingsComponent implements OnInit {
                         accessKey: res.data.accessKey,
                         secretKey: res.data.secretKey,
                         serviceUrl: res.data.serviceUrl,
-                        bucketName: res.data.bucketName
+                        bucketName: res.data.bucketName,
+                        url: res.data.url
                     };
 
                     this.notifications = {

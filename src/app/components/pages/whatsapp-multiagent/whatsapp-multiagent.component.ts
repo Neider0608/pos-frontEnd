@@ -25,6 +25,10 @@ import { WhatsappService } from '../../services/whatsapp.service';
 import { Permission } from '../api/permissions';
 import { LoginService } from '../../services/login.service';
 import { AuthService } from '../core/guards/auth.service';
+import { AuthSession } from '../api/login';
+import { MasterService } from '../../services/master.service';
+import { AISettings, DigitalOceanSettings, PrinterSettings } from '../api/master';
+import { CalendarModule } from 'primeng/calendar';
 
 @Component({
     selector: 'app-whatsapp-multiagent',
@@ -46,7 +50,8 @@ import { AuthService } from '../core/guards/auth.service';
         MenuModule,
         PopoverModule,
         TooltipModule,
-        TableModule
+        TableModule,
+        CalendarModule
     ],
     providers: [MessageService, PosService, WhatsappService]
 })
@@ -68,6 +73,8 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
     loadingMessages = false;
     showImageModal = false;
     selectedImage?: string | null = null;
+    startDate: Date | null = null;
+    endDate: Date | null = null;
 
     permissions: Permission[] = [];
 
@@ -115,13 +122,37 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
     editedClientName: string = '';
     showHistory: boolean = false;
     // Simula agente logueado
-
+    companiaId: number = 0;
+    userId: number = 0;
     currentAgentId = 2;
     statusOptions = [
         { label: 'Abierto', value: 'open' },
         { label: 'En progreso', value: 'in_progress' },
         { label: 'Cerrado', value: 'closed' }
     ];
+
+    // --- NUEVO: Configuración de Impresora ---
+    printerSettings: PrinterSettings = {
+        width: 80,
+        marginTop: 0,
+        copies: 1,
+        port: 'USB001'
+    };
+
+    // --- NUEVO: Configuración de Gemini AI ---
+    aiSettings: AISettings = {
+        geminiKey: '',
+        autoCategorize: true,
+        salesAnalysis: true
+    };
+
+    digitalOcean: DigitalOceanSettings = {
+        accessKey: '',
+        secretKey: '',
+        serviceUrl: '',
+        bucketName: '',
+        url: ''
+    };
 
     templateOptions = [
         {
@@ -149,11 +180,16 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
         private whatsappService: WhatsappService,
         private cdr: ChangeDetectorRef,
         private authService: AuthService,
+        private masterService: MasterService,
         private loginService: LoginService
     ) {}
 
     ngOnInit(): void {
-        const session = this.authService.getSession();
+        const session = this.authService.getSession() as AuthSession;
+        if (session) {
+            this.companiaId = session.companiaId;
+            this.userId = session.userId;
+        }
 
         if (!session) {
             this.resetPermissions();
@@ -169,6 +205,8 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
             },
             error: () => this.resetPermissions()
         });
+
+        this.loadSettings();
 
         this.loadPhoneNumbers();
 
@@ -306,6 +344,31 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
         }
     }
 
+    loadSettings() {
+        this.masterService.getConfiguration(this.companiaId).subscribe({
+            next: (res) => {
+                if (res.code === 0 && res.data) {
+                    this.printerSettings = {
+                        width: res.data.printerWidthMM,
+                        marginTop: res.data.printerTopMargin,
+                        copies: res.data.printerCopies,
+                        port: res.data.printerPort
+                    };
+
+                    this.aiSettings.geminiKey = res.data.geminiApiKey;
+
+                    this.digitalOcean = {
+                        accessKey: res.data.accessKey,
+                        secretKey: res.data.secretKey,
+                        serviceUrl: res.data.serviceUrl,
+                        bucketName: res.data.bucketName,
+                        url: res.data.url
+                    };
+                }
+            }
+        });
+    }
+
     // ==============================
     // 🔹 MESSAGES
     // ==============================
@@ -315,24 +378,34 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
         const formData = new FormData();
 
         formData.append('conversationId', this.activeConversation!.id.toString());
-        formData.append('senderUserId', '1'); // agente
+        formData.append('senderUserId', this.userId.toString()); // agente
+        formData.append('companiaId', this.companiaId.toString());
         formData.append('to', this.activeConversation!.clientPhone);
-
+        formData.append('phoneNumberId', this.selectedPhoneNumber!.phoneNumberId);
+        formData.append('accessToken', this.selectedPhoneNumber!.accessToken);
         if (this.messageText?.trim()) {
             formData.append('messageText', this.messageText);
-        }
-        if (this.messageText?.trim()) {
-            formData.append('phoneNumberId', this.selectedPhoneNumber!.phoneNumberId);
-        }
-        if (this.messageText?.trim()) {
-            formData.append('accessToken', this.selectedPhoneNumber!.accessToken);
         }
 
         // 🔥 múltiples archivos
         this.selectedFiles.forEach((file) => {
-            formData.append('files', file, file.name);
+            formData.append('files', file);
         });
-        console.log('Enviando mensaje con payload:', formData);
+
+        console.log('===== FORM DATA =====');
+
+        formData.forEach((value, key) => {
+            if (value instanceof File) {
+                console.log(`KEY: ${key}`);
+                console.log('FILE NAME:', value.name);
+                console.log('FILE TYPE:', value.type);
+                console.log('FILE SIZE:', value.size);
+            } else {
+                console.log(`KEY: ${key} =`, value);
+            }
+        });
+
+        console.log('=====================');
 
         this.sendingMessage = true;
 
@@ -343,7 +416,7 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
                 if (res.code === 0) {
                     this.messageText = '';
                     this.selectedFiles = [];
-
+                    this.cancelFiles();
                     this.loadMessages(this.activeConversation!.id);
                 } else {
                     this.messageService.add({
@@ -410,8 +483,6 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
 
     sendFiles() {
         this.sendMessage();
-
-        this.cancelFiles();
     }
 
     cancelFiles() {

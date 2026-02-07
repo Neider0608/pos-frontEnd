@@ -31,7 +31,7 @@ pdfMake.vfs = pdfFonts.pdfMake?.vfs || pdfFonts.vfs;
 @Component({
     selector: 'app-invoices',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, ConfirmDialogModule, TableModule, DialogModule, ButtonModule, DropdownModule, CalendarModule, InputTextModule, ToastModule, BadgeModule, OverlayBadgeModule, CardModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterModule, ConfirmDialogModule, TableModule, DialogModule, ButtonModule, DropdownModule, CalendarModule, InputTextModule, ToastModule, BadgeModule, OverlayBadgeModule, CardModule],
     templateUrl: './invoices.component.html',
     styleUrls: ['./invoices.component.scss'],
     providers: [MessageService, ConfirmationService, PosService, InvoicePdfService]

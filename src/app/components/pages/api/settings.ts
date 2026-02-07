@@ -37,4 +37,5 @@ export interface ConfigurationRequest {
     secretKey: string;
     serviceUrl: string;
     bucketName: string;
+    url: string;
 }

@@ -22,6 +22,7 @@ import { AuthSession } from '../api/login';
 import * as XLSX from 'xlsx';
 import { Permission } from '../api/permissions';
 import { LoginService } from '../../services/login.service';
+import { PrinterSettings, AISettings, DigitalOceanSettings } from '../api/master';
 
 interface WarehouseUI extends ProductWarehouseRequest {
     name: string; // Para mostrar el nombre en la lista del modal
@@ -75,6 +76,29 @@ export class InventoryComponent implements OnInit {
     canDelete = false;
     canExport = false;
 
+    // --- NUEVO: Configuración de Impresora ---
+    printerSettings: PrinterSettings = {
+        width: 80,
+        marginTop: 0,
+        copies: 1,
+        port: 'USB001'
+    };
+
+    // --- NUEVO: Configuración de Gemini AI ---
+    aiSettings: AISettings = {
+        geminiKey: '',
+        autoCategorize: true,
+        salesAnalysis: true
+    };
+
+    digitalOcean: DigitalOceanSettings = {
+        accessKey: '',
+        secretKey: '',
+        serviceUrl: '',
+        bucketName: '',
+        url: ''
+    };
+
     constructor(
         private inventoryService: InventoryService,
         private masterService: MasterService,
@@ -104,7 +128,7 @@ export class InventoryComponent implements OnInit {
             },
             error: () => this.resetPermissions()
         });
-
+        this.loadSettings();
         this.loadInventory();
         this.loadCategories();
         this.loadMasterWarehouses();
@@ -140,6 +164,45 @@ export class InventoryComponent implements OnInit {
         this.masterService.getWarehouses(this.companiaId).subscribe((res) => {
             this.masterWarehouses = res.data || [];
         });
+    }
+
+    loadSettings() {
+        this.masterService.getConfiguration(this.companiaId).subscribe({
+            next: (res) => {
+                if (res.code === 0 && res.data) {
+                    this.printerSettings = {
+                        width: res.data.printerWidthMM,
+                        marginTop: res.data.printerTopMargin,
+                        copies: res.data.printerCopies,
+                        port: res.data.printerPort
+                    };
+
+                    this.aiSettings.geminiKey = res.data.geminiApiKey;
+
+                    this.digitalOcean = {
+                        accessKey: res.data.accessKey,
+                        secretKey: res.data.secretKey,
+                        serviceUrl: res.data.serviceUrl,
+                        bucketName: res.data.bucketName,
+                        url: res.data.url
+                    };
+                }
+            }
+        });
+    }
+
+    getImageUrl(): string | null {
+        if (!this.newProduct.imageUrl) return null;
+
+        // detectar base64
+        const isBase64 = this.newProduct.imageUrl.startsWith('data:');
+
+        if (isBase64) {
+            return this.newProduct.imageUrl;
+        }
+
+        // 🔥 si NO es base64 => construir URL DO
+        return this.digitalOcean.url + '/' + this.newProduct.imageUrl;
     }
 
     loadInventory() {
