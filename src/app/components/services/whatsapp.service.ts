@@ -54,4 +54,20 @@ export class WhatsappService {
         console.log('Assigning agent with payload:', payload);
         return this.http.post(`${this.apiUrl}WhatsApp/AssignAgent`, payload);
     }
+
+    updateConversationStatus(conversationId: number, status: string) {
+    return this.http.post<any>(`${this.apiUrl}WhatsApp/UpdateConversationStatus/${conversationId}/${status}`,{});
+    }
+
+    updateClientName(phoneNumberId: number, clientName: string) {
+        return this.http.post<any>(
+            `${this.apiUrl}WhatsApp/UpdateClientName`,
+            {
+                phoneNumberId,
+                clientName
+            }
+        );
+    }
+
+
 }
