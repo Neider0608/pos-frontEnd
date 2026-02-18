@@ -71,7 +71,7 @@
 
         <button
             pButton
-            (click)="showAddDialog = true"
+            (click)="openAddDialog()"
             class="!rounded-2xl !bg-slate-900 dark:!bg-white dark:!text-slate-900 !text-white !border-none !px-8 !font-black !text-[10px] !uppercase !tracking-widest !shadow-lg hover:!scale-105 transition-transform"
         >
             <i class="pi pi-plus-circle mr-2"></i> Nueva Promoción
@@ -84,12 +84,13 @@
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Control de campañas y descuentos</p>
         </div>
 
-        <p-table [value]="filteredPromotions" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+        <p-table [value]="filteredPromotions" [paginator]="true" [rows]="10" [loading]="loading" styleClass="p-datatable-sm">
             <ng-template pTemplate="header">
                 <tr>
                     <th class="!bg-transparent !py-5 !px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Promoción</th>
                     <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</th>
                     <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Valor</th>
+                    <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Aplicabilidad</th>
                     <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Vigencia</th>
                     <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</th>
                     <th class="!bg-transparent !py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Acciones</th>
@@ -114,6 +115,31 @@
                             <span *ngSwitchDefault>${{ promotion.value }}</span>
                         </ng-container>
                     </td>
+                    <td class="py-5 max-w-[250px]">
+                        <div class="space-y-2">
+                            <div *ngIf="getCategoryCount(promotion.categoryIds) > 0" class="flex items-start gap-2">
+                                <i class="pi pi-tags text-xs text-indigo-500 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase">Categorías ({{ getCategoryCount(promotion.categoryIds) }}):</span>
+                                    <p class="text-[10px] font-medium text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">
+                                        {{ getCategoryNames(promotion.categoryIds) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div *ngIf="getProductCount(promotion.productIds) > 0" class="flex items-start gap-2">
+                                <i class="pi pi-shopping-bag text-xs text-emerald-500 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase">Productos ({{ getProductCount(promotion.productIds) }}):</span>
+                                    <p class="text-[10px] font-medium text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">
+                                        {{ getProductNames(promotion.productIds) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div *ngIf="getCategoryCount(promotion.categoryIds) === 0 && getProductCount(promotion.productIds) === 0" class="text-[9px] text-slate-400 italic">
+                                Aplica a todos
+                            </div>
+                        </div>
+                    </td>
                     <td class="py-5">
                         <div class="text-[10px] font-black text-slate-700 dark:text-slate-300">{{ promotion.startDate | date: 'mediumDate' }}</div>
                         <div class="text-[9px] font-bold text-slate-400 uppercase">al {{ promotion.endDate | date: 'mediumDate' }}</div>
@@ -122,11 +148,18 @@
                         <span [class]="promotion.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'" class="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">
                             {{ promotion.isActive ? 'Activa' : 'Pausa' }}
                         </span>
+                        <button 
+                            pButton 
+                            [icon]="promotion.isActive ? 'pi pi-pause' : 'pi pi-play'" 
+                            (click)="togglePromotionStatus(promotion)" 
+                            [pTooltip]="promotion.isActive ? 'Pausar promoción' : 'Activar promoción'"
+                            class="p-button-rounded p-button-text p-button-sm ml-2 !text-slate-400 hover:!text-indigo-500"
+                        ></button>
                     </td>
                     <td class="text-center px-6">
                         <div class="flex justify-center gap-1">
-                            <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text !text-slate-400 hover:!text-indigo-500"></button>
-                            <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text !text-slate-400 hover:!text-rose-500"></button>
+                            <button pButton icon="pi pi-pencil" (click)="editPromotion(promotion)" class="p-button-rounded p-button-text !text-slate-400 hover:!text-indigo-500"></button>
+                            <button pButton icon="pi pi-trash" (click)="deletePromotion(promotion)" class="p-button-rounded p-button-text !text-slate-400 hover:!text-rose-500"></button>
                         </div>
                     </td>
                 </tr>
@@ -134,10 +167,10 @@
         </p-table>
     </div>
 
-    <p-dialog [(visible)]="showAddDialog" [modal]="true" [draggable]="false" [resizable]="false" styleClass="!rounded-[2.5rem] !bg-white dark:!bg-slate-950 !border-none !shadow-2xl overflow-hidden" [style]="{ width: '600px' }">
+    <p-dialog [(visible)]="showAddDialog" [modal]="true" [draggable]="false" [resizable]="false" styleClass="!rounded-[2.5rem] !bg-white dark:!bg-slate-950 !border-none !shadow-2xl overflow-hidden" [style]="{ width: '700px' }" [closable]="true">
         <ng-template pTemplate="header">
             <div class="flex flex-col">
-                <span class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Nueva Promoción</span>
+                <span class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">{{ isEditing ? 'Editar Promoción' : 'Nueva Promoción' }}</span>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configuración de oferta comercial</span>
             </div>
         </ng-template>
@@ -147,21 +180,266 @@
                 <div class="space-y-6 pt-6 pb-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre</label>
-                            <input pInputText [(ngModel)]="currentPromotion.name" class="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none" />
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Nombre *</label>
+                            <input pInputText [(ngModel)]="currentPromotion.name" placeholder="Ej: Descuento Fin de Semana" class="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none" />
                         </div>
                         <div class="flex flex-col gap-2">
-                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Tipo</label>
-                            <p-dropdown [options]="promotionTypes.slice(1)" [(ngModel)]="currentPromotion.type" styleClass="!rounded-xl !border-none !bg-slate-50 dark:!bg-slate-900" optionLabel="label" optionValue="value"></p-dropdown>
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Tipo *</label>
+                            <p-dropdown 
+                                [options]="promotionTypes.slice(1)" 
+                                [(ngModel)]="currentPromotion.type" 
+                                (ngModelChange)="onPromotionTypeChange()"
+                                styleClass="!rounded-xl !border-none !bg-slate-50 dark:!bg-slate-900" 
+                                optionLabel="label" 
+                                optionValue="value"
+                            ></p-dropdown>
                         </div>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Descripción</label>
-                        <textarea pInputTextarea rows="2" [(ngModel)]="currentPromotion.description" class="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none"></textarea>
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Descripción *</label>
+                        <textarea pInputTextarea rows="3" [(ngModel)]="currentPromotion.description" placeholder="Describe la promoción..." class="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha Inicio *</label>
+                            <p-calendar 
+                                [(ngModel)]="startDateModel" 
+                                dateFormat="yy-mm-dd" 
+                                [showIcon]="true" 
+                                inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
+                                (onSelect)="onStartDateChange($event)"
+                            ></p-calendar>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Fecha Fin *</label>
+                            <p-calendar 
+                                [(ngModel)]="endDateModel" 
+                                dateFormat="yy-mm-dd" 
+                                [showIcon]="true" 
+                                inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
+                                (onSelect)="onEndDateChange($event)"
+                            ></p-calendar>
+                        </div>
                     </div>
                 </div>
             </p-tabPanel>
-            <p-tabPanel header="Reglas"> </p-tabPanel>
+            
+            <p-tabPanel header="Valor y Reglas">
+                <div class="space-y-6 pt-6 pb-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">
+                            Valor *
+                            <span *ngIf="currentPromotion.type === 'percentage'">(%)</span>
+                            <span *ngIf="currentPromotion.type === 'fixed_amount'">($)</span>
+                            <span *ngIf="currentPromotion.type === 'buy_x_get_y'">(Cantidad X)</span>
+                            <span *ngIf="currentPromotion.type === 'bundle'">(Precio Combo)</span>
+                        </label>
+                        <p-inputNumber 
+                            [(ngModel)]="currentPromotion.value" 
+                            [min]="0" 
+                            [max]="currentPromotion.type === 'percentage' ? 100 : undefined"
+                            [suffix]="currentPromotion.type === 'percentage' ? '%' : '$'"
+                            inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
+                        ></p-inputNumber>
+                    </div>
+
+                    <!-- Campos específicos por tipo -->
+                    <div *ngIf="currentPromotion.type === 'percentage' || currentPromotion.type === 'fixed_amount'" class="space-y-4">
+                        <div class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Compra Mínima (Opcional)</label>
+                            <p-inputNumber 
+                                [(ngModel)]="currentPromotion.minPurchase" 
+                                [min]="0"
+                                mode="currency" 
+                                currency="COP"
+                                inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
+                            ></p-inputNumber>
+                        </div>
+                        <div *ngIf="currentPromotion.type === 'fixed_amount'" class="flex flex-col gap-2">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Descuento Máximo (Opcional)</label>
+                            <p-inputNumber 
+                                [(ngModel)]="currentPromotion.maxDiscount" 
+                                [min]="0"
+                                mode="currency" 
+                                currency="COP"
+                                inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
+                            ></p-inputNumber>
+                        </div>
+                    </div>
+
+                    <div *ngIf="currentPromotion.type === 'buy_x_get_y'" class="flex flex-col gap-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Cantidad Y (Lleva gratis)</label>
+                        <p-inputNumber 
+                            [(ngModel)]="currentPromotion.buyY" 
+                            [min]="1"
+                            inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
+                        ></p-inputNumber>
+                        <span class="text-[9px] text-slate-400 italic">
+                            Compra {{ currentPromotion.value || 0 }} producto(s) de las categorías/productos seleccionados y lleva {{ currentPromotion.buyY || 1 }} producto(s) gratis de las categorías/productos gratis seleccionados
+                        </span>
+                    </div>
+
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Límite de Usos (Opcional)</label>
+                        <p-inputNumber 
+                            [(ngModel)]="currentPromotion.usageLimit" 
+                            [min]="1"
+                            inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
+                        ></p-inputNumber>
+                    </div>
+                </div>
+            </p-tabPanel>
+
+            <p-tabPanel header="Aplicabilidad">
+                <div class="space-y-6 pt-6 pb-4">
+                    <!-- Para tipo buy_x_get_y: mostrar secciones separadas -->
+                    <ng-container *ngIf="currentPromotion.type === 'buy_x_get_y'">
+                        <!-- Productos/Categorías que se COMPRAN (X) -->
+                        <div class="space-y-4">
+                            <div class="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                                <p class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase mb-2">
+                                    <i class="pi pi-shopping-cart mr-2"></i>
+                                    Productos/Categorías a COMPRAR (X)
+                                </p>
+                                <p class="text-[10px] text-indigo-500 dark:text-indigo-400">
+                                    Selecciona los productos o categorías que el cliente debe comprar para activar la promoción
+                                </p>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Categorías a Comprar</label>
+                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                    <div *ngFor="let category of allCategories" class="flex items-center gap-3">
+                                        <p-checkbox 
+                                            [binary]="true" 
+                                            [inputId]="'buy-cat-' + category.id"
+                                            [ngModel]="isCategorySelected(category.id!)"
+                                            (ngModelChange)="onCategoryChange(category.id!, { checked: $event })"
+                                        ></p-checkbox>
+                                        <label [for]="'buy-cat-' + category.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                            {{ category.name }}
+                                        </label>
+                                    </div>
+                                    <p *ngIf="allCategories.length === 0" class="text-xs text-slate-400 italic">No hay categorías disponibles</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Productos a Comprar</label>
+                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                    <div *ngFor="let product of allProducts" class="flex items-center gap-3">
+                                        <p-checkbox 
+                                            [binary]="true" 
+                                            [inputId]="'buy-prod-' + product.id"
+                                            [ngModel]="isProductSelected(product.id)"
+                                            (ngModelChange)="onProductChange(product.id, { checked: $event })"
+                                        ></p-checkbox>
+                                        <label [for]="'buy-prod-' + product.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                            {{ product.name }}
+                                        </label>
+                                    </div>
+                                    <p *ngIf="allProducts.length === 0" class="text-xs text-slate-400 italic">No hay productos disponibles</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Productos/Categorías que se LLEVAN GRATIS (Y) -->
+                        <div class="space-y-4">
+                            <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                                <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase mb-2">
+                                    <i class="pi pi-gift mr-2"></i>
+                                    Productos/Categorías GRATIS (Y)
+                                </p>
+                                <p class="text-[10px] text-emerald-500 dark:text-emerald-400">
+                                    Selecciona los productos o categorías que el cliente llevará gratis al cumplir la condición
+                                </p>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Categorías Gratis</label>
+                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                    <div *ngFor="let category of allCategories" class="flex items-center gap-3">
+                                        <p-checkbox 
+                                            [binary]="true" 
+                                            [inputId]="'free-cat-' + category.id"
+                                            [ngModel]="isFreeCategorySelected(category.id!)"
+                                            (ngModelChange)="onFreeCategoryChange(category.id!, { checked: $event })"
+                                        ></p-checkbox>
+                                        <label [for]="'free-cat-' + category.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                            {{ category.name }}
+                                        </label>
+                                    </div>
+                                    <p *ngIf="allCategories.length === 0" class="text-xs text-slate-400 italic">No hay categorías disponibles</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Productos Gratis</label>
+                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                    <div *ngFor="let product of allProducts" class="flex items-center gap-3">
+                                        <p-checkbox 
+                                            [binary]="true" 
+                                            [inputId]="'free-prod-' + product.id"
+                                            [ngModel]="isFreeProductSelected(product.id)"
+                                            (ngModelChange)="onFreeProductChange(product.id, { checked: $event })"
+                                        ></p-checkbox>
+                                        <label [for]="'free-prod-' + product.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                            {{ product.name }}
+                                        </label>
+                                    </div>
+                                    <p *ngIf="allProducts.length === 0" class="text-xs text-slate-400 italic">No hay productos disponibles</p>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+
+                    <!-- Para otros tipos: mostrar sección normal -->
+                    <ng-container *ngIf="currentPromotion.type !== 'buy_x_get_y'">
+                        <div class="flex flex-col gap-4">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Categorías Aplicables</label>
+                            <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <div *ngFor="let category of allCategories" class="flex items-center gap-3">
+                                    <p-checkbox 
+                                        [binary]="true" 
+                                        [inputId]="'cat-' + category.id"
+                                        [ngModel]="isCategorySelected(category.id!)"
+                                        (ngModelChange)="onCategoryChange(category.id!, { checked: $event })"
+                                    ></p-checkbox>
+                                    <label [for]="'cat-' + category.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        {{ category.name }}
+                                    </label>
+                                </div>
+                                <p *ngIf="allCategories.length === 0" class="text-xs text-slate-400 italic">No hay categorías disponibles</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-4">
+                            <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Productos Aplicables</label>
+                            <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <div *ngFor="let product of allProducts" class="flex items-center gap-3">
+                                    <p-checkbox 
+                                        [binary]="true" 
+                                        [inputId]="'prod-' + product.id"
+                                        [ngModel]="isProductSelected(product.id)"
+                                        (ngModelChange)="onProductChange(product.id, { checked: $event })"
+                                    ></p-checkbox>
+                                    <label [for]="'prod-' + product.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                                        {{ product.name }}
+                                    </label>
+                                </div>
+                                <p *ngIf="allProducts.length === 0" class="text-xs text-slate-400 italic">No hay productos disponibles</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                            <p class="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
+                                <i class="pi pi-info-circle mr-2"></i>
+                                Si no selecciona categorías ni productos, la promoción se aplicará a todos los productos disponibles.
+                            </p>
+                        </div>
+                    </ng-container>
+                </div>
+            </p-tabPanel>
         </p-tabView>
 
         <ng-template pTemplate="footer">
@@ -171,9 +449,82 @@
                     <span class="text-[10px] font-black uppercase text-slate-400">Publicar ahora</span>
                 </div>
                 <div class="flex gap-3">
-                    <button pButton label="Cancelar" (click)="showAddDialog = false" class="p-button-text !text-slate-400 !font-bold !text-[10px] !uppercase"></button>
-                    <button pButton label="Crear Promoción" class="!rounded-xl !bg-indigo-600 !border-none !px-6 !font-black !text-[10px] !uppercase !tracking-widest"></button>
+                    <button pButton label="Cancelar" (click)="showAddDialog = false; resetCurrentPromotion()" [disabled]="loading" class="p-button-text !text-slate-400 !font-bold !text-[10px] !uppercase"></button>
+                    <button 
+                        pButton 
+                        [label]="isEditing ? 'Actualizar' : 'Crear Promoción'" 
+                        (click)="savePromotion()" 
+                        [disabled]="loading"
+                        [loading]="loading"
+                        class="!rounded-xl !bg-indigo-600 !border-none !px-6 !font-black !text-[10px] !uppercase !tracking-widest"
+                    ></button>
                 </div>
+            </div>
+        </ng-template>
+    </p-dialog>
+
+    <!-- Diálogo de confirmación para cambiar estado -->
+    <p-dialog 
+        [(visible)]="showConfirmStatusDialog" 
+        [modal]="true" 
+        [draggable]="false" 
+        [resizable]="false" 
+        styleClass="!rounded-[2.5rem] !bg-white dark:!bg-slate-950 !border-none !shadow-2xl overflow-hidden" 
+        [style]="{ width: '450px' }" 
+        [closable]="true"
+    >
+        <ng-template pTemplate="header">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center" [ngClass]="newStatus ? 'bg-emerald-100 dark:bg-emerald-900/20' : 'bg-slate-100 dark:bg-slate-800'">
+                    <i [class]="newStatus ? 'pi pi-check-circle text-emerald-600 text-xl' : 'pi pi-pause-circle text-slate-600 text-xl'"></i>
+                </div>
+                <div>
+                    <span class="text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">
+                        {{ newStatus ? 'Activar Promoción' : 'Desactivar Promoción' }}
+                    </span>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                        Confirmar cambio de estado
+                    </p>
+                </div>
+            </div>
+        </ng-template>
+
+        <div class="py-6">
+            <p class="text-sm text-slate-700 dark:text-slate-300 mb-4">
+                ¿Está seguro de que desea 
+                <span class="font-black" [ngClass]="newStatus ? 'text-emerald-600' : 'text-slate-600'">
+                    {{ newStatus ? 'activar' : 'desactivar' }}
+                </span> 
+                la promoción?
+            </p>
+            <div class="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800">
+                <div class="font-black text-slate-800 dark:text-slate-100 text-base mb-1">
+                    {{ promotionToToggle?.name }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">
+                    {{ promotionToToggle?.description }}
+                </div>
+            </div>
+        </div>
+
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-3">
+                <button 
+                    pButton 
+                    label="Cancelar" 
+                    (click)="cancelToggleStatus()" 
+                    [disabled]="loading" 
+                    class="p-button-text !text-slate-400 !font-bold !text-[10px] !uppercase"
+                ></button>
+                <button 
+                    pButton 
+                    [label]="newStatus ? 'Activar' : 'Desactivar'" 
+                    (click)="confirmToggleStatus()" 
+                    [disabled]="loading"
+                    [loading]="loading"
+                    [ngClass]="newStatus ? '!bg-emerald-600' : '!bg-slate-600'"
+                    class="!rounded-xl !border-none !px-6 !font-black !text-[10px] !uppercase !tracking-widest"
+                ></button>
             </div>
         </ng-template>
     </p-dialog>
