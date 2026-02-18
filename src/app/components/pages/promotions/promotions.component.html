@@ -1,6 +1,11 @@
 <div class="p-4 md:p-8 space-y-8 bg-slate-50 dark:bg-slate-950 min-h-screen">
     <p-toast></p-toast>
 
+    <div *ngIf="!canView" class="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 text-center">
+        <p class="text-slate-500 dark:text-slate-400 font-medium">No tiene permisos para ver este módulo.</p>
+    </div>
+
+    <ng-container *ngIf="canView">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
             <div class="flex justify-between items-center mb-4">
@@ -70,6 +75,7 @@
         </div>
 
         <button
+            *ngIf="canCreate"
             pButton
             (click)="openAddDialog()"
             class="!rounded-2xl !bg-slate-900 dark:!bg-white dark:!text-slate-900 !text-white !border-none !px-8 !font-black !text-[10px] !uppercase !tracking-widest !shadow-lg hover:!scale-105 transition-transform"
@@ -115,30 +121,54 @@
                             <span *ngSwitchDefault>${{ promotion.value }}</span>
                         </ng-container>
                     </td>
-                    <td class="py-5 max-w-[250px]">
-                        <div class="space-y-2">
-                            <div *ngIf="getCategoryCount(promotion.categoryIds) > 0" class="flex items-start gap-2">
-                                <i class="pi pi-tags text-xs text-indigo-500 mt-0.5"></i>
-                                <div class="flex-1">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase">Categorías ({{ getCategoryCount(promotion.categoryIds) }}):</span>
+                    <td class="py-5 max-w-[280px]">
+                        <ng-container *ngIf="promotion.type === 'buy_x_get_y'; else aplicabilidadNormal">
+                            <div class="space-y-3">
+                                <div>
+                                    <span class="text-[9px] font-black text-indigo-500 uppercase">Por compra de:</span>
                                     <p class="text-[10px] font-medium text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">
-                                        {{ getCategoryNames(promotion.categoryIds) }}
+                                        <span *ngIf="getCategoryCount(promotion.categoryIds) > 0">{{ getCategoryNames(promotion.categoryIds) }}</span>
+                                        <span *ngIf="getCategoryCount(promotion.categoryIds) > 0 && getProductCount(promotion.productIds) > 0"> · </span>
+                                        <span *ngIf="getProductCount(promotion.productIds) > 0">{{ getProductNames(promotion.productIds) }}</span>
+                                        <span *ngIf="getCategoryCount(promotion.categoryIds) === 0 && getProductCount(promotion.productIds) === 0" class="text-slate-400 italic">—</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-[9px] font-black text-emerald-500 uppercase">Se regalan:</span>
+                                    <p class="text-[10px] font-medium text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">
+                                        <span *ngIf="getCategoryCount(promotion.freeCategoryIds) > 0">{{ getCategoryNames(promotion.freeCategoryIds) }}</span>
+                                        <span *ngIf="getCategoryCount(promotion.freeCategoryIds) > 0 && getProductCount(promotion.freeProductIds) > 0"> · </span>
+                                        <span *ngIf="getProductCount(promotion.freeProductIds) > 0">{{ getProductNames(promotion.freeProductIds) }}</span>
+                                        <span *ngIf="getCategoryCount(promotion.freeCategoryIds) === 0 && getProductCount(promotion.freeProductIds) === 0" class="text-slate-400 italic">—</span>
                                     </p>
                                 </div>
                             </div>
-                            <div *ngIf="getProductCount(promotion.productIds) > 0" class="flex items-start gap-2">
-                                <i class="pi pi-shopping-bag text-xs text-emerald-500 mt-0.5"></i>
-                                <div class="flex-1">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase">Productos ({{ getProductCount(promotion.productIds) }}):</span>
-                                    <p class="text-[10px] font-medium text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">
-                                        {{ getProductNames(promotion.productIds) }}
-                                    </p>
+                        </ng-container>
+                        <ng-template #aplicabilidadNormal>
+                            <div class="space-y-2">
+                                <div *ngIf="getCategoryCount(promotion.categoryIds) > 0" class="flex items-start gap-2">
+                                    <i class="pi pi-tags text-xs text-indigo-500 mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase">Categorías ({{ getCategoryCount(promotion.categoryIds) }}):</span>
+                                        <p class="text-[10px] font-medium text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">
+                                            {{ getCategoryNames(promotion.categoryIds) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div *ngIf="getProductCount(promotion.productIds) > 0" class="flex items-start gap-2">
+                                    <i class="pi pi-shopping-bag text-xs text-emerald-500 mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <span class="text-[9px] font-black text-slate-400 uppercase">Productos ({{ getProductCount(promotion.productIds) }}):</span>
+                                        <p class="text-[10px] font-medium text-slate-700 dark:text-slate-300 mt-0.5 line-clamp-2">
+                                            {{ getProductNames(promotion.productIds) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div *ngIf="getCategoryCount(promotion.categoryIds) === 0 && getProductCount(promotion.productIds) === 0" class="text-[9px] text-slate-400 italic">
+                                    Aplica a todos
                                 </div>
                             </div>
-                            <div *ngIf="getCategoryCount(promotion.categoryIds) === 0 && getProductCount(promotion.productIds) === 0" class="text-[9px] text-slate-400 italic">
-                                Aplica a todos
-                            </div>
-                        </div>
+                        </ng-template>
                     </td>
                     <td class="py-5">
                         <div class="text-[10px] font-black text-slate-700 dark:text-slate-300">{{ promotion.startDate | date: 'mediumDate' }}</div>
@@ -149,6 +179,7 @@
                             {{ promotion.isActive ? 'Activa' : 'Pausa' }}
                         </span>
                         <button 
+                            *ngIf="canEdit"
                             pButton 
                             [icon]="promotion.isActive ? 'pi pi-pause' : 'pi pi-play'" 
                             (click)="togglePromotionStatus(promotion)" 
@@ -158,8 +189,8 @@
                     </td>
                     <td class="text-center px-6">
                         <div class="flex justify-center gap-1">
-                            <button pButton icon="pi pi-pencil" (click)="editPromotion(promotion)" class="p-button-rounded p-button-text !text-slate-400 hover:!text-indigo-500"></button>
-                            <button pButton icon="pi pi-trash" (click)="deletePromotion(promotion)" class="p-button-rounded p-button-text !text-slate-400 hover:!text-rose-500"></button>
+                            <button *ngIf="canEdit" pButton icon="pi pi-pencil" (click)="editPromotion(promotion)" class="p-button-rounded p-button-text !text-slate-400 hover:!text-indigo-500"></button>
+                            <button *ngIf="canDelete" pButton icon="pi pi-trash" (click)="deletePromotion(promotion)" class="p-button-rounded p-button-text !text-slate-400 hover:!text-rose-500"></button>
                         </div>
                     </td>
                 </tr>
@@ -193,6 +224,7 @@
                                 optionLabel="label" 
                                 optionValue="value"
                             ></p-dropdown>
+                            <span class="text-[9px] text-slate-400 italic">Al cambiar el tipo se habilitan o bloquean los campos según corresponda.</span>
                         </div>
                     </div>
                     <div class="flex flex-col gap-2">
@@ -236,14 +268,14 @@
                         </label>
                         <p-inputNumber 
                             [(ngModel)]="currentPromotion.value" 
-                            [min]="0" 
+                            [min]="currentPromotion.type === 'buy_x_get_y' ? 1 : 0" 
                             [max]="currentPromotion.type === 'percentage' ? 100 : undefined"
-                            [suffix]="currentPromotion.type === 'percentage' ? '%' : '$'"
+                            [suffix]="currentPromotion.type === 'percentage' ? '%' : (currentPromotion.type === 'fixed_amount' || currentPromotion.type === 'bundle' ? '$' : '')"
                             inputStyleClass="!rounded-xl !bg-slate-50 dark:!bg-slate-900 !border-none w-full"
                         ></p-inputNumber>
                     </div>
 
-                    <!-- Campos específicos por tipo -->
+                    <!-- Solo para porcentaje o monto fijo -->
                     <div *ngIf="currentPromotion.type === 'percentage' || currentPromotion.type === 'fixed_amount'" class="space-y-4">
                         <div class="flex flex-col gap-2">
                             <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Compra Mínima (Opcional)</label>
@@ -267,6 +299,7 @@
                         </div>
                     </div>
 
+                    <!-- Solo para Compra X Lleva Y -->
                     <div *ngIf="currentPromotion.type === 'buy_x_get_y'" class="flex flex-col gap-2">
                         <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Cantidad Y (Lleva gratis)</label>
                         <p-inputNumber 
@@ -292,23 +325,31 @@
 
             <p-tabPanel header="Aplicabilidad">
                 <div class="space-y-6 pt-6 pb-4">
-                    <!-- Para tipo buy_x_get_y: mostrar secciones separadas -->
+                    <!-- Para tipo buy_x_get_y: flujo secuencial por categoría o por producto -->
                     <ng-container *ngIf="currentPromotion.type === 'buy_x_get_y'">
-                        <!-- Productos/Categorías que se COMPRAN (X) -->
+                        <!-- Paso 1: Por compra de qué aplica (categoría o producto) -->
                         <div class="space-y-4">
                             <div class="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-800">
-                                <p class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase mb-2">
+                                <p class="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase mb-1">
                                     <i class="pi pi-shopping-cart mr-2"></i>
-                                    Productos/Categorías a COMPRAR (X)
+                                    1. Por compra de qué aplica la promoción
                                 </p>
                                 <p class="text-[10px] text-indigo-500 dark:text-indigo-400">
-                                    Selecciona los productos o categorías que el cliente debe comprar para activar la promoción
+                                    Elija si la condición se cumple comprando por categoría o por producto específico
                                 </p>
                             </div>
-
-                            <div class="flex flex-col gap-4">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Categorías a Comprar</label>
-                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <p-selectButton 
+                                [options]="buyXByOptions" 
+                                [(ngModel)]="buyXBy" 
+                                (ngModelChange)="onBuyXByChange($event)"
+                                optionLabel="label" 
+                                optionValue="value"
+                                styleClass="!flex !rounded-xl"
+                            ></p-selectButton>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1" *ngIf="buyXBy === 'category'">Seleccione las categorías que el cliente debe comprar</label>
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1" *ngIf="buyXBy === 'product'">Seleccione los productos que el cliente debe comprar</label>
+                                <div *ngIf="buyXBy === 'category'" class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
                                     <div *ngFor="let category of allCategories" class="flex items-center gap-3">
                                         <p-checkbox 
                                             [binary]="true" 
@@ -316,17 +357,11 @@
                                             [ngModel]="isCategorySelected(category.id!)"
                                             (ngModelChange)="onCategoryChange(category.id!, { checked: $event })"
                                         ></p-checkbox>
-                                        <label [for]="'buy-cat-' + category.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                                            {{ category.name }}
-                                        </label>
+                                        <label [for]="'buy-cat-' + category.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">{{ category.name }}</label>
                                     </div>
                                     <p *ngIf="allCategories.length === 0" class="text-xs text-slate-400 italic">No hay categorías disponibles</p>
                                 </div>
-                            </div>
-
-                            <div class="flex flex-col gap-4">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Productos a Comprar</label>
-                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <div *ngIf="buyXBy === 'product'" class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
                                     <div *ngFor="let product of allProducts" class="flex items-center gap-3">
                                         <p-checkbox 
                                             [binary]="true" 
@@ -334,30 +369,36 @@
                                             [ngModel]="isProductSelected(product.id)"
                                             (ngModelChange)="onProductChange(product.id, { checked: $event })"
                                         ></p-checkbox>
-                                        <label [for]="'buy-prod-' + product.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                                            {{ product.name }}
-                                        </label>
+                                        <label [for]="'buy-prod-' + product.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">{{ product.name }}</label>
                                     </div>
                                     <p *ngIf="allProducts.length === 0" class="text-xs text-slate-400 italic">No hay productos disponibles</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Productos/Categorías que se LLEVAN GRATIS (Y) -->
-                        <div class="space-y-4">
+                        <!-- Paso 2: Qué se regala (por categoría o por producto) -->
+                        <div class="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                             <div class="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800">
-                                <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase mb-2">
+                                <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase mb-1">
                                     <i class="pi pi-gift mr-2"></i>
-                                    Productos/Categorías GRATIS (Y)
+                                    2. Qué se regala
                                 </p>
                                 <p class="text-[10px] text-emerald-500 dark:text-emerald-400">
-                                    Selecciona los productos o categorías que el cliente llevará gratis al cumplir la condición
+                                    Elija si lo que lleva gratis se elige por categoría o por producto específico
                                 </p>
                             </div>
-
-                            <div class="flex flex-col gap-4">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Categorías Gratis</label>
-                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                            <p-selectButton 
+                                [options]="freeYByOptions" 
+                                [(ngModel)]="freeYBy" 
+                                (ngModelChange)="onFreeYByChange($event)"
+                                optionLabel="label" 
+                                optionValue="value"
+                                styleClass="!flex !rounded-xl"
+                            ></p-selectButton>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1" *ngIf="freeYBy === 'category'">Seleccione las categorías que se regalan</label>
+                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1" *ngIf="freeYBy === 'product'">Seleccione los productos que se regalan</label>
+                                <div *ngIf="freeYBy === 'category'" class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
                                     <div *ngFor="let category of allCategories" class="flex items-center gap-3">
                                         <p-checkbox 
                                             [binary]="true" 
@@ -365,17 +406,11 @@
                                             [ngModel]="isFreeCategorySelected(category.id!)"
                                             (ngModelChange)="onFreeCategoryChange(category.id!, { checked: $event })"
                                         ></p-checkbox>
-                                        <label [for]="'free-cat-' + category.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                                            {{ category.name }}
-                                        </label>
+                                        <label [for]="'free-cat-' + category.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">{{ category.name }}</label>
                                     </div>
                                     <p *ngIf="allCategories.length === 0" class="text-xs text-slate-400 italic">No hay categorías disponibles</p>
                                 </div>
-                            </div>
-
-                            <div class="flex flex-col gap-4">
-                                <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Productos Gratis</label>
-                                <div class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                                <div *ngIf="freeYBy === 'product'" class="max-h-48 overflow-y-auto space-y-2 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
                                     <div *ngFor="let product of allProducts" class="flex items-center gap-3">
                                         <p-checkbox 
                                             [binary]="true" 
@@ -383,9 +418,7 @@
                                             [ngModel]="isFreeProductSelected(product.id)"
                                             (ngModelChange)="onFreeProductChange(product.id, { checked: $event })"
                                         ></p-checkbox>
-                                        <label [for]="'free-prod-' + product.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                                            {{ product.name }}
-                                        </label>
+                                        <label [for]="'free-prod-' + product.id" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">{{ product.name }}</label>
                                     </div>
                                     <p *ngIf="allProducts.length === 0" class="text-xs text-slate-400 italic">No hay productos disponibles</p>
                                 </div>
@@ -528,4 +561,5 @@
             </div>
         </ng-template>
     </p-dialog>
+    </ng-container>
 </div>

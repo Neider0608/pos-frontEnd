@@ -27,6 +27,7 @@ import { PromotionsService } from '../../services/promotions.service';
 import { AuthService } from '../core/guards/auth.service';
 import { LoginService } from '../../services/login.service';
 import { AuthSession } from '../api/login';
+import { Permission } from '../api/permissions';
 
 
 @Component({
@@ -112,8 +113,29 @@ export class PromotionsComponent implements OnInit {
     { label: 'Combo', value: 'bundle' },
   ];
 
+  /** Para Compra X Lleva Y: si la compra (X) se elige por categoría o por producto */
+  buyXBy: 'category' | 'product' = 'category';
+  /** Para Compra X Lleva Y: si lo que se regala (Y) se elige por categoría o por producto */
+  freeYBy: 'category' | 'product' = 'category';
+
+  buyXByOptions = [
+    { label: 'Por categoría', value: 'category' as const },
+    { label: 'Por producto', value: 'product' as const },
+  ];
+  freeYByOptions = [
+    { label: 'Por categoría', value: 'category' as const },
+    { label: 'Por producto', value: 'product' as const },
+  ];
+
   companiaId: number = 0;
   userId: number = 0;
+
+  permissions: Permission[] = [];
+  canView = false;
+  canCreate = false;
+  canEdit = false;
+  canDelete = false;
+  canExport = false;
 
   constructor(
     private messageService: MessageService,
@@ -128,6 +150,7 @@ export class PromotionsComponent implements OnInit {
     const session = this.authService.getSession() as AuthSession;
 
     if (!session) {
+      this.resetPermissions();
       return;
     }
 
@@ -135,9 +158,40 @@ export class PromotionsComponent implements OnInit {
     this.companiaId = companiaId;
     this.userId = userId;
 
-    this.loadPromotions();
-    this.loadCategories();
-    this.loadProducts();
+    this.loginService.getPermissions(userId, companiaId).subscribe({
+      next: (permissions) => {
+        this.permissions = permissions.data ?? [];
+        this.applyPermissions();
+        this.loadPromotions();
+        this.loadCategories();
+        this.loadProducts();
+      },
+      error: () => this.resetPermissions()
+    });
+  }
+
+  private applyPermissions(): void {
+    const moduleName = 'Promociones';
+    const permission = this.permissions.find((p) => p.module === moduleName);
+
+    if (!permission) {
+      this.resetPermissions();
+      return;
+    }
+
+    this.canView = permission.canView;
+    this.canCreate = permission.canCreate;
+    this.canEdit = permission.canEdit;
+    this.canDelete = permission.canDelete;
+    this.canExport = permission.canExport;
+  }
+
+  private resetPermissions(): void {
+    this.canView = false;
+    this.canCreate = false;
+    this.canEdit = false;
+    this.canDelete = false;
+    this.canExport = false;
   }
 
   // ============================================================
@@ -277,19 +331,55 @@ export class PromotionsComponent implements OnInit {
   openAddDialog() {
     this.isEditing = false;
     this.currentPromotion = this.getEmptyPromotion();
-    // Inicializar fechas para los calendarios
+    this.buyXBy = 'category';
+    this.freeYBy = 'category';
     this.startDateModel = new Date();
     this.endDateModel = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     this.showAddDialog = true;
   }
 
-  // Función para inicializar arrays cuando cambia el tipo de promoción
+  /** Activa o bloquea campos según el tipo de promoción y limpia los que no aplican */
   onPromotionTypeChange() {
-    // Asegurar que los arrays estén inicializados
+    const t = this.currentPromotion.type;
     if (!this.currentPromotion.categoryIds) this.currentPromotion.categoryIds = [];
     if (!this.currentPromotion.productIds) this.currentPromotion.productIds = [];
     if (!this.currentPromotion.freeCategoryIds) this.currentPromotion.freeCategoryIds = [];
     if (!this.currentPromotion.freeProductIds) this.currentPromotion.freeProductIds = [];
+
+    switch (t) {
+      case 'buy_x_get_y':
+        this.buyXBy = 'category';
+        this.freeYBy = 'category';
+        this.currentPromotion.minPurchase = undefined;
+        this.currentPromotion.maxDiscount = undefined;
+        if (this.currentPromotion.buyY == null || this.currentPromotion.buyY < 1) this.currentPromotion.buyY = 1;
+        break;
+      case 'percentage':
+      case 'fixed_amount':
+        this.currentPromotion.freeCategoryIds = [];
+        this.currentPromotion.freeProductIds = [];
+        this.currentPromotion.buyY = undefined;
+        break;
+      case 'bundle':
+        this.currentPromotion.minPurchase = undefined;
+        this.currentPromotion.maxDiscount = undefined;
+        this.currentPromotion.buyY = undefined;
+        this.currentPromotion.freeCategoryIds = [];
+        this.currentPromotion.freeProductIds = [];
+        break;
+    }
+  }
+
+  onBuyXByChange(value: 'category' | 'product') {
+    this.buyXBy = value;
+    if (value === 'category') this.currentPromotion.productIds = [];
+    else this.currentPromotion.categoryIds = [];
+  }
+
+  onFreeYByChange(value: 'category' | 'product') {
+    this.freeYBy = value;
+    if (value === 'category') this.currentPromotion.freeProductIds = [];
+    else this.currentPromotion.freeCategoryIds = [];
   }
 
   editPromotion(promotion: Promotion) {
@@ -355,9 +445,10 @@ export class PromotionsComponent implements OnInit {
             productIds: productIds.length > 0 ? [...productIds] : [],
             freeCategoryIds: freeCategoryIds.length > 0 ? [...freeCategoryIds] : [],
             freeProductIds: freeProductIds.length > 0 ? [...freeProductIds] : [],
-            // Asegurar que isActive sea siempre un booleano
             isActive: fullPromotion.isActive !== null && fullPromotion.isActive !== undefined ? Boolean(fullPromotion.isActive) : true
           };
+          this.buyXBy = categoryIds.length > 0 ? 'category' : 'product';
+          this.freeYBy = freeCategoryIds.length > 0 ? 'category' : 'product';
           
           // Convertir fechas string a objetos Date para los calendarios
           if (this.currentPromotion.startDate) {
@@ -526,56 +617,44 @@ export class PromotionsComponent implements OnInit {
       if (!this.currentPromotion.freeCategoryIds) this.currentPromotion.freeCategoryIds = [];
       if (!this.currentPromotion.freeProductIds) this.currentPromotion.freeProductIds = [];
       
-      // Verificar que haya al menos una categoría o producto para comprar
-      const hasBuyItems = (this.currentPromotion.categoryIds.length > 0) ||
-                          (this.currentPromotion.productIds.length > 0);
-      
+      const hasBuyItems = this.buyXBy === 'category'
+        ? (this.currentPromotion.categoryIds?.length ?? 0) > 0
+        : (this.currentPromotion.productIds?.length ?? 0) > 0;
       if (!hasBuyItems) {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: 'Debe seleccionar al menos una categoría o producto para comprar' 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.buyXBy === 'category' ? 'Seleccione al menos una categoría por compra.' : 'Seleccione al menos un producto por compra.'
         });
         return;
       }
 
-      // Verificar que haya al menos una categoría o producto gratis
-      const hasFreeItems = (this.currentPromotion.freeCategoryIds.length > 0) ||
-                           (this.currentPromotion.freeProductIds.length > 0);
-      
-      // Debug temporal
-      console.log('Validación buy_x_get_y:', {
-        freeCategoryIds: this.currentPromotion.freeCategoryIds,
-        freeProductIds: this.currentPromotion.freeProductIds,
-        hasFreeItems
-      });
-      
+      const hasFreeItems = this.freeYBy === 'category'
+        ? (this.currentPromotion.freeCategoryIds?.length ?? 0) > 0
+        : (this.currentPromotion.freeProductIds?.length ?? 0) > 0;
       if (!hasFreeItems) {
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: 'Debe seleccionar al menos una categoría o producto que se llevará gratis' 
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: this.freeYBy === 'category' ? 'Seleccione al menos una categoría que se regala.' : 'Seleccione al menos un producto que se regala.'
         });
         return;
       }
     }
 
-    // Preparar datos para envío
+    const norm = (ids: number[] | undefined) => (ids ?? []).map(id => typeof id === 'string' ? parseInt(id as any, 10) : id).filter(id => !isNaN(id as number));
+    const isBuyXGetY = this.currentPromotion.type === 'buy_x_get_y';
     const promotionToSave: Promotion = {
       ...this.currentPromotion,
       companiaId: this.companiaId,
       userId: this.userId,
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
-      // Asegurar que isActive sea siempre un booleano
       isActive: this.currentPromotion.isActive !== null && this.currentPromotion.isActive !== undefined ? Boolean(this.currentPromotion.isActive) : true,
-      // Asegurar que categoryIds sea un array de números (no strings)
-      categoryIds: this.currentPromotion.categoryIds?.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id as number)) || [],
-      // Asegurar que productIds sea un array de números (no strings)
-      productIds: this.currentPromotion.productIds?.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id as number)) || [],
-      // Asegurar que freeCategoryIds y freeProductIds sean arrays de números (para buy_x_get_y)
-      freeCategoryIds: this.currentPromotion.freeCategoryIds?.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id as number)) || [],
-      freeProductIds: this.currentPromotion.freeProductIds?.map(id => typeof id === 'string' ? parseInt(id, 10) : id).filter(id => !isNaN(id as number)) || [],
+      categoryIds: isBuyXGetY && this.buyXBy === 'category' ? norm(this.currentPromotion.categoryIds) : (isBuyXGetY ? [] : norm(this.currentPromotion.categoryIds)),
+      productIds: isBuyXGetY && this.buyXBy === 'product' ? norm(this.currentPromotion.productIds) : (isBuyXGetY ? [] : norm(this.currentPromotion.productIds)),
+      freeCategoryIds: isBuyXGetY && this.freeYBy === 'category' ? norm(this.currentPromotion.freeCategoryIds) : (isBuyXGetY ? [] : norm(this.currentPromotion.freeCategoryIds)),
+      freeProductIds: isBuyXGetY && this.freeYBy === 'product' ? norm(this.currentPromotion.freeProductIds) : (isBuyXGetY ? [] : norm(this.currentPromotion.freeProductIds)),
     };
 
     const operation = this.isEditing 

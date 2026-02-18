@@ -17,11 +17,12 @@ export interface Promotion {
   createdBy?: number;
   createdAt?: string;
   deleted?: boolean;
-  categoryIds?: number[]; // IDs de categorías aplicables
-  categories?: any[]; // Categorías completas (solo lectura desde BD)
-  productIds?: number[]; // IDs de productos aplicables
-  products?: any[]; // Productos completos (solo lectura desde BD)
-  // Para buy_x_get_y: productos/categorías que se llevan gratis
-  freeCategoryIds?: number[]; // Categorías que se llevan gratis
-  freeProductIds?: number[]; // Productos que se llevan gratis
+  // Productos/categorías por cuya COMPRA aplica la promoción (para descuentos: a cuáles aplica; para buy_x_get_y: "por compra de cuáles")
+  categoryIds?: number[];
+  categories?: any[]; // Solo lectura desde BD
+  productIds?: number[];
+  products?: any[]; // Solo lectura desde BD
+  // Solo para buy_x_get_y: productos/categorías que se REGALAN (lo que el cliente se lleva gratis)
+  freeCategoryIds?: number[];
+  freeProductIds?: number[];
 }
