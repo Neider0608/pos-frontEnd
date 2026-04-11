@@ -442,17 +442,40 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
     }
 
     updateStatus(conv: Conversation): void {
-        if (!conv) return;
+    if (!conv) return;
 
-        // Si se cierra, liberar el lock
-        if (conv.status === 'closed') {
-            conv.lockedByAgentId = null;
-        }
-
-        conv.updatedAt = new Date().toISOString();
-
-        // 🔜 aquí luego va API / SQL Server
+    if (conv.status === 'closed') {
+        conv.lockedByAgentId = null;
     }
+
+    conv.updatedAt = new Date().toISOString();
+    this.whatsappService.updateConversationStatus(conv.id, conv.status).subscribe({
+            next: res => {
+                if (res?.data > 0) {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Muy bien',
+                        detail: res.message
+                    });
+                } else {
+                    this.messageService.add({
+                        severity: 'warn',
+                        summary: 'Sin cambios',
+                        detail: 'No se actualizó ninguna conversación'
+                    });
+                }
+            },
+            error: err => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'No se pudo actualizar el estado'
+                });
+                console.error(err);
+            }
+        });
+    }
+
 
     is24hWindowOpen(): boolean {
         const lastClientMessage = [...this.messages].reverse().find((m) => m.from === 'client');
@@ -690,17 +713,46 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
         this.showHistory = true;
     }
 
-    openEditName() {
+    openEditName(): void {
         this.editedClientName = this.activeConversation.clientName;
         this.showEditName = true;
     }
 
-    saveClientName() {
-        if (!this.activeConversation) return;
+    saveClientName(): void {
+        if (!this.editedClientName || this.editedClientName.trim() === '') {
+            this.showEditName = false;
+            return;
+        }
 
-        this.activeConversation.clientName = this.editedClientName;
+        if (this.editedClientName === this.activeConversation.clientName) {
+            this.showEditName = false;
+            return;
+        }
 
-        this.showEditName = false;
-        // aquí luego llamas API
+        this.whatsappService.updateClientName(this.activeConversation.id,this.editedClientName).subscribe({
+                next: res => {
+                    if (res?.code > 0) {
+                        this.activeConversation.clientName = this.editedClientName;
+
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Actualizado',
+                            detail: res.message
+                        });
+                    } else {
+                        this.messageService.add({
+                            severity: 'warn',
+                            summary: 'Sin cambios',
+                            detail: res.message
+                        });
+                    }
+                    this.showEditName = false;
+                },
+                error: err => {
+                    console.error(err);
+                    this.showEditName = false;
+                }
+            });
     }
+
 }
