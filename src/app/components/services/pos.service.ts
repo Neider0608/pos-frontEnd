@@ -5,28 +5,27 @@ import { Observable } from 'rxjs';
 import { ApiResponse, Category, Customer, Product, UnitOfMeasure, Warehouse } from '../pages/api/shared';
 import { FinancingRequest, GetFinancing } from '../pages/api/financing';
 import { Conversation, Message, MessageSend, PhoneNumbers } from '../pages/api/whatsappagents';
-import { IInvoiceClients, StockReservationRequest, StockReservationResponse } from '../pages/api/pos';
+import { IInvoiceClients, Promotion, StockReservationRequest, StockReservationResponse } from '../pages/api/pos';
+import { environment } from '../../../enviroments/enviroment';
 
 @Injectable({ providedIn: 'root' })
 export class PosService {
-    private apiUrl = 'https://localhost:7197/api/'; // Cambia por tu ruta real
-
     constructor(private http: HttpClient) {}
 
     // =====================================================
     // 🧠 UTILIDAD GENERAL
     // =====================================================
     createInvoice(invoice: any) {
-        return this.http.post<ApiResponse<any>>(`${this.apiUrl}pos/CreateInvoice`, invoice);
+        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}pos/CreateInvoice`, invoice);
     }
     getInvoices(startDate: Date, endDate: Date, companyId: number): Observable<ApiResponse<IInvoiceClients[]>> {
-        return this.http.get<ApiResponse<IInvoiceClients[]>>(`${this.apiUrl}pos/GetInvoicesAll/${startDate.toISOString()}/${endDate.toISOString()}/${companyId}`);
+        return this.http.get<ApiResponse<IInvoiceClients[]>>(`${environment.apiUrl}pos/GetInvoicesAll/${startDate.toISOString()}/${endDate.toISOString()}/${companyId}`);
     }
     getInvoiceDetail(invoiceId: number, companyId: number): Observable<ApiResponse<IInvoiceClients>> {
-        return this.http.get<ApiResponse<IInvoiceClients>>(`${this.apiUrl}pos/GetInvoiceDetail/${invoiceId}/${companyId}`);
+        return this.http.get<ApiResponse<IInvoiceClients>>(`${environment.apiUrl}pos/GetInvoiceDetail/${invoiceId}/${companyId}`);
     }
     cancelInvoice(invoiceId?: number, companyId?: number): Observable<ApiResponse<IInvoiceClients>> {
-        return this.http.get<ApiResponse<IInvoiceClients>>(`${this.apiUrl}pos/CancelInvoice/${invoiceId}/${companyId}`);
+        return this.http.get<ApiResponse<IInvoiceClients>>(`${environment.apiUrl}pos/CancelInvoice/${invoiceId}/${companyId}`);
     }
 
     // =====================================================
@@ -42,7 +41,7 @@ export class PosService {
     // =====================================================
 
     getFinancings(): Observable<ApiResponse<GetFinancing[]>> {
-        return this.http.get<ApiResponse<GetFinancing[]>>(`${this.apiUrl}pos/GetFinancings`);
+        return this.http.get<ApiResponse<GetFinancing[]>>(`${environment.apiUrl}pos/GetFinancings`);
     }
 
     // =====================================================
@@ -50,21 +49,21 @@ export class PosService {
     // =====================================================
     getFinancingPayments(financingId: number): Observable<ApiResponse<GetFinancing[]>> {
         const params = new HttpParams().set('option', 'get_payments').set('id', financingId);
-        return this.http.get<ApiResponse<GetFinancing[]>>(`${this.apiUrl}pos/GetFinancingPayments`, { params });
+        return this.http.get<ApiResponse<GetFinancing[]>>(`${environment.apiUrl}pos/GetFinancingPayments`, { params });
     }
 
     // =====================================================
     // 💵 Registrar nuevo abono / pago
     // =====================================================
     addFinancingPayment(model: FinancingRequest): Observable<ApiResponse<any>> {
-        return this.http.post<ApiResponse<any>>(`${this.apiUrl}pos/AddPayment`, model);
+        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}pos/AddPayment`, model);
     }
 
     // =====================================================
     // ✅ Generar Paz y Salvo
     // =====================================================
     generateClearance(model: FinancingRequest): Observable<ApiResponse<any>> {
-        return this.http.post<ApiResponse<any>>(`${this.apiUrl}pos/GenerateClearance`, model);
+        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}pos/GenerateClearance`, model);
     }
 
     /**
@@ -80,14 +79,18 @@ export class PosService {
     }
 
     validateAndReserveStock(payload: StockReservationRequest) {
-        return this.http.post<ApiResponse<StockReservationResponse>>(`${this.apiUrl}pos/ValidateAndReserve`, payload);
+        return this.http.post<ApiResponse<StockReservationResponse>>(`${environment.apiUrl}pos/ValidateAndReserve`, payload);
     }
 
     cancelInvoiceReservations(payload: StockReservationRequest) {
-        return this.http.post<ApiResponse<any>>(`${this.apiUrl}pos/ValidateAndReserve`, payload);
+        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}pos/ValidateAndReserve`, payload);
     }
 
     cancelInvoiceAll(facturaTempId?: string, companiaId?: number) {
-        return this.http.get<ApiResponse<any>>(`${this.apiUrl}pos/CancelInvoiceAll/${facturaTempId}/${companiaId}`);
+        return this.http.get<ApiResponse<any>>(`${environment.apiUrl}pos/CancelInvoiceAll/${facturaTempId}/${companiaId}`);
+    }
+
+    getPromotions(companiaId: number) {
+        return this.http.get<ApiResponse<Promotion[]>>(`${environment.apiUrl}pos/GetPromotions/${companiaId}`);
     }
 }

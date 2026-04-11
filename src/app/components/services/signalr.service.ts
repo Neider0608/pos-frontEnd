@@ -2,10 +2,10 @@
 import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { Subject } from 'rxjs';
+import { environment } from '../../../enviroments/enviroment';
 
 @Injectable({ providedIn: 'root' })
 export class SignalrService {
-    private apiUrl = 'https://localhost:7197';
     private hubConnection!: signalR.HubConnection;
 
     messageArrived$ = new Subject<{
@@ -19,7 +19,7 @@ export class SignalrService {
         }
 
         this.hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl(`${this.apiUrl}/hubs/whatsapp`, {
+            .withUrl(`${environment.apiUrl}/hubs/whatsapp`, {
                 withCredentials: true,
                 transport: signalR.HttpTransportType.LongPolling // 🔥 para local
             })

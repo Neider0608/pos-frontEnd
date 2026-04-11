@@ -131,11 +131,7 @@ export class AppMenu implements OnInit {
                         icon: 'pi pi-exclamation-triangle',
                         routerLink: ['/pages/low-stock']
                     },
-                    this.canView('Proveedores', permissions) && {
-                        label: 'Proveedores',
-                        icon: 'pi pi-truck',
-                        routerLink: ['/pages/suppliers']
-                    },
+
                     this.canView('Promociones', permissions) && {
                         label: 'Promociones',
                         icon: 'pi pi-tag',
@@ -180,6 +176,11 @@ export class AppMenu implements OnInit {
                         label: 'Bodegas',
                         icon: 'pi pi-building',
                         routerLink: ['/pages/warehouse']
+                    },
+                    this.canView('Proveedores', permissions) && {
+                        label: 'Proveedores',
+                        icon: 'pi pi-truck',
+                        routerLink: ['/pages/suppliers']
                     },
                     this.canView('Clientes', permissions) && {
                         label: 'Clientes',

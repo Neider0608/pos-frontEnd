@@ -153,3 +153,37 @@ export interface InvoiceCustomer {
     phone?: string; // c.telefono
     isCompany: boolean; // c.es_empresa
 }
+
+export interface Promotion {
+    id: number;
+    name: string;
+    description: string;
+    type: string;
+    value: number;
+    minPurchase?: number;
+    maxDiscount?: number;
+    buyY?: number;
+    startDate: Date;
+    endDate: Date;
+    isActive: boolean;
+    usageLimit?: number;
+    usageCount?: number;
+
+    products: PromotionProduct[];
+    categories: PromotionCategory[];
+    giftProducts: PromotionProduct[];
+    giftCategories: PromotionCategory[];
+}
+
+export interface PromotionProduct {
+    id: number;
+    code: string;
+    name: string;
+    price: number;
+    categoryId: number;
+}
+
+export interface PromotionCategory {
+    id: number;
+    name: string;
+}

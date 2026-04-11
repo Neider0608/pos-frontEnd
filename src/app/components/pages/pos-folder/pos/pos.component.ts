@@ -14,7 +14,7 @@ import { ToastModule } from 'primeng/toast';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProductGridComponent } from '../product-grid/product-grid.component';
 import { SearchDialogComponent } from '../search-dialog/search-dialog.component';
-import { CartItem, Invoice, LastSale, PaymentMethod, ViewMode } from '../../api/pos';
+import { CartItem, Invoice, LastSale, PaymentMethod, Promotion, ViewMode } from '../../api/pos';
 import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.component';
 import { InvoiceDialogComponent } from '../invoice-dialog/invoice-dialog.component';
 import { LOCALE_ID, Inject } from '@angular/core';
@@ -52,6 +52,8 @@ export class PosComponent implements OnInit {
     showSearchDialog = false;
     showPaymentDialog = false;
     showInvoiceDialog = false;
+
+    promotions: Promotion[] = [];
 
     lastSale: LastSale | null = null;
 
@@ -105,6 +107,7 @@ export class PosComponent implements OnInit {
         this.loadInventory();
         this.loadCustomers();
         this.createNewInvoice(0);
+        this.loadPromotions();
         this.focusBarcodeInput();
     }
 
@@ -221,6 +224,32 @@ export class PosComponent implements OnInit {
         });
     }
 
+    loadPromotions() {
+        this.posService.getPromotions(this.companiaId).subscribe({
+            next: (res) => {
+                if (res.code === 0) {
+                    this.promotions = res.data || [];
+
+                    console.log('Promotions loaded: ', this.promotions);
+                } else {
+                    this.messageService.add({
+                        severity: 'warn',
+                        summary: 'Advertencia',
+                        detail: res.message || 'No se pudieron cargar las promociones.'
+                    });
+                }
+            },
+
+            error: () => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Error al cargar las promociones desde el servidor.'
+                });
+            }
+        });
+    }
+
     /** Crear una nueva venta (carrito) para otro cliente */
     createNewInvoice(index: number) {
         const newInvoice: Invoice = {
@@ -279,59 +308,6 @@ export class PosComponent implements OnInit {
 
         this.productCodeSearch = '';
         this.focusBarcodeInput();
-    }
-
-    /** Agregar producto al carrito del cliente activo */
-    addProduct(product: PosProduct) {
-        if (!this.activeInvoice) return;
-
-        const existingItem = this.activeInvoice.items.find((i) => i.id === product.id);
-
-        if (existingItem) {
-            existingItem.quantity++;
-            this.onQuantityChange(existingItem, true);
-            return;
-        }
-
-        const discountPercent = product.hasDiscount ? product.discountPercent || 0 : 0;
-        const discountValue = (product.price * discountPercent) / 100;
-        const subtotal = product.price;
-        const total = product.price - discountValue;
-
-        const newItem: CartItem = {
-            ...product,
-            quantity: 1,
-            prevQuantity: 0,
-            discount: discountPercent,
-            discountValue,
-            subtotal,
-            total
-        };
-
-        if (newItem.quantity <= 0) return;
-
-        /* this.activeInvoice.items.push(newItem); */
-        this.onQuantityChange(newItem, false);
-
-        this.showSearchDialog = false;
-        this.focusBarcodeInput();
-    }
-
-    onQuantityChange(item: CartItem, existe: boolean) {
-        if (!item.manageStock) {
-            this.updateTotals(this.activeInvoice!);
-            return;
-        }
-
-        const delta = item.quantity - item.prevQuantity;
-
-        if (delta === 0) return;
-
-        if (delta > 0) {
-            this.reserveStock(item, delta, existe);
-        } else {
-            this.releaseStock(item, Math.abs(delta));
-        }
     }
 
     reserveStock(item: CartItem, cantidad: number, existe: boolean) {
@@ -412,47 +388,6 @@ export class PosComponent implements OnInit {
                 this.showToast('error', 'Error', 'No se pudo liberar el stock');
             }
         });
-    }
-
-    /** Recalcular totales */
-    updateTotals(invoice: Invoice): void {
-        let grossSubtotal = 0; // Suma bruta sin descuentos
-        let totalDiscountDetail = 0; // Suma de descuentos por producto
-
-        // 🔹 Recalcular valores por producto
-        for (const item of invoice.items) {
-            const discountPercent = item.discount || 0;
-            const discountValue = (item.price * item.quantity * discountPercent) / 100;
-            const itemSubtotal = item.price * item.quantity; // Valor sin descuentos ni IVA
-            const itemTotal = itemSubtotal - discountValue; // Valor con descuento aplicado
-
-            // 🔹 Actualizar los valores individuales del ítem
-            item.discountValue = discountValue;
-            item.subtotal = itemSubtotal;
-            item.total = itemTotal;
-
-            grossSubtotal += itemSubtotal;
-            totalDiscountDetail += discountValue;
-        }
-
-        // 🔹 IVA configurable desde la configuración
-        const ivaPercentage = this.ivaRate / 100; // por ejemplo, 19 = 19%
-
-        // 🔹 Calcular descuento general e IVA dinámico
-        const generalDiscountAmount = (grossSubtotal - totalDiscountDetail) * (invoice.generalDiscount / 100);
-
-        // 🔹 Base imponible (subtotal neto antes de IVA)
-        const netSubtotal = grossSubtotal - totalDiscountDetail - generalDiscountAmount;
-
-        // 🔹 IVA (solo sobre la base imponible)
-        const totalVat = netSubtotal * ivaPercentage;
-
-        // 🔹 Totales globales finales
-        invoice.grossSubtotal = grossSubtotal; // ✅ Agregado: valor bruto sin descuentos
-        invoice.subtotal = netSubtotal; // Subtotal ya incluye descuentos, sin IVA
-        invoice.detailDiscount = totalDiscountDetail; // Descuentos por producto
-        invoice.totalVat = totalVat; // IVA calculado sobre el subtotal neto
-        invoice.total = netSubtotal + totalVat; // Total con IVA
     }
 
     /** Procesar pago del cliente activo */
@@ -603,5 +538,207 @@ export class PosComponent implements OnInit {
         setTimeout(() => {
             this.barcodeInputRef?.nativeElement?.focus();
         }, 0);
+    }
+
+    /* Checkout*/
+    applyPromotions(invoice: Invoice): void {
+        debugger;
+        if (!this.promotions?.length) return;
+
+        const now = new Date();
+
+        for (const promo of this.promotions) {
+            // 🔹 Validaciones base
+            if (!promo.isActive) continue;
+
+            if (promo.startDate && new Date(promo.startDate) > now) continue;
+            if (promo.endDate && new Date(promo.endDate) < now) continue;
+
+            if (promo.usageLimit && promo.usageCount && promo.usageCount >= promo.usageLimit) continue;
+
+            switch (promo.type.toUpperCase()) {
+                case 'PERCENTAGE':
+                    this.processPercentagePromotion(invoice, promo);
+                    break;
+
+                case 'BUY_X_GET_Y':
+                    this.processBuyXGetYPromotion(invoice, promo);
+                    break;
+            }
+        }
+    }
+
+    processPercentagePromotion(invoice: Invoice, promo: Promotion): void {
+        for (const item of invoice.items) {
+            const appliesByProduct = promo.products?.some((p) => p.id === item.id);
+
+            const appliesByCategory = promo.categories?.some((c) => c.id === item.categoryId);
+
+            if (!appliesByProduct && !appliesByCategory) continue;
+
+            const percent = promo.value || 0;
+
+            let discount = (item.price * item.quantity * percent) / 100;
+
+            // 🔹 Aplicar tope máximo si existe
+            if (promo.maxDiscount && discount > promo.maxDiscount) {
+                discount = promo.maxDiscount;
+            }
+
+            item.discountValue += discount;
+            item.discount = percent;
+        }
+    }
+
+    processBuyXGetYPromotion(invoice: Invoice, promo: Promotion): void {
+        for (const item of invoice.items) {
+            const applies = promo.products?.some((p) => p.id === item.id);
+
+            if (!applies) continue;
+
+            const minQty = promo.value || 0;
+            const giftQty = promo.buyY || 0;
+
+            if (minQty <= 0 || giftQty <= 0) continue;
+
+            const sets = Math.floor(item.quantity / minQty);
+            if (sets <= 0) continue;
+
+            const totalGiftUnits = sets * giftQty;
+
+            // 🔥 CASO 1: Promoción con productos regalo definidos
+            if (promo.giftProducts?.length) {
+                for (const giftPromoProduct of promo.giftProducts) {
+                    // 🔎 Buscar producto REAL en catálogo
+                    const realProduct = this.products.find((p) => p.id === giftPromoProduct.id);
+
+                    if (!realProduct) continue;
+
+                    const existingGift = invoice.items.find((i) => i.id === realProduct.id);
+
+                    if (existingGift) {
+                        (existingGift.quantity = totalGiftUnits),
+                            (existingGift.prevQuantity = totalGiftUnits),
+                            (existingGift.discount = 100),
+                            (existingGift.discountValue = realProduct.price * totalGiftUnits),
+                            (existingGift.subtotal = realProduct.price * totalGiftUnits),
+                            (existingGift.total = 0);
+                    } else {
+                        const giftItem: CartItem = {
+                            ...realProduct,
+                            quantity: totalGiftUnits,
+                            prevQuantity: totalGiftUnits,
+                            discount: 100,
+                            discountValue: realProduct.price * totalGiftUnits,
+                            subtotal: realProduct.price * totalGiftUnits,
+                            total: 0
+                        };
+
+                        invoice.items.push(giftItem);
+                    }
+                }
+            } else {
+                // 🔥 CASO 2: No hay regalo físico → descuento directo
+                const discount = totalGiftUnits * item.price;
+                item.discountValue += discount;
+            }
+        }
+    }
+
+    addProduct(product: PosProduct) {
+        debugger;
+        if (!this.activeInvoice) return;
+
+        const existingItem = this.activeInvoice.items.find((i) => i.id === product.id);
+
+        if (product.manageStock) {
+            const currentQuantity = existingItem ? existingItem.quantity : 0;
+
+            if (product.stock <= currentQuantity) {
+                this.messageService.add({
+                    severity: 'warn',
+                    summary: 'Stock insuficiente',
+                    detail: `Solo hay ${product.stock} unidades disponibles.`
+                });
+                return;
+            }
+        }
+
+        // 🔥 SI YA EXISTE → SOLO SUMAR
+        if (existingItem) {
+            existingItem.quantity++;
+            this.onQuantityChange(existingItem);
+            return;
+        }
+
+        // 🔥 NUEVO ITEM
+        const newItem: CartItem = {
+            ...product,
+            quantity: 1,
+            prevQuantity: 0,
+            discount: 0,
+            discountValue: 0,
+            subtotal: product.price,
+            total: product.price
+        };
+
+        this.activeInvoice.items.push(newItem); // 🔥 SOLO AQUÍ
+
+        this.onQuantityChange(newItem);
+
+        this.showSearchDialog = false;
+        this.focusBarcodeInput();
+    }
+
+    onQuantityChange(item: CartItem) {
+        if (!this.activeInvoice) return;
+
+        item.prevQuantity = item.quantity;
+
+        this.updateTotals(this.activeInvoice);
+    }
+    updateTotals(invoice: Invoice): void {
+        let grossSubtotal = 0;
+        let totalDiscountDetail = 0;
+
+        // 🔹 Resetear descuentos
+        for (const item of invoice.items) {
+            item.discountValue = 0;
+        }
+
+        // 🔹 Aplicar promociones dinámicas
+        this.applyPromotions(invoice);
+
+        // 🔹 Recalcular totales por ítem
+        for (const item of invoice.items) {
+            const itemSubtotal = item.price * item.quantity;
+
+            // 🔹 Protección: evitar descuento mayor al subtotal
+            if (item.discountValue > itemSubtotal) {
+                item.discountValue = itemSubtotal;
+            }
+
+            const itemTotal = itemSubtotal - item.discountValue;
+
+            item.subtotal = itemSubtotal;
+            item.total = itemTotal;
+
+            grossSubtotal += itemSubtotal;
+            totalDiscountDetail += item.discountValue;
+        }
+
+        const ivaPercentage = this.ivaRate / 100;
+
+        const generalDiscountAmount = (grossSubtotal - totalDiscountDetail) * (invoice.generalDiscount / 100);
+
+        const netSubtotal = grossSubtotal - totalDiscountDetail - generalDiscountAmount;
+
+        const totalVat = netSubtotal * ivaPercentage;
+
+        invoice.grossSubtotal = grossSubtotal;
+        invoice.subtotal = netSubtotal;
+        invoice.detailDiscount = totalDiscountDetail;
+        invoice.totalVat = totalVat;
+        invoice.total = netSubtotal + totalVat;
     }
 }

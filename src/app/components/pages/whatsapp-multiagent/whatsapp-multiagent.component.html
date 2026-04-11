@@ -145,8 +145,14 @@
                                     </div>
                                 }
                                 @case ('AUDIO') {
-                                    <div class="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm w-full">
-                                        <audio controls class="h-10 w-full opacity-90"></audio>
+                                    <div class="flex items-center gap-3 p-3 bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-100 shadow-sm min-w-[240px] max-w-full">
+                                        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-inner">
+                                            <i class="pi pi-microphone text-lg"></i>
+                                        </div>
+
+                                        <div class="flex-1">
+                                            <audio controls [src]="digitalOcean.url + '/' + msg.mediaUrl" class="h-8 w-full custom-audio-player"></audio>
+                                        </div>
                                     </div>
                                 }
                                 @case ('DOCUMENT') {

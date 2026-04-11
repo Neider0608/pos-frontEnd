@@ -133,8 +133,8 @@
                                                     dark:text-white
                                                 "
                                                     (onFocus)="item.prevQuantity = item.quantity"
-                                                    (onBlur)="onQuantityChange(item, true)"
-                                                    (onKeyDown.enter)="onQuantityChange(item, true)"
+                                                    (onBlur)="onQuantityChange(item)"
+                                                    (onKeyDown.enter)="onQuantityChange(item)"
                                                 ></p-inputNumber>
                                             </div>
                                         </td>
@@ -146,6 +146,7 @@
                                                     suffix="%"
                                                     [min]="0"
                                                     [max]="100"
+                                                    [disabled]="true"
                                                     (onInput)="updateTotals(activeInvoice!)"
                                                     inputStyleClass="w-20 text-center !py-2 !rounded-xl !border-slate-100 dark:!border-slate-700 !bg-slate-50 dark:!bg-slate-800/50 !text-xs !font-bold dark:text-emerald-400 text-emerald-600"
                                                 >

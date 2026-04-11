@@ -161,21 +161,17 @@ export interface PosProduct {
     extension1?: string;
     extension2?: string;
     tag?: string | null;
-
     barcode: string;
     name: string;
     description: string;
     price: number;
-
     category: string;
     categoryId: number;
-
     unitMeasure: string;
     unitMeasureId: number;
-
-    stock: number; // Disponible en bodega principal
+    stock: number;
     manageStock: boolean;
-
     hasDiscount: boolean | null;
     discountPercent: number;
+    vat: number;
 }

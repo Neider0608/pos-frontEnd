@@ -8,8 +8,6 @@ import { LoginService } from '../../../services/login.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-    private apiUrl = 'https://localhost:7197/api/auth';
-
     constructor(
         private http: HttpClient,
         private storage: AuthStorageService,
