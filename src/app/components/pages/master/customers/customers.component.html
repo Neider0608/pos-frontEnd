@@ -112,16 +112,26 @@
         </ng-template>
 
         <div class="space-y-6 pt-4 px-2 max-h-[65vh] overflow-y-auto custom-scroll">
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Primer Nombre *</label>
-                    <input pInputText [(ngModel)]="currentCustomer.firstName" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+            @if (!currentCustomer.isCompany) {
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Primer Nombre *</label>
+                        <input pInputText [(ngModel)]="currentCustomer.firstName" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Segundo Nombre</label>
+                        <input pInputText [(ngModel)]="currentCustomer.middleName" placeholder="Opcional" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Primer Apellido *</label>
+                        <input pInputText [(ngModel)]="currentCustomer.lastName" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Segundo Apellido</label>
+                        <input pInputText [(ngModel)]="currentCustomer.secondLastName" placeholder="Opcional" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Primer Apellido *</label>
-                    <input pInputText [(ngModel)]="currentCustomer.lastName" class="w-full !rounded-2xl !border-slate-100 dark:!border-slate-800 !bg-slate-50 dark:!bg-slate-800/50 !py-4 dark:text-white" />
-                </div>
-            </div>
+            }
 
             <div class="grid grid-cols-2 gap-4">
                 <div>

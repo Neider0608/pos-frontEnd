@@ -65,6 +65,7 @@ export interface Product {
 
     active: boolean;
     manageStock: boolean;
+    appliesVAT: boolean;
 
     reservedStock: number;
 
@@ -115,6 +116,7 @@ export interface ProductCreateRequest {
 
     active: boolean;
     manageStock: boolean;
+    appliesVAT: boolean;
 
     warehouses: ProductWarehouseRequest[];
 }
@@ -135,6 +137,7 @@ export interface Customer {
     middleName?: string;
     lastName: string;
     secondLastName?: string;
+
     phone?: string;
     email: string;
 
@@ -152,6 +155,9 @@ export interface Customer {
     // 🕒 Auditoría
     createdAt?: Date;
     updatedAt?: Date;
+
+    // UI helper - nombre completo para mostrar
+    displayName?: string;
 }
 
 export interface PosProduct {
@@ -174,4 +180,5 @@ export interface PosProduct {
     hasDiscount: boolean | null;
     discountPercent: number;
     vat: number;
+    appliesVAT: boolean;
 }

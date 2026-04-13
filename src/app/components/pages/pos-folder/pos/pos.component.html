@@ -9,7 +9,7 @@
                 </div>
                 <div>
                     <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tighter uppercase leading-none">Facturación</h2>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Terminal de Ventas POS</p>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1">Punto de Venta</p>
                 </div>
             </div>
 
@@ -61,13 +61,7 @@
             </div>
 
             <div class="lg:col-span-5 flex items-end gap-3">
-                <button
-                    pButton
-                    (click)="showSearchDialog = true"
-                    label="Buscar por Nombre (F2)"
-                    icon="pi pi-search"
-                    class="flex-1 !rounded-2xl !py-4 !bg-slate-800 dark:!bg-slate-700 !border-none !font-bold hover:!bg-slate-700 transition-all"
-                ></button>
+                <button pButton (click)="showSearchDialog = true" label="Buscar Producto (F2)" icon="pi pi-search" class="flex-1 !rounded-2xl !py-4 !bg-slate-800 dark:!bg-slate-700 !border-none !font-bold hover:!bg-slate-700 transition-all"></button>
 
                 <div class="hidden md:flex flex-col items-center justify-center px-6 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800">
                     <span class="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Items</span>
@@ -79,7 +73,7 @@
         <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <section class="lg:col-span-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col">
                 <div class="p-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
-                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-3"><i class="pi pi-list text-emerald-500"></i> Detalle de Venta</h3>
+                    <h3 class="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-3"><i class="pi pi-list text-emerald-500"></i> Detalle de Factura</h3>
                     <span class="text-[10px] font-black bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 px-3 py-1 rounded-full"> {{ activeInvoice?.items?.length || 0 }} PRODUCTOS SELECCIONADOS </span>
                 </div>
 
@@ -87,98 +81,83 @@
                     @if (!activeInvoice || activeInvoice.items.length === 0) {
                         <div class="flex flex-col items-center justify-center h-full py-32 opacity-20">
                             <i class="pi pi-shopping-cart text-8xl mb-4"></i>
-                            <p class="text-xl font-black uppercase tracking-tighter">Esperando productos...</p>
+                            <p class="text-xl font-black uppercase tracking-tighter">Agregue productos a la factura</p>
                         </div>
                     } @else {
                         <table class="w-full text-left border-separate border-spacing-0">
                             <thead class="sticky top-0 z-20 bg-white dark:bg-slate-900">
                                 <tr class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                    <th class="px-8 py-5 border-b border-slate-100 dark:border-slate-800">Producto</th>
-                                    <th class="px-4 py-5 text-center border-b border-slate-100 dark:border-slate-800">Cant.</th>
-                                    <th class="px-4 py-5 text-center border-b border-slate-100 dark:border-slate-800 w-32">Desc. %</th>
-                                    <th class="px-4 py-5 text-right border-b border-slate-100 dark:border-slate-800">Precio Unit.</th>
-                                    <th class="px-4 py-5 text-right border-b border-slate-100 dark:border-slate-800">Subtotal</th>
-                                    <th class="px-6 py-5 text-right border-b border-slate-100 dark:border-slate-800"></th>
+                                    <th class="px-6 py-5 border-b border-slate-100 dark:border-slate-800">Producto</th>
+                                    <th class="px-3 py-5 text-center border-b border-slate-100 dark:border-slate-800">Cant.</th>
+                                    <th class="px-3 py-5 text-center border-b border-slate-100 dark:border-slate-800">IVA %</th>
+                                    <th class="px-3 py-5 text-center border-b border-slate-100 dark:border-slate-800">IVA $</th>
+                                    <th class="px-3 py-5 text-center border-b border-slate-100 dark:border-slate-800">Desc. %</th>
+                                    <th class="px-3 py-5 text-center border-b border-slate-100 dark:border-slate-800">Desc. $</th>
+                                    <th class="px-3 py-5 text-right border-b border-slate-100 dark:border-slate-800">Precio Unit.</th>
+                                    <th class="px-3 py-5 text-right border-b border-slate-100 dark:border-slate-800">Total</th>
+                                    <th class="px-4 py-5 text-right border-b border-slate-100 dark:border-slate-800"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50 dark:divide-slate-800">
                                 @for (item of activeInvoice.items; track item.id) {
                                     <tr class="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all">
-                                        <td class="px-8 py-6">
+                                        <td class="px-6 py-5">
                                             <div class="flex flex-col">
-                                                <span class="font-bold text-slate-700 dark:text-slate-200 text-base group-hover:text-emerald-600 transition-colors">{{ item.name }}</span>
-                                                <span class="text-[10px] font-mono text-slate-400 uppercase mt-0.5">{{ item.code }}</span>
+                                                <span class="font-bold text-slate-700 dark:text-slate-200 text-sm group-hover:text-emerald-600 transition-colors">{{ item.name }}</span>
+                                                <span class="text-[9px] font-mono text-slate-400 uppercase mt-0.5">{{ item.code }}</span>
                                             </div>
                                         </td>
 
-                                        <td class="px-4 py-6">
-                                            <div class="flex justify-center">
-                                                <p-inputNumber
-                                                    [(ngModel)]="item.quantity"
-                                                    [showButtons]="false"
-                                                    [min]="1"
-                                                    [useGrouping]="false"
-                                                    inputStyleClass="
-                                                    w-20
-                                                    text-center
-                                                    text-xl
-                                                    font-black
-                                                    bg-transparent
-                                                    border
-                                                    border-gray-400
-                                                    rounded-lg
-                                                    px-2
-                                                    focus:border-emerald-500
-                                                    focus:ring-0
-                                                    dark:text-white
-                                                "
-                                                    (onFocus)="item.prevQuantity = item.quantity"
-                                                    (onBlur)="onQuantityChange(item)"
-                                                    (onKeyDown.enter)="onQuantityChange(item)"
-                                                ></p-inputNumber>
-                                            </div>
+                                        <td class="px-3 py-5 text-center">
+                                            <p-inputNumber
+                                                [(ngModel)]="item.quantity"
+                                                [showButtons]="false"
+                                                [min]="1"
+                                                [useGrouping]="false"
+                                                inputStyleClass="w-16 text-center text-lg font-black bg-transparent border border-gray-400 rounded-lg px-1 focus:border-emerald-500 focus:ring-0 dark:text-white"
+                                                (onFocus)="item.prevQuantity = item.quantity"
+                                                (onBlur)="onQuantityChange(item)"
+                                                (onKeyDown.enter)="onQuantityChange(item)"
+                                            ></p-inputNumber>
                                         </td>
 
-                                        <td class="px-4 py-6">
-                                            <div class="relative flex items-center justify-center">
-                                                <p-inputNumber
-                                                    [(ngModel)]="item.discount"
-                                                    suffix="%"
-                                                    [min]="0"
-                                                    [max]="100"
-                                                    [disabled]="true"
-                                                    (onInput)="updateTotals(activeInvoice!)"
-                                                    inputStyleClass="w-20 text-center !py-2 !rounded-xl !border-slate-100 dark:!border-slate-700 !bg-slate-50 dark:!bg-slate-800/50 !text-xs !font-bold dark:text-emerald-400 text-emerald-600"
-                                                >
-                                                </p-inputNumber>
-                                            </div>
+                                        <td class="px-3 py-5 text-center">
+                                            <span class="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">{{ item.vatRate }}%</span>
                                         </td>
 
-                                        <td class="px-4 py-6 text-right">
+                                        <td class="px-3 py-5 text-center">
+                                            <span class="text-xs font-mono text-rose-500">{{ item.vatValue | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                                        </td>
+
+                                        <td class="px-3 py-5 text-center">
+                                            <span class="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ item.discount }}%</span>
+                                        </td>
+
+                                        <td class="px-3 py-5 text-center">
+                                            @if (item.discountValue > 0) {
+                                                <span class="text-xs font-mono text-rose-500">-{{ item.discountValue | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                                            } @else {
+                                                <span class="text-xs font-mono text-slate-300">-</span>
+                                            }
+                                        </td>
+
+                                        <td class="px-3 py-5 text-right">
                                             <p-inputNumber
                                                 [(ngModel)]="item.price"
                                                 [mode]="'currency'"
                                                 [currency]="currencyCode"
                                                 [locale]="locale"
                                                 (onInput)="updateTotals(activeInvoice!)"
-                                                inputStyleClass="w-32 text-right !bg-transparent !border-none !font-mono !text-sm text-slate-500 dark:text-slate-400"
-                                            >
-                                            </p-inputNumber>
+                                                inputStyleClass="w-28 text-right !bg-transparent !border-none !font-mono !text-xs text-slate-500 dark:text-slate-400"
+                                            ></p-inputNumber>
                                         </td>
 
-                                        <td class="px-4 py-6 text-right">
-                                            <div class="flex flex-col items-end font-mono">
-                                                <span class="font-black text-slate-800 dark:text-slate-100">{{ item.total | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
-                                                @if (item.discountValue > 0) {
-                                                    <span class="text-[9px] bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold mt-1">
-                                                        -{{ item.discountValue | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
-                                                    </span>
-                                                }
-                                            </div>
+                                        <td class="px-3 py-5 text-right">
+                                            <span class="font-mono font-bold text-slate-800 dark:text-slate-100 text-sm">{{ item.total | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
                                         </td>
 
-                                        <td class="px-6 py-6 text-right">
-                                            <button (click)="removeProduct(item.id)" class="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all">
+                                        <td class="px-4 py-5 text-right">
+                                            <button (click)="removeProduct(item.id)" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-300 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all">
                                                 <i class="pi pi-trash"></i>
                                             </button>
                                         </td>
@@ -190,7 +169,7 @@
                 </div>
 
                 <div class="px-8 py-4 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Los cambios de precio/descuento afectan solo esta factura</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Precios sin IVA incluido. Los cambios afectan solo esta factura.</span>
                     <div class="flex gap-6">
                         <div class="flex items-center gap-2">
                             <span class="text-[10px] font-bold text-slate-400 uppercase">Subtotal:</span>
@@ -204,12 +183,17 @@
                 <div class="bg-slate-900 dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl shadow-emerald-200/20 text-white relative overflow-hidden">
                     <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"></div>
 
-                    <h3 class="text-[11px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-8">Liquidación Total</h3>
+                    <h3 class="text-[11px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-8">Total Factura</h3>
 
                     <div class="space-y-4">
                         <div class="flex justify-between items-center opacity-70">
-                            <span class="text-sm font-bold uppercase tracking-widest">Subtotal Bruto</span>
-                            <span class="font-mono">{{ activeInvoice?.grossSubtotal | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                            <span class="text-sm font-bold uppercase tracking-widest">Base Gravable</span>
+                            <span class="font-mono">{{ activeInvoice?.subtotal | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
+                        </div>
+
+                        <div class="flex justify-between items-center text-amber-400">
+                            <span class="text-xs font-bold uppercase tracking-widest">Impuestos (IVA)</span>
+                            <span class="font-mono">{{ activeInvoice?.totalVat | currency: currencyCode : 'symbol' : '1.0-0' : locale }}</span>
                         </div>
 
                         <div class="group">
@@ -224,7 +208,7 @@
                         </div>
 
                         <div class="flex justify-between items-center text-rose-400">
-                            <span class="text-xs font-bold uppercase tracking-widest">Ahorro Total</span>
+                            <span class="text-xs font-bold uppercase tracking-widest">Total Descuentos</span>
                             <span class="font-mono font-black text-lg"
                                 >-{{
                                     (activeInvoice?.detailDiscount || 0) + (((activeInvoice?.grossSubtotal || 0) - (activeInvoice?.detailDiscount || 0)) * (activeInvoice?.generalDiscount || 0)) / 100
@@ -235,11 +219,10 @@
 
                         <div class="pt-6 border-t border-slate-800">
                             <div class="flex flex-col gap-1">
-                                <span class="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Total a Pagar</span>
+                                <span class="text-[11px] font-black text-emerald-400 uppercase tracking-widest">Total Factura</span>
                                 <div class="text-5xl font-black tracking-tighter text-white">
                                     {{ activeInvoice?.total | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
                                 </div>
-                                <span class="text-[10px] font-mono text-slate-500 uppercase">Incluye IVA ({{ ivaRate }}%)</span>
                             </div>
                         </div>
                     </div>
@@ -248,12 +231,12 @@
                         <button
                             pButton
                             (click)="showPaymentDialog = true"
-                            label="REGISTRAR PAGO (F3)"
+                            label="COBRAR (F3)"
                             icon="pi pi-credit-card"
                             class="!w-full !rounded-[1.5rem] !py-6 !bg-emerald-600 !border-none !font-black !text-lg !shadow-xl !shadow-emerald-900/50 hover:!scale-[1.02] transition-transform"
                         ></button>
 
-                        <button pButton (click)="clearInvoice(activeInvoice!)" label="Anular Orden" icon="pi pi-times" class="p-button-text !w-full !text-slate-500 hover:!text-rose-500 !font-bold"></button>
+                        <button pButton (click)="confirmClearInvoice()" label="Anular Factura" icon="pi pi-times" class="p-button-text !w-full !text-slate-500 hover:!text-rose-500 !font-bold"></button>
                     </div>
                 </div>
 
@@ -265,7 +248,7 @@
                         </div>
                         <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex flex-col items-center">
                             <kbd class="px-2 py-1 bg-white dark:bg-slate-700 rounded shadow text-xs font-black">F3</kbd>
-                            <span class="text-[9px] font-bold text-slate-400 uppercase mt-2">Pagar</span>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase mt-2">Cobrar</span>
                         </div>
                     </div>
                 </div>
@@ -292,6 +275,8 @@
         [total]="activeInvoice?.total || 0"
         [customers]="customers"
         [totalVat]="activeInvoice?.totalVat ?? 0"
+        [grossSubtotal]="activeInvoice?.grossSubtotal || 0"
+        [detailDiscount]="activeInvoice?.detailDiscount || 0"
         [viewMode]="'desktop'"
         (visibleChange)="showPaymentDialog = false"
         (cartItemsChange)="activeInvoice!.items = $event; updateTotals(activeInvoice!)"
@@ -300,6 +285,7 @@
         (generalDiscountChange)="activeInvoice!.generalDiscount = $event; updateTotals(activeInvoice!)"
         (deliveryInfoChange)="activeInvoice!.deliveryInfo = $event"
         (checkout)="handleCheckout()"
+        (customerCreated)="onCustomerCreated($event)"
     ></app-payment-dialog>
 }
 
@@ -329,3 +315,5 @@
         [deliveryInfo]="lastSale.deliveryInfo"
     ></app-invoice-dialog>
 }
+
+<p-confirmDialog></p-confirmDialog>

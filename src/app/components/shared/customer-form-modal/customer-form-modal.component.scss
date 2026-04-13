@@ -1,0 +1,18 @@
+:host ::ng-deep {
+    .p-dialog {
+        border-radius: 1.5rem;
+    }
+
+    .p-dialog .p-dialog-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .p-dialog .p-dialog-content {
+        padding: 1.5rem;
+    }
+
+    .p-dialog .p-dialog-footer {
+        padding: 1rem 1.5rem;
+    }
+}

@@ -57,10 +57,10 @@ export class InventoryComponent implements OnInit {
 
     filters = {
         nameOrReference: '',
-        category: null,
+        category: null as number | null,
         extension1: '',
         extension2: '',
-        unitMeasure: '',
+        unitMeasure: null as number | null,
         active: true,
         minPrice: null,
         maxPrice: null
@@ -257,22 +257,21 @@ export class InventoryComponent implements OnInit {
 
     filterProducts() {
         this.filteredInventory = this.inventory.filter((item) => {
-            const matchesSearch =
-                !this.filters.nameOrReference ||
-                item.name.toLowerCase().includes(this.filters.nameOrReference.toLowerCase()) ||
-                item.reference?.toLowerCase().includes(this.filters.nameOrReference.toLowerCase()) ||
-                item.barcode?.toLowerCase().includes(this.filters.nameOrReference.toLowerCase());
+            const searchLower = (this.filters.nameOrReference || '').toLowerCase().trim();
+            const matchesSearch = !searchLower || item.name.toLowerCase().includes(searchLower) || (item.reference || '').toLowerCase().includes(searchLower) || (item.barcode || '').toLowerCase().includes(searchLower);
 
             const matchesCategory = !this.filters.category || item.categoryId === this.filters.category;
-            const matchesExtension = !this.filters.extension1 || item.extension1?.toLowerCase().includes(this.filters.extension1.toLowerCase());
+
+            const matchesUnitMeasure = !this.filters.unitMeasure || item.unitMeasureId === this.filters.unitMeasure;
+
             const matchesActive = item.active === this.filters.active;
 
-            return matchesSearch && matchesCategory && matchesExtension && matchesActive;
+            return matchesSearch && matchesCategory && matchesUnitMeasure && matchesActive;
         });
     }
 
     resetFilters() {
-        this.filters = { nameOrReference: '', category: null, extension1: '', extension2: '', unitMeasure: '', active: true, minPrice: null, maxPrice: null };
+        this.filters = { nameOrReference: '', category: null, extension1: '', extension2: '', unitMeasure: null, active: true, minPrice: null, maxPrice: null };
         this.filterProducts();
     }
 
@@ -296,7 +295,7 @@ export class InventoryComponent implements OnInit {
     }
 
     openAddDialog() {
-        this.newProduct = { active: true, manageStock: true, price: 0 };
+        this.newProduct = { active: true, manageStock: true, appliesVAT: true, price: 0 };
         this.prepareWarehouseUI();
         this.showAddDialog = true;
     }
@@ -311,6 +310,12 @@ export class InventoryComponent implements OnInit {
         this.showAddDialog = false;
         this.showEditDialog = false;
         this.newProduct = {};
+    }
+
+    onDialogVisibleChange(visible: boolean) {
+        if (!visible) {
+            this.closeDialog();
+        }
     }
 
     onImageSelected(event: any) {
@@ -339,6 +344,7 @@ export class InventoryComponent implements OnInit {
             unitMeasureId: this.newProduct.unitMeasureId,
             active: this.newProduct.active,
             manageStock: this.newProduct.manageStock,
+            appliesVAT: this.newProduct.appliesVAT ?? true,
             warehouses: this.warehousesUI.map((w) => ({
                 warehouseId: w.warehouseId,
                 stock: w.stock,
@@ -456,6 +462,7 @@ export class InventoryComponent implements OnInit {
                 unitMeasureId: Number(row['Unidad Medida ID']),
                 active: row['Activo'] === 'SI',
                 manageStock: row['Maneja Stock'] === 'SI',
+                appliesVAT: row['Aplica IVA'] === 'SI',
                 warehouses: warehousesForThisProduct
             };
         });

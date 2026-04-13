@@ -396,6 +396,7 @@ export class PurchaseComponent implements OnInit {
             unitMeasureId: this.newProduct.unitMeasureId,
             active: this.newProduct.active,
             manageStock: this.newProduct.manageStock,
+            appliesVAT: this.newProduct.appliesVAT ?? true,
             warehouses: this.warehousesUI.map((w) => ({
                 warehouseId: w.warehouseId,
                 stock: w.stock,
@@ -416,7 +417,7 @@ export class PurchaseComponent implements OnInit {
     }
 
     openAddDialog() {
-        this.newProduct = { active: true, manageStock: true, price: 0 };
+        this.newProduct = { active: true, manageStock: true, appliesVAT: true, price: 0 };
         this.prepareWarehouseUI();
         this.showAddDialog = true;
     }

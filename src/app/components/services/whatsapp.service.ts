@@ -55,18 +55,13 @@ export class WhatsappService {
     }
 
     updateConversationStatus(conversationId: number, status: string) {
-    return this.http.post<any>(`${this.apiUrl}WhatsApp/UpdateConversationStatus/${conversationId}/${status}`,{});
+        return this.http.post<any>(`${environment.apiUrl}WhatsApp/UpdateConversationStatus/${conversationId}/${status}`, {});
     }
 
     updateClientName(phoneNumberId: number, clientName: string) {
-        return this.http.post<any>(
-            `${this.apiUrl}WhatsApp/UpdateClientName`,
-            {
-                phoneNumberId,
-                clientName
-            }
-        );
+        return this.http.post<any>(`${environment.apiUrl}WhatsApp/UpdateClientName`, {
+            phoneNumberId,
+            clientName
+        });
     }
-
-
 }

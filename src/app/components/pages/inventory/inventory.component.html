@@ -22,7 +22,7 @@
                     type="button"
                     icon="pi pi-file-excel"
                     label="Exportar"
-                    *ngIf="canExport"
+                    *ngIf="canEdit || canExport"
                     (click)="exportToExcel()"
                     [disabled]="loading || filteredInventory.length === 0"
                     class="p-button-outlined !border-emerald-500 !text-emerald-600 hover:!bg-emerald-50 !rounded-xl !px-6 !py-3 !font-bold transition-all"
@@ -35,7 +35,7 @@
                         type="button"
                         icon="pi pi-upload"
                         label="Importar"
-                        *ngIf="canExport"
+                        *ngIf="canEdit || canExport"
                         (click)="excelUpload.click()"
                         [disabled]="loading"
                         class="p-button-outlined !border-indigo-500 !text-indigo-600 hover:!bg-indigo-50 !rounded-xl !px-6 !py-3 !font-bold transition-all"
@@ -71,7 +71,11 @@
                     [options]="categories"
                     [(ngModel)]="filters.category"
                     (onChange)="filterProducts()"
+                    appendTo="body"
                     placeholder="Categoría"
+                    optionLabel="name"
+                    optionValue="id"
+                    [showClear]="true"
                     styleClass="!bg-white dark:!bg-slate-800 !border-slate-200 !rounded-xl !h-[45px] w-full flex items-center px-2 font-semibold shadow-sm"
                 ></p-dropdown>
 
@@ -79,7 +83,11 @@
                     [options]="unitsMeasure"
                     [(ngModel)]="filters.unitMeasure"
                     (onChange)="filterProducts()"
+                    appendTo="body"
                     placeholder="U. Medida"
+                    optionLabel="code"
+                    optionValue="id"
+                    [showClear]="true"
                     styleClass="!bg-white dark:!bg-slate-800 !border-slate-200 !rounded-xl !h-[45px] w-full flex items-center px-2 font-semibold shadow-sm"
                 ></p-dropdown>
 
@@ -143,7 +151,14 @@
         </div>
     </div>
 
-    <p-dialog [visible]="showAddDialog || showEditDialog" [modal]="true" [header]="showEditDialog ? '✏️ EDITAR PRODUCTO' : '📦 NUEVO PRODUCTO'" [style]="{ width: '1000px' }" styleClass="custom-dialog-clean">
+    <p-dialog
+        [visible]="showAddDialog || showEditDialog"
+        [modal]="true"
+        [header]="showEditDialog ? '✏️ EDITAR PRODUCTO' : '📦 NUEVO PRODUCTO'"
+        [style]="{ width: '1000px' }"
+        styleClass="custom-dialog-clean"
+        (visibleChange)="onDialogVisibleChange($event)"
+    >
         <div class="grid grid-cols-1 md:grid-cols-12 gap-8 py-4">
             <div class="md:col-span-4 space-y-6">
                 <div
@@ -167,6 +182,10 @@
                     <div class="flex items-center justify-between p-2">
                         <span class="text-[10px] font-bold text-slate-500 uppercase">Producto Activo</span>
                         <p-toggleswitch [(ngModel)]="newProduct.active"></p-toggleswitch>
+                    </div>
+                    <div class="flex items-center justify-between p-2">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Aplica IVA</span>
+                        <p-toggleswitch [(ngModel)]="newProduct.appliesVAT"></p-toggleswitch>
                     </div>
                 </div>
             </div>

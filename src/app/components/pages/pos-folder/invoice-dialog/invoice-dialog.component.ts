@@ -57,6 +57,17 @@ export class InvoiceDialogComponent {
         return this.subtotal * (this.generalDiscount / 100);
     }
 
+    get totalDiscountAmount(): number {
+        return this.detailDiscount + this.generalDiscountAmount;
+    }
+
+    get calculatedTotalVat(): number {
+        if (this.totalVat && this.totalVat > 0) {
+            return this.totalVat;
+        }
+        return this.items.reduce((sum, item) => sum + (item.vatValue || 0), 0);
+    }
+
     get totalFinanced(): number {
         return this.paymentMethods.filter((pm) => pm.type === 'financed').reduce((sum, pm) => sum + pm.amount, 0);
     }
@@ -74,6 +85,7 @@ export class InvoiceDialogComponent {
             grossSubtotal: this.grossSubtotal,
             discount: this.detailDiscount + ((this.grossSubtotal - this.detailDiscount) * this.generalDiscount) / 100,
             total: this.total,
+            totalVat: this.calculatedTotalVat,
             deliveryInfo: this.deliveryInfo,
             paymentMethods: this.paymentMethods,
             session: this.selectedCompany
@@ -92,6 +104,7 @@ export class InvoiceDialogComponent {
             grossSubtotal: this.grossSubtotal,
             discount: this.detailDiscount + ((this.grossSubtotal - this.detailDiscount) * this.generalDiscount) / 100,
             total: this.total,
+            totalVat: this.calculatedTotalVat,
             deliveryInfo: this.deliveryInfo,
             paymentMethods: this.paymentMethods,
             session: this.selectedCompany

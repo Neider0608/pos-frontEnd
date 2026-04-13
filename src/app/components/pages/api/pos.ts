@@ -52,6 +52,9 @@ export interface CartItem extends PosProduct {
     discount: number;
     subtotal: number;
     discountValue: number;
+    vatRate: number;
+    vatValue: number;
+    priceExcludedTax: number;
     total: number;
 }
 
@@ -124,6 +127,9 @@ export interface InvoiceItem {
     discount?: number;
     discount_Value?: number;
     subtotal?: number;
+    subtotal_With_Iva?: number;
+    vat_Rate?: number;
+    vat_Value?: number;
     total?: number;
 }
 

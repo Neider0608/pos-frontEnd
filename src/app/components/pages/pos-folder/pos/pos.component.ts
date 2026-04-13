@@ -12,6 +12,8 @@ import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { InputNumberModule } from 'primeng/inputnumber';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { ProductGridComponent } from '../product-grid/product-grid.component';
 import { SearchDialogComponent } from '../search-dialog/search-dialog.component';
 import { CartItem, Invoice, LastSale, PaymentMethod, Promotion, ViewMode } from '../../api/pos';
@@ -31,9 +33,24 @@ import { LoginService } from '../../../services/login.service';
 @Component({
     selector: 'app-pos',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, InputSwitchModule, BadgeModule, CardModule, DialogModule, ToastModule, InputNumberModule, SearchDialogComponent, PaymentDialogComponent, InvoiceDialogComponent],
+    imports: [
+        CommonModule,
+        FormsModule,
+        ButtonModule,
+        InputTextModule,
+        InputSwitchModule,
+        BadgeModule,
+        CardModule,
+        DialogModule,
+        ToastModule,
+        InputNumberModule,
+        ConfirmDialogModule,
+        SearchDialogComponent,
+        PaymentDialogComponent,
+        InvoiceDialogComponent
+    ],
 
-    providers: [MessageService, PosService, MasterService, InventoryService],
+    providers: [MessageService, PosService, MasterService, InventoryService, AuthService, LoginService, ConfirmationService],
     templateUrl: './pos.component.html',
     styleUrls: ['./pos.component.scss']
 })
@@ -73,9 +90,10 @@ export class PosComponent implements OnInit {
     private barcodeBuffer = '';
     private barcodeTimer: any;
     currencyCode: string = 'COP';
-    ivaRate = 0; //pendiente
+
     constructor(
         private messageService: MessageService,
+        private confirmationService: ConfirmationService,
         private posService: PosService,
         private masterService: MasterService,
         private inventoryService: InventoryService,
@@ -140,6 +158,7 @@ export class PosComponent implements OnInit {
         this.inventoryService.getProductsStore(this.companiaId).subscribe({
             next: (res) => {
                 this.products = res.data || [];
+                console.log('Productos cargados para POS:', this.products);
             },
             error: () =>
                 this.messageService.add({
@@ -169,6 +188,7 @@ export class PosComponent implements OnInit {
         this.activeInvoice.items = this.activeInvoice.items.filter((item) => String(item.id) !== String(productId));
 
         this.updateTotals(this.activeInvoice);
+        this.focusBarcodeInput();
     }
 
     @HostListener('window:keydown', ['$event'])
@@ -204,8 +224,10 @@ export class PosComponent implements OnInit {
         this.masterService.getClients(this.companiaId).subscribe({
             next: (res) => {
                 if (res.code === 0) {
-                    this.customers = res.data || [];
-                    console.log('custmerS: ', this.customers);
+                    this.customers = (res.data || []).map((c: any) => ({
+                        ...c,
+                        displayName: this.buildCustomerDisplayName(c)
+                    }));
                 } else {
                     this.messageService.add({
                         severity: 'warn',
@@ -222,6 +244,14 @@ export class PosComponent implements OnInit {
                 });
             }
         });
+    }
+
+    private buildCustomerDisplayName(customer: Customer): string {
+        if (customer.isCompany && customer.businessName) {
+            return customer.businessName;
+        }
+        const name = [customer.firstName, customer.middleName, customer.lastName, customer.secondLastName].filter(Boolean).join(' ').trim();
+        return name || customer.email || 'Cliente sin nombre';
     }
 
     loadPromotions() {
@@ -252,11 +282,28 @@ export class PosComponent implements OnInit {
 
     /** Crear una nueva venta (carrito) para otro cliente */
     createNewInvoice(index: number) {
+        let defaultCustomer = this.customers.find((c) => c.document === '222222222' || c.nit === '222222222');
+
+        if (!defaultCustomer) {
+            defaultCustomer = {
+                id: 0,
+                document: '222222222',
+                firstName: 'Consumidor',
+                lastName: 'Final',
+                isCompany: false,
+                displayName: 'Consumidor Final',
+                email: '',
+                phone: '',
+                address: '',
+                city: ''
+            } as Customer;
+        }
+
         const newInvoice: Invoice = {
             invoiceNumber: `FV-${this.invoiceCounter.toString().padStart(3, '0')}`,
             index: index,
             date: new Date(),
-            customer: null,
+            customer: defaultCustomer,
             items: [],
             subtotal: 0,
             grossSubtotal: 0,
@@ -447,6 +494,8 @@ export class PosComponent implements OnInit {
                     manageStock: item.manageStock ?? true,
                     quantity: item.quantity,
                     price: item.price,
+                    vatRate: item.vatRate ?? 0,
+                    vatValue: item.vatValue ?? 0,
                     discount: item.discount ?? 0,
                     discountValue: item.discountValue ?? 0,
                     subtotal: item.subtotal,
@@ -486,8 +535,6 @@ export class PosComponent implements OnInit {
                     if (this.lastSale) {
                         this.lastSale.invoiceNumber = res.data[0].invoice_Number?.toString() || '';
                     }
-                    console.log('fsv:', this.lastSale);
-                    console.log('res:', res);
 
                     // --- Mostrar resultado ---
                     /*  this.showToast('success', 'Venta completada', `Factura ${finalNumber}`); */
@@ -515,6 +562,22 @@ export class PosComponent implements OnInit {
         });
     }
 
+    confirmClearInvoice() {
+        this.confirmationService.confirm({
+            header: 'Confirmar anulación',
+            message: '¿Está seguro de que desea anular esta factura? Se liberará todo el stock reservado.',
+            icon: 'pi pi-exclamation-triangle',
+            acceptLabel: 'Sí, anular',
+            rejectLabel: 'Cancelar',
+            acceptButtonStyleClass: 'p-button-danger',
+            accept: () => {
+                if (this.activeInvoice) {
+                    this.clearInvoice(this.activeInvoice);
+                }
+            }
+        });
+    }
+
     /** Reiniciar un carrito */
     clearInvoice(invoice: Invoice) {
         this.clearInvoiceAll();
@@ -527,6 +590,11 @@ export class PosComponent implements OnInit {
         if (this.invoices.length == 0) {
             this.createNewInvoice(0);
         }
+    }
+
+    /** Manejar cliente creado desde el selector - Recargar clientes desde BD */
+    onCustomerCreated(customer: Customer): void {
+        this.loadCustomers();
     }
 
     /** Mensajes Toast */
@@ -542,7 +610,6 @@ export class PosComponent implements OnInit {
 
     /* Checkout*/
     applyPromotions(invoice: Invoice): void {
-        debugger;
         if (!this.promotions?.length) return;
 
         const now = new Date();
@@ -617,12 +684,12 @@ export class PosComponent implements OnInit {
                     const existingGift = invoice.items.find((i) => i.id === realProduct.id);
 
                     if (existingGift) {
-                        (existingGift.quantity = totalGiftUnits),
+                        ((existingGift.quantity = totalGiftUnits),
                             (existingGift.prevQuantity = totalGiftUnits),
                             (existingGift.discount = 100),
                             (existingGift.discountValue = realProduct.price * totalGiftUnits),
                             (existingGift.subtotal = realProduct.price * totalGiftUnits),
-                            (existingGift.total = 0);
+                            (existingGift.total = 0));
                     } else {
                         const giftItem: CartItem = {
                             ...realProduct,
@@ -630,8 +697,12 @@ export class PosComponent implements OnInit {
                             prevQuantity: totalGiftUnits,
                             discount: 100,
                             discountValue: realProduct.price * totalGiftUnits,
+                            vatRate: realProduct.vat || 0,
+                            vatValue: 0,
+                            priceExcludedTax: 0,
                             subtotal: realProduct.price * totalGiftUnits,
-                            total: 0
+                            total: 0,
+                            appliesVAT: realProduct.appliesVAT ?? false
                         };
 
                         invoice.items.push(giftItem);
@@ -646,7 +717,6 @@ export class PosComponent implements OnInit {
     }
 
     addProduct(product: PosProduct) {
-        debugger;
         if (!this.activeInvoice) return;
 
         const existingItem = this.activeInvoice.items.find((i) => i.id === product.id);
@@ -678,8 +748,12 @@ export class PosComponent implements OnInit {
             prevQuantity: 0,
             discount: 0,
             discountValue: 0,
+            vatRate: product.vat || 0,
+            vatValue: 0,
+            priceExcludedTax: 0,
             subtotal: product.price,
-            total: product.price
+            total: product.price,
+            appliesVAT: product.appliesVAT ?? false
         };
 
         this.activeInvoice.items.push(newItem); // 🔥 SOLO AQUÍ
@@ -700,45 +774,51 @@ export class PosComponent implements OnInit {
     updateTotals(invoice: Invoice): void {
         let grossSubtotal = 0;
         let totalDiscountDetail = 0;
+        let totalVat = 0;
+        let totalExcludedTax = 0;
 
-        // 🔹 Resetear descuentos
         for (const item of invoice.items) {
             item.discountValue = 0;
         }
 
-        // 🔹 Aplicar promociones dinámicas
         this.applyPromotions(invoice);
 
-        // 🔹 Recalcular totales por ítem
         for (const item of invoice.items) {
             const itemSubtotal = item.price * item.quantity;
 
-            // 🔹 Protección: evitar descuento mayor al subtotal
             if (item.discountValue > itemSubtotal) {
                 item.discountValue = itemSubtotal;
             }
 
-            const itemTotal = itemSubtotal - item.discountValue;
+            const itemAfterDiscount = itemSubtotal - item.discountValue;
+
+            if (item.appliesVAT && item.vatRate > 0) {
+                item.priceExcludedTax = itemAfterDiscount / (1 + item.vatRate / 100);
+                item.vatValue = itemAfterDiscount - item.priceExcludedTax;
+            } else {
+                item.priceExcludedTax = itemAfterDiscount;
+                item.vatValue = 0;
+            }
 
             item.subtotal = itemSubtotal;
-            item.total = itemTotal;
+            item.total = itemAfterDiscount + item.vatValue;
 
             grossSubtotal += itemSubtotal;
             totalDiscountDetail += item.discountValue;
+            totalVat += item.vatValue;
+            totalExcludedTax += item.priceExcludedTax;
         }
+        const netSubtotal = grossSubtotal - totalDiscountDetail;
 
-        const ivaPercentage = this.ivaRate / 100;
+        const generalDiscountAmount = netSubtotal * (invoice.generalDiscount / 100);
 
-        const generalDiscountAmount = (grossSubtotal - totalDiscountDetail) * (invoice.generalDiscount / 100);
-
-        const netSubtotal = grossSubtotal - totalDiscountDetail - generalDiscountAmount;
-
-        const totalVat = netSubtotal * ivaPercentage;
+        const subtotalAfterGeneralDiscount = netSubtotal - generalDiscountAmount;
+        const vatAfterGeneralDiscount = totalVat;
 
         invoice.grossSubtotal = grossSubtotal;
-        invoice.subtotal = netSubtotal;
+        invoice.subtotal = subtotalAfterGeneralDiscount;
         invoice.detailDiscount = totalDiscountDetail;
-        invoice.totalVat = totalVat;
-        invoice.total = netSubtotal + totalVat;
+        invoice.totalVat = vatAfterGeneralDiscount;
+        invoice.total = subtotalAfterGeneralDiscount + vatAfterGeneralDiscount;
     }
 }

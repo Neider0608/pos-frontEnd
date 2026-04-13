@@ -274,17 +274,33 @@ export class InvoicesComponent implements OnInit {
     handlePrint(): void {
         let detailDiscount = this.selectedInvoice?.items?.reduce((sum, item) => sum + (item.discount_Value || 0), 0) || 0;
 
+        const items = (this.selectedInvoice?.items || []).map((item: any) => ({
+            ...item,
+            discountValue: item.discount_Value || 0,
+            vatRate: item.vat_Rate || 0,
+            vatValue: item.vat_Value || 0,
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            subtotal: item.subtotal || 0,
+            total: item.total || 0,
+            appliesVAT: item.vat_Rate > 0,
+            discount: item.discount || 0,
+            reference: item.reference || '',
+            name: item.name || 'Producto sin nombre'
+        }));
+
         this.invoicePdfService.generatePOS({
             invoiceNumber: this.selectedInvoice?.invoice_Number || '',
             date: this.selectedInvoice?.created_At || new Date(),
             customer: this.selectedInvoice?.customer || null,
-            items: this.selectedInvoice?.items || [],
+            items: items,
             subtotal: this.selectedInvoice?.subtotal || 0,
-            detailDiscount: this.selectedInvoice?.items?.reduce((acc, item) => acc + (item.discount_Value ?? 0), 0) ?? 0,
+            detailDiscount: detailDiscount,
             generalDiscount: this.selectedInvoice?.descuento_General || 0,
             grossSubtotal: this.selectedInvoice?.subtotal_Bruto || 0,
             discount: detailDiscount + (((this.selectedInvoice?.subtotal || 0) - detailDiscount) * (this.selectedInvoice?.descuento_General || 0)) / 100,
             total: this.selectedInvoice?.invoice_Total || 0,
+            totalVat: this.selectedInvoice?.total_Iva || 0,
             deliveryInfo: this.selectedInvoice?.delivery,
             paymentMethods: this.selectedInvoice?.payments || [],
             session: this.selectedCompany
@@ -293,17 +309,34 @@ export class InvoicesComponent implements OnInit {
 
     handleDownload() {
         let detailDiscount = this.selectedInvoice?.items?.reduce((sum, item) => sum + (item.discount_Value || 0), 0) || 0;
+
+        const items = (this.selectedInvoice?.items || []).map((item: any) => ({
+            ...item,
+            discountValue: item.discount_Value || 0,
+            vatRate: item.vat_Rate || 0,
+            vatValue: item.vat_Value || 0,
+            price: item.price || 0,
+            quantity: item.quantity || 1,
+            subtotal: item.subtotal || 0,
+            total: item.total || 0,
+            appliesVAT: item.vat_Rate > 0,
+            discount: item.discount || 0,
+            reference: item.reference || '',
+            name: item.name || 'Producto sin nombre'
+        }));
+
         this.invoicePdfService.generate({
             invoiceNumber: this.selectedInvoice?.invoice_Number || '',
             date: this.selectedInvoice?.created_At || new Date(),
             customer: this.selectedInvoice?.customer || null,
-            items: this.selectedInvoice?.items || [],
+            items: items,
             subtotal: this.selectedInvoice?.subtotal || 0,
-            detailDiscount: this.selectedInvoice?.items?.reduce((acc, item) => acc + (item.discount_Value ?? 0), 0) ?? 0,
+            detailDiscount: detailDiscount,
             generalDiscount: this.selectedInvoice?.descuento_General || 0,
             grossSubtotal: this.selectedInvoice?.subtotal_Bruto || 0,
             discount: detailDiscount + (((this.selectedInvoice?.subtotal || 0) - detailDiscount) * (this.selectedInvoice?.descuento_General || 0)) / 100,
             total: this.selectedInvoice?.invoice_Total || 0,
+            totalVat: this.selectedInvoice?.total_Iva || 0,
             deliveryInfo: this.selectedInvoice?.delivery,
             paymentMethods: this.selectedInvoice?.payments || [],
             session: this.selectedCompany
