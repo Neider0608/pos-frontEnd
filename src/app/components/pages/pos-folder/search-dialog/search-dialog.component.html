@@ -111,7 +111,13 @@
             </div>
             <div class="flex gap-3">
                 <button (click)="visible = false" class="px-6 py-3 text-xs font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Cancelar</button>
-                <button class="px-8 py-3 bg-slate-800 dark:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-200 dark:shadow-none">Seleccionar Producto</button>
+                <button
+                    (click)="handleConfirmSelection()"
+                    class="px-8 py-3 bg-slate-800 dark:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-200 dark:shadow-none hover:bg-emerald-600 dark:hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                    [disabled]="filteredProducts.length === 0"
+                >
+                    Seleccionar Producto
+                </button>
             </div>
         </div>
     </ng-template>

@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import * as CryptoJS from 'crypto-js';
 import { AuthSession } from '../../api/login';
+import { environment } from '../../../../../enviroments/enviroment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthStorageService {
     private readonly KEY = 'pos_session';
-    private readonly SECRET_KEY = 'NEIDSOFT_SECRET_2026';
+    private readonly SECRET_KEY = environment.sessionSecret;
 
     setSession(session: AuthSession): void {
         const encrypted = CryptoJS.AES.encrypt(JSON.stringify(session), this.SECRET_KEY).toString();
@@ -22,6 +23,8 @@ export class AuthStorageService {
             const encrypted = cookie.split('=')[1];
             const bytes = CryptoJS.AES.decrypt(encrypted, this.SECRET_KEY);
             const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+
+            if (!decrypted) return null;
 
             return JSON.parse(decrypted);
         } catch {

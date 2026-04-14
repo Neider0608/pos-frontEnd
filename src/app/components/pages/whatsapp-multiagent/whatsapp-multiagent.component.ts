@@ -29,6 +29,7 @@ import { AuthSession } from '../api/login';
 import { MasterService } from '../../services/master.service';
 import { AISettings, DigitalOceanSettings, PrinterSettings } from '../api/master';
 import { CalendarModule } from 'primeng/calendar';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
     selector: 'app-whatsapp-multiagent',
@@ -51,9 +52,9 @@ import { CalendarModule } from 'primeng/calendar';
         PopoverModule,
         TooltipModule,
         TableModule,
-        CalendarModule
-    ],
-    providers: [MessageService, PosService, WhatsappService]
+        CalendarModule,
+        ToastModule
+    ]
 })
 export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, OnDestroy {
     @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
@@ -70,11 +71,13 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
 
     activeConversation: Conversation = {} as Conversation;
     messageText = '';
+    loadingConversations = false;
     loadingMessages = false;
     showImageModal = false;
     selectedImage?: string | null = null;
     startDate: Date | null = null;
     endDate: Date | null = null;
+    readonly MAX_QUERY_DAYS = 3;
 
     permissions: Permission[] = [];
 
@@ -185,6 +188,12 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
     ) {}
 
     ngOnInit(): void {
+        const today = new Date();
+        const threeDaysAgo = new Date();
+        threeDaysAgo.setDate(today.getDate() - (this.MAX_QUERY_DAYS - 1));
+        this.startDate = threeDaysAgo;
+        this.endDate = today;
+
         const session = this.authService.getSession() as AuthSession;
         if (session) {
             this.companiaId = session.companiaId;
@@ -268,8 +277,56 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
 
         this.activeConversation = {} as Conversation;
         this.messages = [];
+    }
 
-        this.loadConversations(this.selectedPhoneNumber.phoneNumberId);
+    onDateRangeChange(): void {
+        // Sin consulta automática por requerimiento del usuario.
+    }
+
+    onConsultConversations(): void {
+        if (!this.selectedPhoneNumber) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atención',
+                detail: 'Seleccione una línea de WhatsApp.'
+            });
+            return;
+        }
+
+        if (!this.startDate || !this.endDate) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Atención',
+                detail: 'Seleccione fecha inicial y fecha final.'
+            });
+            return;
+        }
+
+        const start = new Date(this.startDate);
+        const end = new Date(this.endDate);
+
+        if (start > end) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Rango inválido',
+                detail: 'La fecha inicial no puede ser mayor a la final.'
+            });
+            return;
+        }
+
+        const diffMs = end.getTime() - start.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
+        if (diffDays > this.MAX_QUERY_DAYS) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Rango no permitido',
+                detail: `El rango máximo de consulta es de ${this.MAX_QUERY_DAYS} días.`
+            });
+            return;
+        }
+
+        this.loadConversations(this.selectedPhoneNumber.phoneNumberId, start, end);
     }
 
     scrollToBottom(): void {
@@ -442,16 +499,16 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
     }
 
     updateStatus(conv: Conversation): void {
-    if (!conv) return;
+        if (!conv) return;
 
-    if (conv.status === 'closed') {
-        conv.lockedByAgentId = null;
-    }
+        if (conv.status === 'closed') {
+            conv.lockedByAgentId = null;
+        }
 
-    conv.updatedAt = new Date().toISOString();
-    this.whatsappService.updateConversationStatus(conv.id, conv.status).subscribe({
-            next: res => {
-                if (res?.data > 0) {
+        conv.updatedAt = new Date().toISOString();
+        this.whatsappService.updateConversationStatus(conv.id, conv.status).subscribe({
+            next: (res) => {
+                if (res?.code === 0) {
                     this.messageService.add({
                         severity: 'success',
                         summary: 'Muy bien',
@@ -465,7 +522,7 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
                     });
                 }
             },
-            error: err => {
+            error: (err) => {
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Error',
@@ -475,7 +532,6 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
             }
         });
     }
-
 
     is24hWindowOpen(): boolean {
         const lastClientMessage = [...this.messages].reverse().find((m) => m.from === 'client');
@@ -542,10 +598,23 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
         });
     }
 
-    loadConversations(phoneNumberId?: string) {
-        /*         alert('Cargando conversaciones desde backend...'); */
-        this.whatsappService.getConversations(phoneNumberId).subscribe({
+    loadConversations(phoneNumberId?: string, startDate?: Date, endDate?: Date) {
+        if (!phoneNumberId) return;
+
+        this.loadingConversations = true;
+
+        const end = endDate || new Date();
+        const start =
+            startDate ||
+            (() => {
+                const d = new Date(end);
+                d.setDate(d.getDate() - (this.MAX_QUERY_DAYS - 1));
+                return d;
+            })();
+
+        this.whatsappService.getConversations(phoneNumberId, start, end).subscribe({
             next: (res) => {
+                this.loadingConversations = false;
                 if (res.code === 0) {
                     this.conversations = res.data || [];
                     this.loadAgents();
@@ -559,6 +628,7 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
                 }
             },
             error: () => {
+                this.loadingConversations = false;
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Error',
@@ -729,30 +799,29 @@ export class WhatsappMultiagentComponent implements OnInit, AfterViewChecked, On
             return;
         }
 
-        this.whatsappService.updateClientName(this.activeConversation.id,this.editedClientName).subscribe({
-                next: res => {
-                    if (res?.code > 0) {
-                        this.activeConversation.clientName = this.editedClientName;
+        this.whatsappService.updateClientName(this.activeConversation.id, this.editedClientName).subscribe({
+            next: (res) => {
+                if (res?.code > 0) {
+                    this.activeConversation.clientName = this.editedClientName;
 
-                        this.messageService.add({
-                            severity: 'success',
-                            summary: 'Actualizado',
-                            detail: res.message
-                        });
-                    } else {
-                        this.messageService.add({
-                            severity: 'warn',
-                            summary: 'Sin cambios',
-                            detail: res.message
-                        });
-                    }
-                    this.showEditName = false;
-                },
-                error: err => {
-                    console.error(err);
-                    this.showEditName = false;
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Actualizado',
+                        detail: res.message
+                    });
+                } else {
+                    this.messageService.add({
+                        severity: 'warn',
+                        summary: 'Sin cambios',
+                        detail: res.message
+                    });
                 }
-            });
+                this.showEditName = false;
+            },
+            error: (err) => {
+                console.error(err);
+                this.showEditName = false;
+            }
+        });
     }
-
 }

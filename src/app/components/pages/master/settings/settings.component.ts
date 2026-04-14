@@ -20,7 +20,7 @@ import { AISettings, DigitalOceanSettings, PrinterSettings } from '../../api/mas
 @Component({
     selector: 'app-settings',
     imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputSwitchModule, DropdownModule, TabViewModule, ToastModule],
-    providers: [MessageService, MasterService, AuthService],
+    providers: [MessageService],
     templateUrl: './settings.component.html',
     styleUrl: './settings.component.scss'
 })

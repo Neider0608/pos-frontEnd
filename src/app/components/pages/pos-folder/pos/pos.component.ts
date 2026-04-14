@@ -50,7 +50,6 @@ import { LoginService } from '../../../services/login.service';
         InvoiceDialogComponent
     ],
 
-    providers: [MessageService, PosService, MasterService, InventoryService, AuthService, LoginService, ConfirmationService],
     templateUrl: './pos.component.html',
     styleUrls: ['./pos.component.scss']
 })
@@ -425,13 +424,24 @@ export class PosComponent implements OnInit {
     }
 
     clearInvoiceAll() {
-        this.posService.cancelInvoiceAll(this.activeInvoice!.tempId, 1).subscribe({
+        if (!this.activeInvoice?.tempId || !this.companiaId) {
+            this.showToast('warn', 'Atención', 'No hay factura activa para liberar.');
+            return;
+        }
+        const tempId = this.activeInvoice!.tempId!;
+        const result = this.posService.cancelInvoiceAll(tempId, this.companiaId);
+        if (!result) {
+            this.showToast('error', 'Error', 'No se pudo procesar la solicitud.');
+            return;
+        }
+        result.subscribe({
             next: () => {
-                this.activeInvoice!.tempId = uuidv4();
+                if (this.activeInvoice) {
+                    this.activeInvoice.tempId = uuidv4();
+                }
                 this.showToast('success', 'Stock liberado', 'Se ha liberado el stock reservado de la factura.');
             },
             error: () => {
-                /*  item.quantity = item.prevQuantity; */
                 this.showToast('error', 'Error', 'No se pudo liberar el stock');
             }
         });
@@ -684,12 +694,12 @@ export class PosComponent implements OnInit {
                     const existingGift = invoice.items.find((i) => i.id === realProduct.id);
 
                     if (existingGift) {
-                        ((existingGift.quantity = totalGiftUnits),
+                        (existingGift.quantity = totalGiftUnits),
                             (existingGift.prevQuantity = totalGiftUnits),
                             (existingGift.discount = 100),
                             (existingGift.discountValue = realProduct.price * totalGiftUnits),
                             (existingGift.subtotal = realProduct.price * totalGiftUnits),
-                            (existingGift.total = 0));
+                            (existingGift.total = 0);
                     } else {
                         const giftItem: CartItem = {
                             ...realProduct,
@@ -792,9 +802,9 @@ export class PosComponent implements OnInit {
 
             const itemAfterDiscount = itemSubtotal - item.discountValue;
 
-            if (item.appliesVAT && item.vatRate > 0) {
-                item.priceExcludedTax = itemAfterDiscount / (1 + item.vatRate / 100);
-                item.vatValue = itemAfterDiscount - item.priceExcludedTax;
+            if (item.appliesVAT && item.vat > 0) {
+                item.priceExcludedTax = itemAfterDiscount;
+                item.vatValue = itemAfterDiscount * (item.vat / 100);
             } else {
                 item.priceExcludedTax = itemAfterDiscount;
                 item.vatValue = 0;

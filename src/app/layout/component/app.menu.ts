@@ -102,7 +102,6 @@ export class AppMenu implements OnInit {
     }
 
     private canView(moduleName: string, permissions: Permission[]): boolean {
-        debugger;
         return permissions.some((p) => this.normalize(p.module) === this.normalize(moduleName) && p.canView);
     }
 

@@ -34,7 +34,7 @@ pdfMake.vfs = pdfFonts.pdfMake?.vfs || pdfFonts.vfs;
     imports: [CommonModule, FormsModule, RouterModule, ConfirmDialogModule, TableModule, DialogModule, ButtonModule, DropdownModule, CalendarModule, InputTextModule, ToastModule, BadgeModule, OverlayBadgeModule, CardModule],
     templateUrl: './invoices.component.html',
     styleUrls: ['./invoices.component.scss'],
-    providers: [MessageService, ConfirmationService, PosService, InvoicePdfService]
+    providers: [MessageService, ConfirmationService]
 })
 export class InvoicesComponent implements OnInit {
     invoices: IInvoiceClients[] = [];
@@ -125,7 +125,11 @@ export class InvoicesComponent implements OnInit {
     // 📋 Cargar todas las facturas
     // ============================================================
     loadInvoices() {
-        let companyId = 1; // Reemplaza con el ID de la compañía actual según tu lógica
+        const companyId = this.session?.companiaId || 0;
+        if (!companyId) {
+            console.error('No se puede cargar facturas sin companyId');
+            return;
+        }
         this.invoices = [];
         this.posService.getInvoices(this.startDate, this.endDate, companyId).subscribe({
             next: (res) => {
@@ -143,7 +147,7 @@ export class InvoicesComponent implements OnInit {
     }
 
     cancelInvoice() {
-        let companyId = 1;
+        const companyId = this.session?.companiaId || 0;
         this.confirmationService.confirm({
             message: `¿Está seguro de anular la factura ${this.selectedInvoice?.invoice_Number}?`,
             header: 'Confirmación',
@@ -252,7 +256,7 @@ export class InvoicesComponent implements OnInit {
     // ============================================================
     viewInvoice(invoice: IInvoiceClients) {
         this.selectedInvoice = {} as IInvoiceClients;
-        let companyId = 1; // Reemplaza con el ID de la compañía actual según tu lógica
+        const companyId = this.session?.companiaId || 0;
         this.posService.getInvoiceDetail(invoice.id, companyId).subscribe({
             next: (res) => {
                 this.selectedInvoice = res.data;

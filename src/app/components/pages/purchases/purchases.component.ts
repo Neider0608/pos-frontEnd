@@ -260,12 +260,9 @@ export class PurchaseComponent implements OnInit {
 
     // Cálculos automáticos
     calculateTotals() {
-        /*  this.purchase.subtotal = this.purchase.details.reduce((acc, item) => acc + item.quantity * item.cost, 0);
-        this.purchase.tax = this.purchase.details.reduce((acc, item) => acc + item.quantity * item.cost * (item.taxPercent / 100), 0);
-        this.purchase.total = this.purchase.subtotal + this.purchase.tax; */
         this.purchase.subtotal = this.purchase.details.reduce((acc, item) => acc + item.quantity * item.cost, 0);
-        this.purchase.tax = this.purchase.details.reduce((acc, item) => acc + item.quantity * item.cost, 0);
-        this.purchase.total = this.purchase.subtotal;
+        this.purchase.tax = this.purchase.details.reduce((acc, item) => acc + item.quantity * item.cost * (item.taxPercent / 100), 0);
+        this.purchase.total = this.purchase.subtotal + this.purchase.tax;
     }
 
     removeItem(index: number) {

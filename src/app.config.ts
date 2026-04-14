@@ -4,6 +4,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter, withEnabledBlockingInitialNavigation, withInMemoryScrolling } from '@angular/router';
 import Aura from '@primeng/themes/aura';
 import { providePrimeNG } from 'primeng/config';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { appRoutes } from './app.routes';
 import { registerLocaleData } from '@angular/common';
 import localeEsCO from '@angular/common/locales/es-CO';
@@ -18,6 +19,8 @@ export const appConfig: ApplicationConfig = {
         providePrimeNG({
             theme: { preset: Aura, options: { darkModeSelector: '.app-dark' } }
         }),
+        MessageService,
+        ConfirmationService,
         { provide: LOCALE_ID, useValue: 'es-CO' } // ✅ LOCALIZACIÓN COLOMBIANA
     ]
 };

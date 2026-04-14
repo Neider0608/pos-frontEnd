@@ -20,7 +20,7 @@ import { LoginService } from '../../../services/login.service';
 @Component({
     selector: 'app-warehouses',
     imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TextareaModule, InputSwitchModule, ToastModule],
-    providers: [MessageService, PosService, MasterService],
+    providers: [MessageService],
     templateUrl: './warehouses.component.html',
     styleUrl: './warehouses.component.scss'
 })

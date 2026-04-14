@@ -45,6 +45,13 @@ export class SearchDialogComponent {
         this.closeDialog();
     }
 
+    handleConfirmSelection(): void {
+        const products = this.filteredProducts;
+        if (products.length > 0 && this.selectedIndex < products.length) {
+            this.handleSelectProduct(products[this.selectedIndex]);
+        }
+    }
+
     closeDialog(): void {
         this.visible = false;
         this.visibleChange.emit(this.visible);

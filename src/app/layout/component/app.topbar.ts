@@ -14,7 +14,7 @@ import { AuthSession, ICompanySession } from '../../components/pages/api/login';
     selector: 'app-topbar',
     standalone: true,
     imports: [RouterModule, CommonModule, StyleClassModule],
-    providers: [AppConfigurator, MasterService, MessageService],
+    providers: [AppConfigurator],
     template: `
         <div class="flex items-center justify-between w-full h-20 px-6 bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-[999]">
             <div class="flex items-center gap-6">

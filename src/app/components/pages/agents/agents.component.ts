@@ -40,7 +40,7 @@ export class AgentsComponent implements OnInit {
     channels: PhoneNumbers[] = [];
     assignedAgents: any[] = [];
     systemUsers: User[] = [];
-    companiaId: number = 1;
+    companiaId: number = 0;
 
     // Form Object
     assignmentForm = {
@@ -75,6 +75,7 @@ export class AgentsComponent implements OnInit {
         }
 
         const { userId, companiaId } = session;
+        this.companiaId = companiaId;
 
         this.loginService.getPermissions(userId, companiaId).subscribe({
             next: (permissions) => {
@@ -156,15 +157,11 @@ export class AgentsComponent implements OnInit {
         if (!this.assignmentForm.agentId || !this.selectedConfigId) return;
 
         const payload = {
-            rowid: this.assignmentForm.rowidAgent,
-            rowidUser: this.assignmentForm.agentId,
-            rowidConfiguration: this.selectedConfigId,
+            agentId: this.assignmentForm.agentId,
+            phoneNumberId: String(this.selectedConfigId),
             priority: this.assignmentForm.priority,
-            status: true,
-            maxConversation: this.assignmentForm.maxConversations
+            maxConversations: this.assignmentForm.maxConversations
         };
-
-        console.log('Assigning agent with payload:', payload);
 
         this.whatsappService.assignAgent(payload).subscribe({
             next: () => {
@@ -176,7 +173,6 @@ export class AgentsComponent implements OnInit {
     }
 
     editAgent(agent: any): void {
-        debugger;
         this.assignmentForm.rowidAgent = agent.rowid;
         this.assignmentForm.agentId = agent.rowidUser;
         this.assignmentForm.priority = agent.priority;

@@ -1,13 +1,41 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ApiResponse, Category, Customer, PosProduct, Product, ProductCreateRequest, UnitOfMeasure, Warehouse } from '../pages/api/shared';
-import { FinancingRequest, GetFinancing } from '../pages/api/financing';
-import { Conversation, Message, MessageSend, PhoneNumbers } from '../pages/api/whatsappagents';
-import { AnyCatcher } from 'rxjs/internal/AnyCatcher';
-import { GetPurchase, GetPurchaseDetail, Purchase, PurchaseDetail } from '../pages/api/inventory';
+import { ApiResponse, PosProduct, Product, ProductCreateRequest } from '../pages/api/shared';
+import { GetPurchase, GetPurchaseDetail } from '../pages/api/inventory';
 import { environment } from '../../../enviroments/enviroment';
+
+export interface PurchaseCreateRequest {
+    companiaId: number;
+    stateId: number | null;
+    purchaseOrder: string | null;
+    userId: number;
+    providerId: number | null;
+    invoiceNumber: string;
+    date: Date;
+    details: PurchaseDetailRequest[];
+    subtotal: number;
+    tax: number;
+    total: number;
+}
+
+export interface PurchaseDetailRequest {
+    productId?: number;
+    productName: string;
+    reference: string;
+    sku: number | string;
+    ean?: string;
+    ext1?: string;
+    ext2?: string;
+    quantity: number;
+    cost: number;
+    taxPercent: number;
+    total: number;
+    categoryId?: number | null | undefined;
+    unitMeasureId?: number | null | undefined;
+    warehouseId?: number | null | undefined;
+}
 
 @Injectable({ providedIn: 'root' })
 export class InventoryService {
@@ -17,27 +45,27 @@ export class InventoryService {
         return this.http.get<ApiResponse<Product[]>>(`${environment.apiUrl}Inventory/GetProducts/${companiaId}`);
     }
 
-    createProduct(model: ProductCreateRequest): Observable<ApiResponse<any>> {
-        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}Inventory/CreateProduct`, model);
+    createProduct(model: ProductCreateRequest): Observable<ApiResponse<number>> {
+        return this.http.post<ApiResponse<number>>(`${environment.apiUrl}Inventory/CreateProduct`, model);
     }
 
-    createProductBulk(model: ProductCreateRequest[]): Observable<ApiResponse<any>> {
-        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}Inventory/CreateProductBulk`, model);
+    createProductBulk(model: ProductCreateRequest[]): Observable<ApiResponse<number>> {
+        return this.http.post<ApiResponse<number>>(`${environment.apiUrl}Inventory/CreateProductBulk`, model);
     }
 
-    deleteProduct(model: ProductCreateRequest): Observable<ApiResponse<any>> {
-        return this.http.request<ApiResponse<any>>('delete', `${environment.apiUrl}Inventory/DeleteProduct`, { body: model });
+    deleteProduct(model: ProductCreateRequest): Observable<ApiResponse<boolean>> {
+        return this.http.request<ApiResponse<boolean>>('delete', `${environment.apiUrl}Inventory/DeleteProduct`, { body: model });
     }
 
     getProductsStore(companiaId: number): Observable<ApiResponse<PosProduct[]>> {
         return this.http.get<ApiResponse<PosProduct[]>>(`${environment.apiUrl}Inventory/GetProductsStore/${companiaId}`);
     }
 
-    getDetailPurchases(formData: FormData): Observable<ApiResponse<any[]>> {
-        return this.http.post<ApiResponse<any[]>>(`${environment.apiUrl}Inventory/GetDetailPurchases`, formData);
+    getDetailPurchases(formData: FormData): Observable<ApiResponse<GetPurchaseDetail[]>> {
+        return this.http.post<ApiResponse<GetPurchaseDetail[]>>(`${environment.apiUrl}Inventory/GetDetailPurchases`, formData);
     }
 
-    savePurchase(model: any): Observable<ApiResponse<boolean>> {
+    savePurchase(model: PurchaseCreateRequest): Observable<ApiResponse<boolean>> {
         return this.http.post<ApiResponse<boolean>>(`${environment.apiUrl}Inventory/SavePurchase`, model);
     }
 
@@ -50,6 +78,6 @@ export class InventoryService {
     }
 
     updateStatePurchase(stateId: number, purchaseId: number): Observable<ApiResponse<GetPurchaseDetail[]>> {
-        return this.http.get<ApiResponse<GetPurchaseDetail[]>>(`${environment.apiUrl}Inventory/UpdateStatePurchase/${stateId}/${purchaseId}`);
+        return this.http.patch<ApiResponse<GetPurchaseDetail[]>>(`${environment.apiUrl}Inventory/UpdateStatePurchase/${stateId}/${purchaseId}`, {});
     }
 }

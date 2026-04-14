@@ -63,6 +63,24 @@ export interface Agent {
     name: string;
     avatar?: string;
 }
+
+export interface WhatsAppAgent {
+    id: number;
+    rowid: number;
+    rowidUser: number;
+    rowidConfiguracion: number;
+    priority: number;
+    maxConversation: number;
+    status?: string;
+    userName?: string;
+}
+
+export interface AgentAssignmentPayload {
+    agentId: number;
+    phoneNumberId: string;
+    priority: number;
+    maxConversations: number;
+}
 export const MOCK_CONVERSATIONS: Conversation[] = [
     {
         id: 1,

@@ -20,7 +20,7 @@ import { LoginService } from '../../../services/login.service';
 @Component({
     selector: 'app-categorys',
     imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, TextareaModule, InputSwitchModule, ToastModule],
-    providers: [PosService, MessageService, MasterService],
+    providers: [MessageService],
     templateUrl: './categorys.component.html',
     styleUrl: './categorys.component.scss'
 })

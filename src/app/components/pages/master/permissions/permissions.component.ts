@@ -25,7 +25,7 @@ import { LoginService } from '../../../services/login.service';
     selector: 'app-permissions',
     standalone: true,
     imports: [CommonModule, FormsModule, CardModule, PasswordModule, ToastModule, ButtonModule, InputTextModule, TagModule, TableModule, DialogModule, DropdownModule, InputSwitchModule, TabViewModule, DividerModule],
-    providers: [MessageService, MasterService],
+    providers: [MessageService],
     templateUrl: './permissions.component.html',
     styleUrl: './permissions.component.scss',
     encapsulation: ViewEncapsulation.None
@@ -51,7 +51,7 @@ export class PermissionsModuleComponent implements OnInit {
     currentUser: User = {} as User;
 
     loanding: boolean = false;
-    companiaId: number = 1;
+    companiaId: number = 0;
 
     permissions: Permission[] = [];
 
@@ -346,7 +346,6 @@ export class PermissionsModuleComponent implements OnInit {
 
     // Abrir modal para crear o editar
     openUserDialog(user?: User): void {
-        debugger;
         if (user) {
             // Editar
             this.isEditingUser = true;

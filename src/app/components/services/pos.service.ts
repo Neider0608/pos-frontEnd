@@ -83,10 +83,14 @@ export class PosService {
     }
 
     cancelInvoiceReservations(payload: StockReservationRequest) {
-        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}pos/ValidateAndReserve`, payload);
+        return this.http.post<ApiResponse<any>>(`${environment.apiUrl}pos/CancelReservation`, payload);
     }
 
-    cancelInvoiceAll(facturaTempId?: string, companiaId?: number) {
+    cancelInvoiceAll(facturaTempId: string | undefined, companiaId: number | undefined): Observable<ApiResponse<any>> | null {
+        if (!facturaTempId || companiaId === undefined || companiaId === null) {
+            console.error('cancelInvoiceAll: facturaTempId y companiaId son requeridos');
+            return null;
+        }
         return this.http.get<ApiResponse<any>>(`${environment.apiUrl}pos/CancelInvoiceAll/${facturaTempId}/${companiaId}`);
     }
 

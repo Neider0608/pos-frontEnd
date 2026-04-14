@@ -99,55 +99,83 @@
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <p-table [value]="filteredInventory" [paginator]="true" [rows]="10" responsiveLayout="scroll">
-                <ng-template pTemplate="header">
-                    <tr class="!bg-slate-50 dark:!bg-slate-800/50">
-                        <th class="py-6 px-8 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Producto / Identificadores</th>
-                        <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Categoría / Medida</th>
-                        <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Ext 1 / 2</th>
-                        <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Stock Global</th>
-                        <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">Precio</th>
-                        <th class="py-6 px-8 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Gestión</th>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-item>
-                    <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 dark:border-slate-800">
-                        <td class="py-4 px-8">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-white">
-                                    <img *ngIf="item.imageUrl" [src]="digitalOcean.url + '/' + item.imageUrl" class="w-full h-full object-cover" />
-                                    <div *ngIf="!item.imageUrl" class="w-full h-full flex items-center justify-center text-slate-200"><i class="pi pi-image text-lg"></i></div>
+            <!-- Loading Skeleton -->
+            @if (loading) {
+                <div class="p-8 space-y-4">
+                    @for (i of [1, 2, 3, 4, 5]; track i) {
+                        <div class="flex items-center gap-4 animate-pulse">
+                            <div class="w-12 h-12 bg-slate-200 rounded-xl"></div>
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                                <div class="h-3 bg-slate-100 rounded w-1/2"></div>
+                            </div>
+                            <div class="h-8 w-8 bg-slate-200 rounded-lg"></div>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <p-table [value]="filteredInventory" [paginator]="true" [rows]="10" responsiveLayout="scroll" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos">
+                    <ng-template pTemplate="header">
+                        <tr class="!bg-slate-50 dark:!bg-slate-800/50">
+                            <th class="py-6 px-8 text-[11px] font-bold text-slate-400 uppercase tracking-widest">Producto / Identificadores</th>
+                            <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Categoría / Medida</th>
+                            <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Ext 1 / 2</th>
+                            <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Stock Global</th>
+                            <th class="py-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-right">Precio</th>
+                            <th class="py-6 px-8 text-[11px] font-bold text-slate-400 uppercase tracking-widest text-center">Gestión</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td colspan="6" class="text-center py-20">
+                                <div class="flex flex-col items-center opacity-50">
+                                    <i class="pi pi-box text-7xl text-slate-300 mb-6"></i>
+                                    <p class="text-xl font-black text-slate-400 uppercase tracking-tight">No hay productos</p>
+                                    <p class="text-sm text-slate-400 mt-2">Comienza agregando tu primer producto</p>
+                                    <button pButton label="Agregar Producto" icon="pi pi-plus" class="mt-6 !bg-emerald-500 !border-emerald-500 hover:!bg-emerald-600 !rounded-xl" (click)="showAddDialog = true; showEditDialog = false"></button>
                                 </div>
-                                <div>
-                                    <div class="text-base font-bold text-slate-800 dark:text-white leading-none">{{ item.name }}</div>
-                                    <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1 font-semibold uppercase text-[10px]">
-                                        <span class="text-indigo-600">CÓD: {{ item.code }}</span>
-                                        <span class="text-slate-400">REF: {{ item.reference }}</span>
-                                        <span *ngIf="item.ean" class="text-slate-400"><i class="pi pi-barcode"></i> {{ item.ean }}</span>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                        <tr class="hover:bg-slate-50/50 transition-colors border-b border-slate-100 dark:border-slate-800">
+                            <td class="py-4 px-8">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-white">
+                                        <img *ngIf="item.imageUrl" [src]="digitalOcean.url + '/' + item.imageUrl" class="w-full h-full object-cover" />
+                                        <div *ngIf="!item.imageUrl" class="w-full h-full flex items-center justify-center text-slate-200"><i class="pi pi-image text-lg"></i></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-base font-bold text-slate-800 dark:text-white leading-none">{{ item.name }}</div>
+                                        <div class="flex flex-wrap gap-x-3 gap-y-1 mt-1 font-semibold uppercase text-[10px]">
+                                            <span class="text-indigo-600">CÓD: {{ item.code }}</span>
+                                            <span class="text-slate-400">REF: {{ item.reference }}</span>
+                                            <span *ngIf="item.ean" class="text-slate-400"><i class="pi pi-barcode"></i> {{ item.ean }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="px-4 py-4 text-center">
-                            <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">{{ item.category || 'Sin Categoría' }}</div>
-                            <div class="text-[10px] font-medium text-indigo-400 italic uppercase">{{ item.unitMeasure }}</div>
-                        </td>
-                        <td class="px-4 py-4 text-center">
-                            <div class="text-[11px] font-bold text-slate-500 uppercase">{{ item.extension1 || '-' }}</div>
-                            <div class="text-[10px] font-medium text-slate-400 uppercase">{{ item.extension2 || '-' }}</div>
-                        </td>
-                        <td class="px-4 py-4 text-center">
-                            <span [class]="getProductTotalStock(item) <= 5 ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-800'" class="text-lg font-bold px-4 py-1.5 rounded-xl">
-                                {{ getProductTotalStock(item) }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-4 text-right text-lg font-bold text-slate-900 dark:text-white tracking-tight">${{ item.price | number: '1.0-0' }}</td>
-                        <td class="px-8 py-4 text-center">
-                            <button pButton icon="pi pi-pencil" *ngIf="canEdit" (click)="editProduct(item)" class="p-button-rounded p-button-text !text-indigo-600"></button>
-                        </td>
-                    </tr>
-                </ng-template>
-            </p-table>
+                            </td>
+                            <td class="px-4 py-4 text-center">
+                                <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase">{{ item.category || 'Sin Categoría' }}</div>
+                                <div class="text-[10px] font-medium text-indigo-400 italic uppercase">{{ item.unitMeasure }}</div>
+                            </td>
+                            <td class="px-4 py-4 text-center">
+                                <div class="text-[11px] font-bold text-slate-500 uppercase">{{ item.extension1 || '-' }}</div>
+                                <div class="text-[10px] font-medium text-slate-400 uppercase">{{ item.extension2 || '-' }}</div>
+                            </td>
+                            <td class="px-4 py-4 text-center">
+                                <span [class]="getProductTotalStock(item) <= 5 ? 'bg-rose-50 text-rose-600' : 'bg-slate-100 text-slate-800'" class="text-lg font-bold px-4 py-1.5 rounded-xl">
+                                    {{ getProductTotalStock(item) }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-4 text-right text-lg font-bold text-slate-900 dark:text-white tracking-tight">${{ item.price | number: '1.0-0' }}</td>
+                            <td class="px-8 py-4 text-center">
+                                <button pButton icon="pi pi-pencil" *ngIf="canEdit" (click)="editProduct(item)" class="p-button-rounded p-button-text !text-indigo-600"></button>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            }
         </div>
     </div>
 

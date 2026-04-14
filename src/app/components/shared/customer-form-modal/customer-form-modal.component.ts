@@ -95,7 +95,8 @@ export class CustomerFormModalComponent {
         }
     }
 
-    private isValidEmail(email: string): boolean {
+    isValidEmail(email: string | undefined): boolean {
+        if (!email) return false;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }

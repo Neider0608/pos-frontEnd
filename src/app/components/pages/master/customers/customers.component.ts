@@ -29,7 +29,7 @@ import { LoginService } from '../../../services/login.service';
     imports: [CommonModule, FormsModule, TableModule, DialogModule, DropdownModule, InputTextModule, InputSwitchModule, ButtonModule, ToastModule, ToggleSwitchModule, RippleModule],
     templateUrl: './customers.component.html',
     styleUrls: ['./customers.component.scss'],
-    providers: [MessageService, PosService, MasterService]
+    providers: [MessageService]
 })
 export class CustomersComponent implements OnInit {
     // ============================================================

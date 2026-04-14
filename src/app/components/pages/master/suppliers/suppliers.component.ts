@@ -22,7 +22,7 @@ import { LoginService } from '../../../services/login.service';
     selector: 'app-suppliers',
     standalone: true,
     imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, TableModule, DialogModule, ToastModule, InputSwitchModule],
-    providers: [MessageService, MasterService],
+    providers: [MessageService],
     templateUrl: './suppliers.component.html'
 })
 export class SuppliersComponent implements OnInit {
@@ -56,7 +56,6 @@ export class SuppliersComponent implements OnInit {
     ) {}
 
     ngOnInit() {
-        debugger;
         const session = this.authService.getSession() as AuthSession;
 
         if (!session) {

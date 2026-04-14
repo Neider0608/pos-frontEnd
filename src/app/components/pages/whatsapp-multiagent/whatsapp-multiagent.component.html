@@ -1,3 +1,4 @@
+<p-toast></p-toast>
 <div class="flex h-[92vh] bg-slate-100/30 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden border border-white m-4">
     <aside class="w-96 bg-white border-r border-slate-200 flex flex-col shrink-0">
         <div class="p-4 bg-slate-50/80 border-b border-slate-200">
@@ -34,6 +35,8 @@
                             <i class="pi pi-calendar absolute right-3 top-2.5 text-slate-400 text-xs z-10 pointer-events-none"></i>
                             <p-calendar
                                 [(ngModel)]="startDate"
+                                (ngModelChange)="onDateRangeChange()"
+                                dateFormat="dd/mm/yy"
                                 placeholder="01/01/2026"
                                 [showIcon]="false"
                                 [baseZIndex]="99999"
@@ -51,6 +54,8 @@
                             <i class="pi pi-calendar absolute right-3 top-2.5 text-slate-400 text-xs z-10 pointer-events-none"></i>
                             <p-calendar
                                 [(ngModel)]="endDate"
+                                (ngModelChange)="onDateRangeChange()"
+                                dateFormat="dd/mm/yy"
                                 placeholder="07/02/26"
                                 [baseZIndex]="99999"
                                 [showIcon]="false"
@@ -62,32 +67,50 @@
                         </div>
                     </div>
                 </div>
+
+                <button
+                    pButton
+                    type="button"
+                    [label]="loadingConversations ? 'Consultando...' : 'Consultar'"
+                    [icon]="loadingConversations ? 'pi pi-spin pi-spinner' : 'pi pi-search'"
+                    class="w-full !mt-1 !bg-blue-600 !border-blue-600 hover:!bg-blue-700 !rounded-xl !text-xs !font-black !uppercase !tracking-wider"
+                    [disabled]="loadingConversations"
+                    (click)="onConsultConversations()"
+                ></button>
+                <p class="text-[10px] text-amber-600 font-bold tracking-wide">Rango máximo permitido: 3 días.</p>
             </div>
         </div>
 
         <div class="flex-1 overflow-y-auto space-y-2 px-4 pb-4 custom-scrollbar">
-            @for (conv of conversations; track conv.id) {
-                <div
-                    (click)="selectConversation(conv)"
-                    class="group relative p-4 flex gap-4 items-start cursor-pointer rounded-[1.5rem] transition-all duration-300 border border-transparent"
-                    [class]="activeConversation.id === conv.id ? 'bg-blue-50 shadow-sm border-blue-100' : 'hover:bg-slate-50'"
-                >
-                    <div class="relative shrink-0">
-                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 text-white flex items-center justify-center font-black text-xl shadow-lg group-hover:scale-105 transition-transform duration-300">
-                            {{ conv.clientName[0] }}
-                        </div>
-                        @if (conv.status === 'open') {
-                            <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-[3px] border-white rounded-full shadow-sm animate-pulse"></span>
-                        }
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex justify-between items-center mb-1">
-                            <p class="font-black text-slate-700 truncate group-hover:text-blue-600 transition-colors">{{ conv.clientName }}</p>
-                            <span class="text-[10px] font-black text-slate-400 uppercase">{{ conv.updatedAt | date: 'shortTime' }}</span>
-                        </div>
-                        <p class="text-[13px] text-slate-500 truncate mb-2 font-medium opacity-80">{{ conv.lastMessage }}</p>
-                    </div>
+            @if (loadingConversations) {
+                <div class="h-full min-h-[260px] flex flex-col items-center justify-center gap-3 text-slate-400">
+                    <i class="pi pi-spin pi-spinner text-3xl"></i>
+                    <span class="text-xs font-bold uppercase tracking-widest">Cargando conversaciones...</span>
                 </div>
+            } @else {
+                @for (conv of conversations; track conv.id) {
+                    <div
+                        (click)="selectConversation(conv)"
+                        class="group relative p-4 flex gap-4 items-start cursor-pointer rounded-[1.5rem] transition-all duration-300 border border-transparent"
+                        [class]="activeConversation.id === conv.id ? 'bg-blue-50 shadow-sm border-blue-100' : 'hover:bg-slate-50'"
+                    >
+                        <div class="relative shrink-0">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 text-white flex items-center justify-center font-black text-xl shadow-lg group-hover:scale-105 transition-transform duration-300">
+                                {{ (conv.clientName || '').charAt(0) || '?' }}
+                            </div>
+                            @if (conv.status === 'open') {
+                                <span class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-[3px] border-white rounded-full shadow-sm animate-pulse"></span>
+                            }
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="font-black text-slate-700 truncate group-hover:text-blue-600 transition-colors">{{ conv.clientName }}</p>
+                                <span class="text-[10px] font-black text-slate-400 uppercase">{{ conv.updatedAt | date: 'shortTime' }}</span>
+                            </div>
+                            <p class="text-[13px] text-slate-500 truncate mb-2 font-medium opacity-80">{{ conv.lastMessage }}</p>
+                        </div>
+                    </div>
+                }
             }
         </div>
     </aside>
@@ -96,16 +119,14 @@
         <header class="h-24 px-10 border-b border-slate-100 flex justify-between items-center shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.02)] z-10 bg-white/80 backdrop-blur-md">
             <div class="flex items-center gap-5">
                 <div class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-blue-600 border border-slate-200 shadow-inner text-xl">
-                    {{ activeConversation.clientName.charAt(0) || '?' }}
+                    {{ (activeConversation.clientName || '').charAt(0) || '?' }}
                 </div>
                 <div class="flex flex-col">
                     <div class="flex items-center gap-3 group">
                         <span class="font-black text-slate-800 text-xl tracking-tight leading-none">
                             {{ activeConversation.clientName }}
                         </span>
-                        <button
-                            (click)="openEditName()"
-                            class="opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-xl hover:bg-slate-100 text-slate-400">
+                        <button (click)="openEditName()" class="opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-xl hover:bg-slate-100 text-slate-400">
                             <i class="pi pi-pencil text-[10px]"></i>
                         </button>
                     </div>
@@ -116,16 +137,17 @@
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                 <p-dropdown
-                *ngIf="activeConversation"
-                [options]="statusOptions"
-                [(ngModel)]="activeConversation.status"
-                optionLabel="label"
-                optionValue="value"
-                (onChange)="updateStatus(activeConversation)"
-                styleClass="w-36 border-none bg-slate-50 rounded-xl font-black
-                            text-[10px] uppercase tracking-wider text-slate-600">
-        </p-dropdown>
+                <p-dropdown
+                    *ngIf="activeConversation"
+                    [options]="statusOptions"
+                    [(ngModel)]="activeConversation.status"
+                    optionLabel="label"
+                    optionValue="value"
+                    (onChange)="updateStatus(activeConversation)"
+                    styleClass="w-36 border-none bg-slate-50 rounded-xl font-black
+                            text-[10px] uppercase tracking-wider text-slate-600"
+                >
+                </p-dropdown>
                 <button (click)="openClientHistory(activeConversation)" class="w-12 h-12 rounded-2xl border border-slate-100 text-slate-400 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center shadow-sm">
                     <i class="pi pi-history"></i>
                 </button>

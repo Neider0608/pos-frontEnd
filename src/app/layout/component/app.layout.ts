@@ -13,9 +13,29 @@ import { LayoutService } from '../service/layout.service';
     imports: [CommonModule, AppTopbar, AppSidebar, RouterModule, AppFooter],
     template: `
         <div [class.dark-layout]="layoutService.isDarkTheme()" class="fixed inset-0 w-screen h-screen bg-[#F8FAFC] flex overflow-hidden font-sans antialiased text-slate-900 transition-colors duration-300">
-            <aside class="w-80 h-full bg-[#F8FAFC] border-r border-slate-200 flex flex-col flex-none z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)] side-container">
+            <!-- Mobile Overlay -->
+            <div *ngIf="layoutService.layoutState().staticMenuMobileActive" class="fixed inset-0 bg-black/50 z-40 lg:hidden" (click)="layoutService.onMenuToggle()"></div>
+
+            <!-- Sidebar -->
+            <aside
+                class="side-container fixed lg:relative z-50 lg:z-30 transition-transform duration-300 ease-in-out"
+                [class.w-80]="true"
+                [class.h-full]="true"
+                [class.bg-[#F8FAFC]]="true"
+                [class.border-r]="true"
+                [class.border-slate-200]="true"
+                [class.flex]="true"
+                [class.flex-col]="true"
+                [class.flex-none]="true"
+                [class.shadow-[4px_0_24px_rgba(0,0,0,0.02)]="true"
+                [class.-translate-x-full]="layoutService.layoutState().staticMenuMobileActive"
+                [class.lg-translate-x-0]="true"
+            >
                 <div class="h-20 flex items-center px-8 bg-white border-b border-slate-100 flex-none header-brand">
                     <div class="flex items-center gap-3">
+                        <button class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 transition-colors -ml-2" (click)="layoutService.onMenuToggle()">
+                            <i class="pi pi-times text-slate-600"></i>
+                        </button>
                         <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 icon-box">
                             <i class="pi pi-bolt text-white text-xl"></i>
                         </div>
@@ -29,7 +49,7 @@ import { LayoutService } from '../service/layout.service';
             </aside>
 
             <div class="flex-1 flex flex-col min-w-0 h-full relative">
-                <header class="h-20 flex-none px-8 flex items-center border-b border-slate-100 bg-white z-20 top-header">
+                <header class="h-20 flex-none px-4 lg:px-8 flex items-center border-b border-slate-100 bg-white z-20 top-header">
                     <app-topbar class="w-full"></app-topbar>
                 </header>
 
