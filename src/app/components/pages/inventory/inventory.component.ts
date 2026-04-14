@@ -295,13 +295,17 @@ export class InventoryComponent implements OnInit {
     }
 
     openAddDialog() {
-        this.newProduct = { active: true, manageStock: true, appliesVAT: true, price: 0 };
+        this.newProduct = { active: true, manageStock: true, appliesVAT: true, price: 0, priceCurva: 0, pricePaquete: 0 };
         this.prepareWarehouseUI();
         this.showAddDialog = true;
     }
 
     editProduct(product: Product) {
-        this.newProduct = { ...product };
+        this.newProduct = {
+            ...product,
+            priceCurva: product.priceCurva ?? 0,
+            pricePaquete: product.pricePaquete ?? 0
+        };
         this.prepareWarehouseUI(product);
         this.showEditDialog = true;
     }
@@ -339,6 +343,8 @@ export class InventoryComponent implements OnInit {
             extension1: this.newProduct.extension1,
             extension2: this.newProduct.extension2,
             price: this.newProduct.price,
+            priceCurva: this.newProduct.priceCurva ?? 0,
+            pricePaquete: this.newProduct.pricePaquete ?? 0,
             imageUrl: this.newProduct.imageUrl,
             categoryId: this.newProduct.categoryId,
             unitMeasureId: this.newProduct.unitMeasureId,

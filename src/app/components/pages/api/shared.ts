@@ -55,6 +55,8 @@ export interface Product {
     tag?: string;
 
     price: number;
+    priceCurva?: number;
+    pricePaquete?: number;
     imageUrl?: string;
 
     categoryId: number;
@@ -109,6 +111,8 @@ export interface ProductCreateRequest {
     tag?: string;
 
     price: number;
+    priceCurva?: number;
+    pricePaquete?: number;
     imageUrl?: string;
 
     categoryId: number;
