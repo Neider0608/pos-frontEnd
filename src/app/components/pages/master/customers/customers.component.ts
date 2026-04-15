@@ -273,6 +273,7 @@ export class CustomersComponent implements OnInit {
             country: '',
             address: '',
             isCompany: false,
+            isWholesale: false,
             nit: '',
             businessName: '',
             createdAt: new Date(),

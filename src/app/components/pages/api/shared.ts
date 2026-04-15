@@ -149,6 +149,7 @@ export interface Customer {
 
     // 🏢 Datos empresariales
     isCompany: boolean;
+    isWholesale: boolean;
     nit?: string;
     businessName?: string;
 

@@ -134,6 +134,7 @@ export class PaymentDialogComponent {
                         firstName: 'Consumidor',
                         lastName: 'Final',
                         isCompany: false,
+                        isWholesale: false,
                         displayName: 'Consumidor Final',
                         email: '',
                         phone: '',

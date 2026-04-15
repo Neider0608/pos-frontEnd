@@ -1,0 +1,116 @@
+.page-shell {
+    @apply bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.1),_transparent_46%),radial-gradient(circle_at_95%_15%,_rgba(16,185,129,0.08),_transparent_38%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)];
+}
+
+.hero-panel {
+    @apply relative overflow-hidden bg-white/90 border border-slate-200 rounded-[2rem] p-6 md:p-8 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4;
+}
+
+.hero-panel::before {
+    content: '';
+    @apply absolute -top-14 -right-12 w-52 h-52 rounded-full bg-sky-200/40 blur-2xl pointer-events-none;
+}
+
+.hero-panel::after {
+    content: '';
+    @apply absolute -bottom-12 -left-8 w-40 h-40 rounded-full bg-emerald-200/40 blur-2xl pointer-events-none;
+}
+
+.hero-eyebrow {
+    @apply text-[11px] uppercase tracking-[0.22em] font-black text-sky-600 mb-2;
+}
+
+.hero-title {
+    @apply text-2xl md:text-3xl font-black text-slate-900 tracking-tight;
+}
+
+.hero-subtitle {
+    @apply mt-1 text-sm text-slate-600 font-medium max-w-2xl;
+}
+
+.quick-actions {
+    @apply relative z-[1] flex flex-wrap gap-2;
+}
+
+.quick-btn {
+    @apply rounded-xl bg-white text-slate-700 border-slate-200 hover:bg-sky-50;
+}
+
+.run-btn {
+    @apply rounded-xl bg-sky-600 border-sky-600 hover:bg-sky-700;
+}
+
+.filter-panel {
+    @apply bg-white/90 border border-slate-200 rounded-[2rem] p-6 shadow-sm backdrop-blur;
+}
+
+.field-wrap {
+    @apply flex flex-col gap-1;
+}
+
+.field-label {
+    @apply text-[10px] uppercase tracking-widest font-black text-slate-400;
+}
+
+.field-input {
+    @apply w-full !rounded-xl !bg-slate-50 !border-slate-200;
+}
+
+.export-xlsx {
+    @apply rounded-xl bg-emerald-600 border-emerald-600 hover:bg-emerald-700;
+}
+
+.export-pdf {
+    @apply rounded-xl bg-rose-600 border-rose-600 hover:bg-rose-700;
+}
+
+.export-csv {
+    @apply rounded-xl bg-slate-700 border-slate-700 hover:bg-slate-800;
+}
+
+.kpi-card {
+    @apply relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col gap-2;
+}
+
+.kpi-card::after {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-1;
+}
+
+.kpi-income::after { @apply bg-emerald-500; }
+.kpi-expense::after { @apply bg-rose-500; }
+.kpi-net::after { @apply bg-sky-500; }
+.kpi-mix::after { @apply bg-indigo-500; }
+.kpi-ticket::after { @apply bg-amber-500; }
+
+.kpi-label {
+    @apply text-[10px] uppercase tracking-widest font-black text-slate-500;
+}
+
+.kpi-value {
+    @apply text-xl font-black tracking-tight text-slate-900;
+}
+
+.kpi-sub {
+    @apply text-[11px] font-semibold text-slate-500;
+}
+
+.report-card {
+    @apply bg-white border border-slate-200 rounded-3xl p-5 shadow-sm;
+}
+
+.card-header {
+    @apply mb-4;
+}
+
+.card-header h3 {
+    @apply text-lg font-black text-slate-800 tracking-tight;
+}
+
+.card-header p {
+    @apply text-xs font-medium text-slate-500;
+}
+
+.empty-note {
+    @apply py-8 text-center text-sm text-slate-400 font-semibold;
+}

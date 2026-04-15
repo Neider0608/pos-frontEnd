@@ -82,6 +82,7 @@ export class CustomerFormModalComponent {
             country: '',
             address: '',
             isCompany: false,
+            isWholesale: false,
             nit: '',
             businessName: ''
         };
@@ -128,6 +129,7 @@ export class CustomerFormModalComponent {
             country: this.formData.country || '',
             address: this.formData.address || '',
             isCompany: this.formData.isCompany || false,
+            isWholesale: this.formData.isWholesale || false,
             nit: this.formData.nit || '',
             businessName: this.formData.businessName || '',
             createdAt: new Date(),
