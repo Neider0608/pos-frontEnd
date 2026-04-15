@@ -45,3 +45,9 @@ Thumbs.db
 *.zip
 dist/
 node_modules/
+/.vs/Front/FileContentIndex/7ba2552e-32bb-438d-9375-a1263aa0f64e.vsidx
+/.vs/Front/FileContentIndex/101a9610-8cc0-4c27-80ba-06877d0b90e8.vsidx
+/.vs/Front/v17
+/.vs/Front/FileContentIndex
+/.vs/slnx.sqlite
+/.vs/VSWorkspaceState.json
