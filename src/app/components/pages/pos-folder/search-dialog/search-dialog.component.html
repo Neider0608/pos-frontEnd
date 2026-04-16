@@ -71,12 +71,35 @@
                                 </div>
                             </div>
 
-                            <div class="mt-auto flex justify-between items-end">
-                                <div class="flex flex-col">
-                                    <span class="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Precio Venta</span>
-                                    <span class="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tighter">
-                                        {{ product.price | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
-                                    </span>
+                            <div class="mt-auto flex flex-col gap-3">
+                                <div class="flex flex-wrap gap-2">
+                                    @if (hasPrice(product, 'DETAL')) {
+                                        <button
+                                            type="button"
+                                            (click)="$event.stopPropagation(); handleSelectPrice(product, 'DETAL')"
+                                            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/20 transition-colors"
+                                        >
+                                            Detal: {{ getPrice(product, 'DETAL') | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
+                                        </button>
+                                    }
+                                    @if (hasPrice(product, 'CURVA')) {
+                                        <button
+                                            type="button"
+                                            (click)="$event.stopPropagation(); handleSelectPrice(product, 'CURVA')"
+                                            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/20 transition-colors"
+                                        >
+                                            Curva: {{ getPrice(product, 'CURVA') | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
+                                        </button>
+                                    }
+                                    @if (hasPrice(product, 'PAQUETE')) {
+                                        <button
+                                            type="button"
+                                            (click)="$event.stopPropagation(); handleSelectPrice(product, 'PAQUETE')"
+                                            class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/20 transition-colors"
+                                        >
+                                            Paquete: {{ getPrice(product, 'PAQUETE') | currency: currencyCode : 'symbol' : '1.0-0' : locale }}
+                                        </button>
+                                    }
                                 </div>
                                 <div class="text-right">
                                     <span class="block text-[9px] font-mono text-slate-400">{{ product.barcode }}</span>

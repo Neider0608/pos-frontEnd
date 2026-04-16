@@ -15,12 +15,12 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { ProductGridComponent } from '../product-grid/product-grid.component';
-import { SearchDialogComponent } from '../search-dialog/search-dialog.component';
+import { SearchDialogComponent, SelectProductPayload } from '../search-dialog/search-dialog.component';
 import { CartItem, Invoice, LastSale, PaymentMethod, Promotion, ViewMode } from '../../api/pos';
 import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.component';
 import { InvoiceDialogComponent } from '../invoice-dialog/invoice-dialog.component';
 import { LOCALE_ID, Inject } from '@angular/core';
-import { Customer, PosProduct, Product } from '../../api/shared';
+import { Customer, PosProduct, Product, Warehouse } from '../../api/shared';
 import { PosService } from '../../../services/pos.service';
 import { MasterService } from '../../../services/master.service';
 import { InventoryService } from '../../../services/inventory.service';
@@ -59,6 +59,9 @@ export class PosComponent implements OnInit {
     @ViewChild('barcodeInputRef') barcodeInputRef!: ElementRef<HTMLInputElement>;
 
     products: PosProduct[] = [];
+    selectionProducts: PosProduct[] = [];
+    warehouses: Warehouse[] = [];
+    selectedWarehouseId: number | null = null;
     /* customers: Customer[] = []; */
     customers: Customer[] = [];
     invoices: Invoice[] = [];
@@ -121,11 +124,26 @@ export class PosComponent implements OnInit {
         this.companiaId = session.companiaId;
         this.userId = session.userId;
 
-        this.loadInventory();
+        this.loadWarehouses();
         this.loadCustomers();
         this.createNewInvoice(0);
         this.loadPromotions();
         this.focusBarcodeInput();
+    }
+
+    loadWarehouses() {
+        this.masterService.getWarehouses(this.companiaId).subscribe({
+            next: (res) => {
+                this.warehouses = res.data || [];
+                this.selectedWarehouseId = this.warehouses[0]?.id ?? null;
+                this.loadInventory();
+            },
+            error: () => {
+                this.warehouses = [];
+                this.selectedWarehouseId = null;
+                this.loadInventory();
+            }
+        });
     }
 
     private applyPermissions(): void {
@@ -154,6 +172,7 @@ export class PosComponent implements OnInit {
     }
 
     loadInventory() {
+        // Inventario general del POS (sin filtrar por bodega).
         this.inventoryService.getProductsStore(this.companiaId).subscribe({
             next: (res) => {
                 this.products = res.data || [];
@@ -165,6 +184,23 @@ export class PosComponent implements OnInit {
                     summary: 'Error',
                     detail: 'No se pudo cargar el inventario.'
                 })
+        });
+    }
+
+    openSearchDialog() {
+        this.loadSelectionProductsAndOpen();
+    }
+
+    private loadSelectionProductsAndOpen() {
+        this.inventoryService.getProductsStore(this.companiaId, this.selectedWarehouseId).subscribe({
+            next: (res) => {
+                this.selectionProducts = res.data || [];
+                this.showSearchDialog = true;
+            },
+            error: () => {
+                this.selectionProducts = [];
+                this.showSearchDialog = true;
+            }
         });
     }
 
@@ -195,7 +231,7 @@ export class PosComponent implements OnInit {
         switch (event.key) {
             case 'F2':
                 event.preventDefault();
-                this.showSearchDialog = true; // Buscar producto
+                this.openSearchDialog(); // Buscar producto (filtrado por bodega)
                 break;
 
             case 'F3':
@@ -326,13 +362,24 @@ export class PosComponent implements OnInit {
         this.activeInvoice = invoice;
     }
 
+    private getFirstAvailablePrice(product: PosProduct): number {
+        const detal = Number(product.price ?? 0);
+        const curva = Number(product.priceCurva ?? 0);
+        const paquete = Number(product.pricePaquete ?? 0);
+
+        if (Number.isFinite(detal) && detal > 0) return detal;
+        if (Number.isFinite(curva) && curva > 0) return curva;
+        if (Number.isFinite(paquete) && paquete > 0) return paquete;
+        return Number.isFinite(detal) ? detal : 0;
+    }
+
     searchByBarcode() {
         if (!this.barcodeSearch.trim()) return;
 
         const product = this.products.find((p) => p.barcode === this.barcodeSearch.trim());
 
         if (product) {
-            this.addProduct(product);
+            this.addProduct({ product, priceMode: 'DETAL', unitPrice: this.getFirstAvailablePrice(product) });
         } else {
             this.showToast('warn', 'No encontrado', `No existe producto con ese código.`);
         }
@@ -347,7 +394,7 @@ export class PosComponent implements OnInit {
         const product = this.products.find((p) => p.code.toString() === this.productCodeSearch.toLowerCase() || p.name.toLowerCase().includes(this.productCodeSearch.toLowerCase()));
 
         if (product) {
-            this.addProduct(product);
+            this.addProduct({ product, priceMode: 'DETAL', unitPrice: this.getFirstAvailablePrice(product) });
         } else {
             this.showToast('warn', 'No encontrado', `No existe producto con ese código.`);
         }
@@ -697,20 +744,21 @@ export class PosComponent implements OnInit {
                         (existingGift.quantity = totalGiftUnits),
                             (existingGift.prevQuantity = totalGiftUnits),
                             (existingGift.discount = 100),
-                            (existingGift.discountValue = realProduct.price * totalGiftUnits),
-                            (existingGift.subtotal = realProduct.price * totalGiftUnits),
+                            (existingGift.discountValue = this.getFirstAvailablePrice(realProduct) * totalGiftUnits),
+                            (existingGift.subtotal = this.getFirstAvailablePrice(realProduct) * totalGiftUnits),
                             (existingGift.total = 0);
                     } else {
+                        const unitPrice = this.getFirstAvailablePrice(realProduct);
                         const giftItem: CartItem = {
                             ...realProduct,
                             quantity: totalGiftUnits,
                             prevQuantity: totalGiftUnits,
                             discount: 100,
-                            discountValue: realProduct.price * totalGiftUnits,
+                            discountValue: unitPrice * totalGiftUnits,
                             vatRate: realProduct.vat || 0,
                             vatValue: 0,
                             priceExcludedTax: 0,
-                            subtotal: realProduct.price * totalGiftUnits,
+                            subtotal: unitPrice * totalGiftUnits,
                             total: 0,
                             appliesVAT: realProduct.appliesVAT ?? false
                         };
@@ -726,8 +774,11 @@ export class PosComponent implements OnInit {
         }
     }
 
-    addProduct(product: PosProduct) {
+    addProduct(payload: SelectProductPayload) {
         if (!this.activeInvoice) return;
+
+        const product = payload.product;
+        const unitPrice = payload.unitPrice ?? this.getFirstAvailablePrice(product);
 
         const existingItem = this.activeInvoice.items.find((i) => i.id === product.id);
 
@@ -761,10 +812,12 @@ export class PosComponent implements OnInit {
             vatRate: product.vat || 0,
             vatValue: 0,
             priceExcludedTax: 0,
-            subtotal: product.price,
-            total: product.price,
+            price: unitPrice,
+            subtotal: unitPrice,
+            total: unitPrice,
             appliesVAT: product.appliesVAT ?? false
         };
+        (newItem as any).warehouseId = this.selectedWarehouseId ?? 1;
 
         this.activeInvoice.items.push(newItem); // 🔥 SOLO AQUÍ
 

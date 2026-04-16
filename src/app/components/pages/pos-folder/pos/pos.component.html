@@ -61,7 +61,7 @@
             </div>
 
             <div class="lg:col-span-5 flex items-end gap-3">
-                <button pButton (click)="showSearchDialog = true" label="Buscar Producto (F2)" icon="pi pi-search" class="flex-1 !rounded-2xl !py-4 !bg-slate-800 dark:!bg-slate-700 !border-none !font-bold hover:!bg-slate-700 transition-all"></button>
+                <button pButton (click)="openSearchDialog()" label="Buscar Producto (F2)" icon="pi pi-search" class="flex-1 !rounded-2xl !py-4 !bg-slate-800 dark:!bg-slate-700 !border-none !font-bold hover:!bg-slate-700 transition-all"></button>
 
                 <div class="hidden md:flex flex-col items-center justify-center px-6 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800">
                     <span class="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Items</span>
@@ -259,7 +259,12 @@
 
 <!-- DIALOGOS -->
 @if (showSearchDialog) {
-    <app-search-dialog [visible]="showSearchDialog" (selectProduct)="addProduct($event)" (visibleChange)="showSearchDialog = false; focusBarcodeInput()" [products]="products"></app-search-dialog>
+    <app-search-dialog
+        [visible]="showSearchDialog"
+        (selectProduct)="addProduct($event)"
+        (visibleChange)="showSearchDialog = false; focusBarcodeInput()"
+        [products]="selectionProducts"
+    ></app-search-dialog>
 }
 
 @if (showPaymentDialog) {

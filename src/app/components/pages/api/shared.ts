@@ -175,6 +175,8 @@ export interface PosProduct {
     name: string;
     description: string;
     price: number;
+    priceCurva?: number;
+    pricePaquete?: number;
     category: string;
     categoryId: number;
     unitMeasure: string;
