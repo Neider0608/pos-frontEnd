@@ -1,181 +1,148 @@
-<div class="p-4 md:p-8 space-y-8 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-500">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<p-toast></p-toast>
+
+<div class="page-shell min-h-screen p-4 md:p-8 space-y-6">
+    <section class="hero-panel">
         <div>
-            <h2 class="text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Caja & Contabilidad</h2>
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Control de flujo de caja y balances contables</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <p-dropdown [options]="periodOptions" [(ngModel)]="selectedPeriod" optionLabel="label" styleClass="!rounded-2xl !border-slate-200 dark:!border-slate-800 !bg-white dark:!bg-slate-900 !shadow-sm w-48"></p-dropdown>
-
-            <button pButton class="!rounded-2xl !bg-indigo-600 !border-none !px-6 !font-black !shadow-lg !shadow-indigo-100 dark:!shadow-none hover:!scale-105 transition-transform"><i class="pi pi-plus-circle mr-2"></i> Nuevo Movimiento</button>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm group">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl flex items-center justify-center text-emerald-600">
-                    <i [class]="getIcon('ArrowUpRight')" class="text-lg"></i>
-                </div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bruto</span>
-            </div>
-            <div class="text-2xl font-black text-emerald-600 tracking-tighter">${{ totalIncome.toFixed(2) }}</div>
-            <div class="flex items-center gap-1 mt-2">
-                <i [class]="getIcon('TrendingUp')" class="text-[10px] text-emerald-500"></i>
-                <span class="text-[10px] font-bold text-emerald-500 uppercase">+12.5% vs ayer</span>
-            </div>
+            <p class="hero-eyebrow">Caja Inteligente</p>
+            <h2 class="hero-title">Dashboard de Caja y Contabilidad</h2>
+            <p class="hero-subtitle">Control de liquidez, transacciones y mezcla de pagos en tiempo real para la operación POS.</p>
         </div>
 
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm group">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-10 h-10 bg-rose-50 dark:bg-rose-900/20 rounded-xl flex items-center justify-center text-rose-600">
-                    <i [class]="getIcon('ArrowDownRight')" class="text-lg"></i>
-                </div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Egresos</span>
+        <div class="quick-actions">
+            <button pButton type="button" label="Hoy" class="quick-btn" (click)="applyQuickRange(1)"></button>
+            <button pButton type="button" label="3 días" class="quick-btn" (click)="applyQuickRange(3)"></button>
+            <button pButton type="button" label="7 días" class="quick-btn" (click)="applyQuickRange(7)"></button>
+            <button pButton type="button" [label]="loading ? 'Consultando...' : 'Actualizar'" [icon]="loading ? 'pi pi-spin pi-spinner' : 'pi pi-sync'" class="run-btn" (click)="onSearch()"></button>
+        </div>
+    </section>
+
+    <section class="filter-panel">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
+            <div class="field-wrap">
+                <label class="field-label">Fecha inicial</label>
+                <p-calendar [(ngModel)]="startDate" dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="field-input"></p-calendar>
             </div>
-            <div class="text-2xl font-black text-rose-600 tracking-tighter">${{ totalExpenses.toFixed(2) }}</div>
-            <div class="flex items-center gap-1 mt-2">
-                <i [class]="getIcon('TrendingDown')" class="text-[10px] text-rose-500"></i>
-                <span class="text-[10px] font-bold text-rose-500 uppercase">-5.2% vs ayer</span>
+            <div class="field-wrap">
+                <label class="field-label">Fecha final</label>
+                <p-calendar [(ngModel)]="endDate" dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="field-input"></p-calendar>
+            </div>
+            <div class="field-wrap">
+                <label class="field-label">Vendedor</label>
+                <p-dropdown [options]="userOptions" [(ngModel)]="selectedUserId" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full" (onChange)="onSearch()"></p-dropdown>
+            </div>
+            <div class="flex gap-2 xl:col-span-2">
+                <button
+                    pButton
+                    type="button"
+                    [disabled]="exporting"
+                    [icon]="exporting ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"
+                    class="flex-1 export-xlsx"
+                    (click)="exportCashReport('xlsx')"
+                    label="Excel"
+                ></button>
+                <button pButton type="button" [disabled]="exporting" [icon]="exporting ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'" class="flex-1 export-pdf" (click)="exportCashReport('pdf')" label="PDF"></button>
+                <button pButton type="button" [disabled]="exporting" [icon]="exporting ? 'pi pi-spin pi-spinner' : 'pi pi-file'" class="flex-1 export-csv" (click)="exportCashReport('csv')" label="CSV"></button>
             </div>
         </div>
+    </section>
 
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm group">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-600">
-                    <i [class]="getIcon('Calculator')" class="text-lg"></i>
-                </div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Balance</span>
-            </div>
-            <div [ngClass]="netFlow >= 0 ? 'text-indigo-600' : 'text-rose-600'" class="text-2xl font-black tracking-tighter">${{ netFlow.toFixed(2) }}</div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase mt-2">Ingresos - Gastos</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+        <div class="kpi-card kpi-income">
+            <span class="kpi-label">Ingresos</span>
+            <span class="kpi-value text-emerald-600">{{ summary.ingresos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            <span class="kpi-sub">Transacciones: {{ summary.transacciones }}</span>
         </div>
-
-        <div class="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm group">
-            <div class="flex justify-between items-start mb-4">
-                <div class="w-10 h-10 bg-amber-50 dark:bg-amber-900/20 rounded-xl flex items-center justify-center text-amber-600">
-                    <i [class]="getIcon('Banknote')" class="text-lg"></i>
-                </div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Disponible</span>
-            </div>
-            <div class="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tighter">${{ cashBalance.toFixed(2) }}</div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase mt-2">Efectivo en Caja</p>
+        <div class="kpi-card kpi-expense">
+            <span class="kpi-label">Egresos</span>
+            <span class="kpi-value text-rose-600">{{ summary.egresos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            <span class="kpi-sub">Control de salidas operativas</span>
         </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div class="p-6 border-b border-slate-50 dark:border-slate-800">
-                <h4 class="font-black text-slate-800 dark:text-slate-100 uppercase text-xs tracking-widest">Balance por Método</h4>
-            </div>
-            <div class="p-6 space-y-3">
-                <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <i [class]="getIcon('Banknote')" class="text-emerald-500"></i>
-                        <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Efectivo</span>
-                    </div>
-                    <span class="font-black text-slate-900 dark:text-slate-100">${{ cashBalance.toFixed(2) }}</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <i [class]="getIcon('CreditCard')" class="text-blue-500"></i>
-                        <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Tarjeta</span>
-                    </div>
-                    <span class="font-black text-slate-900 dark:text-slate-100">${{ cardBalance.toFixed(2) }}</span>
-                </div>
-                <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <i [class]="getIcon('DollarSign')" class="text-purple-500"></i>
-                        <span class="font-bold text-slate-700 dark:text-slate-300 text-sm">Transferencia</span>
-                    </div>
-                    <span class="font-black text-slate-900 dark:text-slate-100">$0.00</span>
-                </div>
-            </div>
+        <div class="kpi-card kpi-net">
+            <span class="kpi-label">Flujo Neto</span>
+            <span class="kpi-value" [class.text-emerald-600]="summary.neto >= 0" [class.text-rose-600]="summary.neto < 0">{{ summary.neto | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            <span class="kpi-sub">Ingresos - Egresos</span>
         </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div class="p-6 border-b border-slate-50 dark:border-slate-800">
-                <h4 class="font-black text-slate-800 dark:text-slate-100 uppercase text-xs tracking-widest">Resumen Categorías</h4>
-            </div>
-            <div class="p-6 space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter">Ventas</span>
-                    <span class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-lg font-black text-[10px] tracking-widest">+ $280.50</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter">Inventario</span>
-                    <span class="px-3 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-lg font-black text-[10px] tracking-widest">- $250.00</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter">Servicios</span>
-                    <span class="px-3 py-1 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-lg font-black text-[10px] tracking-widest">- $85.30</span>
-                </div>
-                <div class="flex items-center justify-between pt-2 border-t border-slate-50 dark:border-slate-800">
-                    <span class="text-sm font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter">Otros</span>
-                    <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-lg font-black text-[10px] tracking-widest">$0.00</span>
-                </div>
-            </div>
+        <div class="kpi-card kpi-mix">
+            <span class="kpi-label">Efectivo + Tarjetas</span>
+            <span class="kpi-value">{{ summary.efectivo + summary.tarjetas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            <span class="kpi-sub">Caja + medios electrónicos</span>
         </div>
-
-        <div class="bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-            <div class="p-6 border-b border-slate-50 dark:border-slate-800">
-                <h4 class="font-black text-slate-800 dark:text-slate-100 uppercase text-xs tracking-widest">Acciones Rápidas</h4>
-            </div>
-            <div class="p-6 grid grid-cols-1 gap-3">
-                <button pButton class="!w-full !rounded-2xl !bg-white dark:!bg-slate-800 !text-slate-700 dark:!text-slate-200 !border-slate-200 dark:!border-slate-700 !font-bold !text-xs !justify-start hover:!bg-slate-50 transition-all">
-                    <i [class]="getIcon('ArrowUpRight')" class="mr-3 text-emerald-500"></i> Registrar Ingreso
-                </button>
-                <button pButton class="!w-full !rounded-2xl !bg-white dark:!bg-slate-800 !text-slate-700 dark:!text-slate-200 !border-slate-200 dark:!border-slate-700 !font-bold !text-xs !justify-start hover:!bg-slate-50 transition-all">
-                    <i [class]="getIcon('ArrowDownRight')" class="mr-3 text-rose-500"></i> Registrar Gasto
-                </button>
-                <button pButton class="!w-full !rounded-2xl !bg-white dark:!bg-slate-800 !text-slate-700 dark:!text-slate-200 !border-slate-200 dark:!border-slate-700 !font-bold !text-xs !justify-start hover:!bg-slate-50 transition-all">
-                    <i [class]="getIcon('Calculator')" class="mr-3 text-indigo-500"></i> Arqueo de Caja
-                </button>
-                <button pButton class="!w-full !rounded-2xl !bg-slate-900 dark:!bg-white dark:!text-slate-900 !text-white !border-none !font-black !text-[10px] !uppercase !tracking-widest !justify-center shadow-xl">Cerrar Caja</button>
-            </div>
+        <div class="kpi-card kpi-ticket">
+            <span class="kpi-label">Ticket Promedio</span>
+            <span class="kpi-value">{{ summary.ticketPromedio | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            <span class="kpi-sub">Promedio por transacción</span>
         </div>
     </div>
 
-    <div class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-2xl transition-all">
-        <div class="p-8 border-b border-slate-100 dark:border-slate-800">
-            <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tighter">Movimientos Recientes</h3>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Historial de transacciones del día</p>
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="report-card xl:col-span-1">
+            <div class="card-header">
+                <h3>Mix de Medios de Pago</h3>
+                <p>Total reportado: {{ mixTotal | currency: 'COP' : 'symbol' : '1.0-0' }}</p>
+            </div>
+
+            @if (!loading && paymentMix.length === 0) {
+                <p class="empty-note">No hay datos de medios de pago para este rango.</p>
+            }
+
+            <div class="space-y-3">
+                @for (mix of paymentMix; track mix.metodo) {
+                    <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-slate-50 dark:bg-slate-800/40 hover:border-sky-300 dark:hover:border-sky-600 transition-colors">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-black uppercase tracking-widest text-slate-500">{{ mix.metodo }}</span>
+                            <span class="text-xs font-black text-slate-700 dark:text-slate-200">{{ mix.porcentaje | number: '1.0-2' }}%</span>
+                        </div>
+                        <div class="w-full h-2 rounded bg-slate-200 dark:bg-slate-700 overflow-hidden mb-2">
+                            <div class="h-full bg-blue-600" [style.width.%]="mix.porcentaje"></div>
+                        </div>
+                        <div class="text-right text-xs font-semibold text-slate-600 dark:text-slate-300">{{ mix.valor | currency: 'COP' : 'symbol' : '1.0-0' }}</div>
+                    </div>
+                }
+            </div>
         </div>
 
-        <div class="p-2 md:p-6">
-            <p-table [value]="transactions" styleClass="p-datatable-sm">
+        <div class="report-card xl:col-span-2">
+            <div class="card-header">
+                <h3>Movimientos Recientes de Caja</h3>
+                <p>Ingresos y egresos registrados en el periodo.</p>
+            </div>
+
+            <p-table [value]="transactions" [loading]="loading" [paginator]="true" [rows]="10" responsiveLayout="scroll">
                 <ng-template pTemplate="header">
-                    <tr class="!bg-slate-50 dark:!bg-slate-800/50">
-                        <th pSortableColumn="date" class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Fecha/Hora</th>
-                        <th pSortableColumn="description" class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Descripción</th>
-                        <th pSortableColumn="category" class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Categoría</th>
-                        <th pSortableColumn="paymentMethod" class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Método</th>
-                        <th pSortableColumn="amount" class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-right">Monto</th>
-                        <th pSortableColumn="type" class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent text-center">Tipo</th>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Método</th>
+                        <th class="text-right">Monto</th>
+                        <th>Tipo</th>
                     </tr>
                 </ng-template>
-                <ng-template pTemplate="body" let-transaction>
-                    <tr class="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td class="px-6 py-4">
-                            <span class="font-mono text-[10px] font-bold text-slate-500 tracking-tighter">{{ transaction.date | date: 'short' }}</span>
+
+                <ng-template pTemplate="body" let-row>
+                    <tr>
+                        <td>{{ row.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+                        <td>
+                            <div class="font-semibold text-slate-700 dark:text-slate-200">{{ row.descripcion || 'N/A' }}</div>
+                            @if (row.referencia) {
+                                <div class="text-[11px] text-slate-400">Ref: {{ row.referencia }}</div>
+                            }
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="font-bold text-slate-700 dark:text-slate-200 text-sm">{{ transaction.description }}</span>
+                        <td>{{ row.categoria || '-' }}</td>
+                        <td>{{ row.metodoPago || '-' }}</td>
+                        <td class="text-right font-black" [class.text-emerald-600]="row.tipo === 'income'" [class.text-rose-600]="row.tipo === 'expense'">
+                            {{ row.tipo === 'income' ? '+' : '-' }}{{ row.monto | currency: 'COP' : 'symbol' : '1.0-0' }}
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-black uppercase text-slate-500">{{ transaction.category }}</span>
+                        <td>
+                            <p-tag [value]="row.tipo === 'income' ? 'Ingreso' : 'Egreso'" [severity]="getTransactionSeverity(row.tipo)"></p-tag>
                         </td>
-                        <td class="px-6 py-4">
-                            <span class="text-xs font-medium text-slate-600 dark:text-slate-400 italic uppercase">{{ transaction.paymentMethod }}</span>
-                        </td>
-                        <td [ngClass]="transaction.type === 'income' ? 'text-emerald-600' : 'text-rose-600'" class="px-6 py-4 text-right font-black tracking-tighter">
-                            {{ transaction.type === 'income' ? '+' : '-' }}{{ transaction.amount.toFixed(2) }}
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span [class]="transaction.type === 'income' ? 'bg-emerald-500' : 'bg-rose-500'" class="w-2 h-2 rounded-full inline-block mr-2 ring-4 ring-opacity-20 ring-current"></span>
-                            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                {{ transaction.type === 'income' ? 'Entrada' : 'Salida' }}
-                            </span>
+                    </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                    <tr>
+                        <td colspan="6">
+                            <p class="empty-note">No hay movimientos de caja para este periodo.</p>
                         </td>
                     </tr>
                 </ng-template>

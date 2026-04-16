@@ -1,59 +1,140 @@
-.p-card .p-card-body {
-    padding: 0 !important; /* Anula el padding por defecto para que los divs internos controlen el espaciado */
-}
-.p-card .p-card-content {
-  padding: 0; /* Asegura que el contenido de la tarjeta no tenga padding extra */
-}
-.p-dropdown {
-  width: 100%; /* Asegura que el dropdown ocupe todo el ancho disponible */
-}
-.p-dropdown .p-dropdown-label {
-  min-height: 2.5rem; /* Altura mínima para que coincida con los campos de input de ShadCN */
-  line-height: 1.25rem; /* Ajuste para el texto dentro del input */
-  padding: 0.5rem 0.75rem; /* Ajuste el padding para coincidir con la apariencia del input de ShadCN */
-}
-.p-button {
-  /* Estilos generales para botones de PrimeNG para que se parezcan a los de ShadCN */
-  @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
-  height: 2.5rem; /* h-10 */
-  padding: 0 1rem; /* px-4 */
+.page-shell {
+    @apply bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.09),_transparent_45%),radial-gradient(circle_at_90%_10%,_rgba(16,185,129,0.07),_transparent_35%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)];
 }
 
-.p-button.p-button-outlined {
-  @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+.hero-panel {
+    @apply relative overflow-hidden bg-white/90 border border-slate-200 rounded-[2rem] p-6 md:p-8 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4;
 }
 
-/* Estilos específicos para p-tag para replicar p-badge de shadcn */
-.p-tag {
-    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+.hero-panel::before {
+    content: '';
+    @apply absolute -top-14 -right-12 w-52 h-52 rounded-full bg-sky-200/40 blur-2xl pointer-events-none;
 }
 
-/* Variantes de p-tag para simular las variantes de Badge de ShadCN */
-.p-tag.p-tag-info { /* draft - outline */
-  @apply border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200;
-}
-.p-tag.p-tag-warning { /* sent - secondary */
-    @apply border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200;
-}
-.p-tag.p-tag-success { /* accepted - default */
-    @apply border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
-    background-color: #22c55e; /* green-500 */
-    color: white;
-}
-.p-tag.p-tag-danger { /* rejected - destructive */
-    @apply border-transparent bg-red-500 text-white hover:bg-red-500/90;
-}
-.p-tag.p-tag-secondary { /* expired - secondary (using warning or info for better visual distinction) */
-    @apply border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200;
+.hero-panel::after {
+    content: '';
+    @apply absolute -bottom-12 -left-8 w-40 h-40 rounded-full bg-emerald-200/40 blur-2xl pointer-events-none;
 }
 
-/* Estilo para los iconos de PrimeIcons */
-.pi {
-  font-size: 1.25rem; /* Base size for h-5 w-5 (20px) */
-  display: inline-flex; /* Ensures proper alignment and size with text */
-  align-items: center;
-  justify-content: center;
+.hero-eyebrow {
+    @apply text-[11px] uppercase tracking-[0.22em] font-black text-sky-600 mb-2;
 }
-.pi.h-3.w-3 {
-    font-size: 0.75rem; /* 12px for h-3 w-3 */
+
+.hero-title {
+    @apply text-2xl md:text-3xl font-black text-slate-900 tracking-tight;
+}
+
+.hero-subtitle {
+    @apply mt-1 text-sm text-slate-600 font-medium max-w-2xl;
+}
+
+.quick-actions {
+    @apply relative z-[1] flex flex-wrap gap-2;
+}
+
+.quick-btn {
+    @apply rounded-xl bg-white text-slate-700 border-slate-200 hover:bg-sky-50;
+}
+
+.run-btn {
+    @apply rounded-xl bg-sky-600 border-sky-600 hover:bg-sky-700;
+}
+
+.filter-panel {
+    @apply bg-white/90 border border-slate-200 rounded-[2rem] p-6 shadow-sm backdrop-blur;
+}
+
+.field-wrap {
+    @apply flex flex-col gap-1;
+}
+
+.field-label {
+    @apply text-[10px] uppercase tracking-widest font-black text-slate-400;
+}
+
+.field-input {
+    @apply w-full !rounded-xl !bg-slate-50 !border-slate-200;
+}
+
+.export-btn {
+    @apply rounded-xl bg-emerald-600 border-emerald-600 hover:bg-emerald-700;
+}
+
+.kpi-card {
+    @apply relative overflow-hidden bg-white border border-slate-200 rounded-3xl p-5 shadow-sm flex flex-col gap-2;
+}
+
+.kpi-card::after {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-1;
+}
+
+.kpi-sales::after { @apply bg-emerald-500; }
+.kpi-tax::after { @apply bg-amber-500; }
+.kpi-purchases::after { @apply bg-rose-500; }
+.kpi-profit::after { @apply bg-sky-500; }
+.kpi-financing::after { @apply bg-indigo-500; }
+
+.kpi-label {
+    @apply text-[10px] uppercase tracking-widest font-black text-slate-500;
+}
+
+.kpi-value {
+    @apply text-xl font-black tracking-tight text-slate-900;
+}
+
+.kpi-sub {
+    @apply text-[11px] font-semibold text-slate-500;
+}
+
+.report-card {
+    @apply bg-white border border-slate-200 rounded-3xl p-5 shadow-sm;
+}
+
+.card-header {
+    @apply mb-4;
+}
+
+.card-header h3 {
+    @apply text-lg font-black text-slate-800 tracking-tight;
+}
+
+.card-header p {
+    @apply text-xs font-medium text-slate-500;
+}
+
+.empty-note {
+    @apply py-8 text-center text-sm text-slate-400 font-semibold;
+}
+
+.decision-panel {
+    @apply bg-white border border-slate-200 rounded-3xl p-5 shadow-sm;
+}
+
+.decision-head {
+    @apply flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4;
+}
+
+.decision-eyebrow {
+    @apply text-[10px] uppercase tracking-[0.22em] font-black text-sky-600;
+}
+
+.decision-head h3 {
+    @apply text-lg font-black text-slate-800 tracking-tight;
+}
+
+.decision-item {
+    @apply rounded-2xl border border-slate-200 bg-slate-50 p-4 flex flex-col gap-1;
+}
+
+.decision-item span {
+    @apply text-[10px] uppercase tracking-widest font-black text-slate-500;
+}
+
+.decision-item strong {
+    @apply text-lg font-black text-slate-900;
+}
+
+.decision-item small {
+    @apply text-[11px] font-medium text-slate-500;
 }

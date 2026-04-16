@@ -214,6 +214,27 @@ export class PosComponent implements OnInit {
         return this.activeInvoice.items.length > 0 && diff <= 0.01;
     }
 
+    get invoiceElectronicChecklist(): { label: string; ok: boolean }[] {
+        const invoice = this.activeInvoice;
+        const customer = invoice?.customer as any;
+
+        const customerName = (customer?.displayName || `${customer?.firstName || ''} ${customer?.lastName || ''}`.trim()).trim();
+
+        return [
+            { label: 'Cliente identificado', ok: !!customer && !!customerName },
+            { label: 'Documento del cliente', ok: !!(customer?.document || customer?.nit) },
+            { label: 'Correo para envio', ok: !!customer?.email },
+            { label: 'Items de factura', ok: !!invoice && invoice.items.length > 0 },
+            { label: 'Totales balanceados', ok: !!invoice && Math.abs(this.totalPagado - invoice.total) <= 0.01 }
+        ];
+    }
+
+    get invoiceElectronicProgress(): number {
+        const checklist = this.invoiceElectronicChecklist;
+        const completed = checklist.filter((x) => x.ok).length;
+        return checklist.length ? (completed * 100) / checklist.length : 0;
+    }
+
     removeProduct(productId: number | string) {
         if (!this.activeInvoice) return;
 
@@ -326,6 +347,7 @@ export class PosComponent implements OnInit {
                 firstName: 'Consumidor',
                 lastName: 'Final',
                 isCompany: false,
+                isWholesale: false,
                 displayName: 'Consumidor Final',
                 email: '',
                 phone: '',
@@ -741,12 +763,12 @@ export class PosComponent implements OnInit {
                     const existingGift = invoice.items.find((i) => i.id === realProduct.id);
 
                     if (existingGift) {
-                        (existingGift.quantity = totalGiftUnits),
+                        ((existingGift.quantity = totalGiftUnits),
                             (existingGift.prevQuantity = totalGiftUnits),
                             (existingGift.discount = 100),
-                            (existingGift.discountValue = this.getFirstAvailablePrice(realProduct) * totalGiftUnits),
-                            (existingGift.subtotal = this.getFirstAvailablePrice(realProduct) * totalGiftUnits),
-                            (existingGift.total = 0);
+                            (existingGift.discountValue = realProduct.price * totalGiftUnits),
+                            (existingGift.subtotal = realProduct.price * totalGiftUnits),
+                            (existingGift.total = 0));
                     } else {
                         const unitPrice = this.getFirstAvailablePrice(realProduct);
                         const giftItem: CartItem = {
@@ -856,8 +878,9 @@ export class PosComponent implements OnInit {
             const itemAfterDiscount = itemSubtotal - item.discountValue;
 
             if (item.appliesVAT && item.vat > 0) {
-                item.priceExcludedTax = itemAfterDiscount;
-                item.vatValue = itemAfterDiscount * (item.vat / 100);
+                const vatFactor = 1 + item.vat / 100;
+                item.priceExcludedTax = itemAfterDiscount / vatFactor;
+                item.vatValue = itemAfterDiscount - item.priceExcludedTax;
             } else {
                 item.priceExcludedTax = itemAfterDiscount;
                 item.vatValue = 0;
@@ -871,11 +894,8 @@ export class PosComponent implements OnInit {
             totalVat += item.vatValue;
             totalExcludedTax += item.priceExcludedTax;
         }
-        const netSubtotal = grossSubtotal - totalDiscountDetail;
-
-        const generalDiscountAmount = netSubtotal * (invoice.generalDiscount / 100);
-
-        const subtotalAfterGeneralDiscount = netSubtotal - generalDiscountAmount;
+        const generalDiscountAmount = totalExcludedTax * (invoice.generalDiscount / 100);
+        const subtotalAfterGeneralDiscount = totalExcludedTax - generalDiscountAmount;
         const vatAfterGeneralDiscount = totalVat;
 
         invoice.grossSubtotal = grossSubtotal;
