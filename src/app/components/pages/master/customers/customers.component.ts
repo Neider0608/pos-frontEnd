@@ -46,6 +46,7 @@ export class CustomersComponent implements OnInit {
     isEditing = false;
     companiaId: number = 0;
     userId: number = 0;
+    customerTypeFilter: 'all' | 'wholesale' | 'regular' = 'all';
 
     // ============================================================
     // 🔹 FORMULARIO ACTUAL (CREAR/EDITAR)
@@ -57,6 +58,12 @@ export class CustomersComponent implements OnInit {
         { label: 'TI', value: 2 },
         { label: 'PAS', value: 3 },
         { label: 'NIT', value: 4 }
+    ];
+
+    customerTypeOptions = [
+        { label: 'Todos', value: 'all' },
+        { label: 'Mayorista', value: 'wholesale' },
+        { label: 'Regular', value: 'regular' }
     ];
 
     permissions: Permission[] = [];
@@ -155,11 +162,20 @@ export class CustomersComponent implements OnInit {
     // ============================================================
     filterCustomers() {
         const term = this.searchTerm.toLowerCase();
-        this.filteredCustomers = this.customers.filter((c) => `${c.firstName} ${c.lastName} ${c.businessName ?? ''} ${c.document}`.toLowerCase().includes(term));
+        this.filteredCustomers = this.customers.filter((c) => {
+            const matchesTerm = `${c.firstName} ${c.lastName} ${c.businessName ?? ''} ${c.document}`.toLowerCase().includes(term);
+            const matchesType =
+                this.customerTypeFilter === 'all' ||
+                (this.customerTypeFilter === 'wholesale' && c.isWholesale) ||
+                (this.customerTypeFilter === 'regular' && !c.isWholesale);
+
+            return matchesTerm && matchesType;
+        });
     }
 
     resetFilters() {
         this.searchTerm = '';
+        this.customerTypeFilter = 'all';
         this.filteredCustomers = [...this.customers];
     }
 

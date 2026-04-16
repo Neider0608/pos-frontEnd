@@ -1,5 +1,106 @@
+/* Fondo de página: sin gradiente (la vista hereda el fondo del layout). */
 .page-shell {
-    @apply bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.09),_transparent_45%),radial-gradient(circle_at_90%_10%,_rgba(16,185,129,0.07),_transparent_35%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)];
+    @apply bg-transparent;
+}
+
+.reports-page {
+    @apply bg-transparent;
+}
+
+/* Encabezado del módulo: identidad clara, sin card pesada ni fondo de bloque */
+.reports-toolbar {
+    @apply border-b border-slate-200 dark:border-slate-700 pb-4;
+}
+
+.reports-toolbar__top {
+    @apply flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4;
+}
+
+.reports-toolbar__brand {
+    @apply flex gap-3 md:gap-4 min-w-0 flex-1;
+}
+
+.reports-toolbar__mark {
+    @apply flex-shrink-0 w-11 h-11 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-lg md:text-xl;
+    @apply bg-gradient-to-br from-sky-50 to-sky-100/80 dark:from-sky-950/50 dark:to-slate-800 border border-sky-200/80 dark:border-sky-800 text-sky-600 dark:text-sky-400 shadow-sm;
+}
+
+.reports-toolbar__titles {
+    @apply min-w-0 flex flex-col gap-0.5;
+}
+
+.reports-toolbar__eyebrow {
+    @apply text-[10px] uppercase tracking-[0.2em] font-black text-sky-600 dark:text-sky-400 m-0;
+}
+
+.reports-toolbar__h1 {
+    @apply text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight m-0 leading-tight;
+}
+
+.reports-toolbar__tagline {
+    @apply text-sm text-slate-600 dark:text-slate-400 font-medium leading-snug max-w-2xl mt-1.5 m-0;
+}
+
+.reports-toolbar__chips {
+    @apply flex flex-wrap items-center gap-2 mt-3;
+}
+
+.reports-toolbar__chip {
+    @apply inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300;
+    @apply px-2.5 py-1 rounded-lg bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700;
+}
+
+.reports-toolbar__chip i {
+    @apply text-xs;
+}
+
+.reports-toolbar__chip--muted {
+    @apply text-slate-500 dark:text-slate-400 font-medium border-slate-200/60 dark:border-slate-700/80;
+}
+
+.reports-toolbar__actions {
+    @apply flex flex-wrap items-center gap-1.5 flex-shrink-0 lg:pt-1;
+}
+
+.reports-toolbar__filters {
+    @apply grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-x-3 gap-y-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800;
+}
+
+.reports-field {
+    @apply flex flex-col gap-0.5 min-w-0;
+}
+
+.reports-field__label {
+    @apply text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-slate-500;
+}
+
+:host ::ng-deep .reports-input {
+    @apply w-full text-sm py-2 px-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100;
+}
+
+:host ::ng-deep .p-calendar .reports-input {
+    @apply w-full;
+}
+
+:host ::ng-deep .reports-dd.p-dropdown,
+:host ::ng-deep .reports-dd.p-component {
+    @apply w-full;
+}
+
+:host ::ng-deep .reports-dd .p-dropdown-label {
+    @apply py-2 text-sm;
+}
+
+.reports-section-compact {
+    @apply pb-6 border-b border-slate-200 dark:border-slate-700;
+}
+
+.reports-section-compact__head {
+    @apply mb-3;
+}
+
+.reports-section-compact__title {
+    @apply text-base font-black text-slate-900 dark:text-white tracking-tight m-0 mt-0.5;
 }
 
 .hero-panel {
@@ -137,4 +238,226 @@
 
 .decision-item small {
     @apply text-[11px] font-medium text-slate-500;
+}
+
+/* --- Panel empresarial ampliado --- */
+.enterprise-shell {
+    @apply max-w-[1600px] mx-auto;
+}
+
+.enterprise-hero {
+    @apply relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-700 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8 md:p-10 shadow-xl;
+}
+
+.enterprise-hero::before {
+    content: '';
+    @apply absolute inset-0 opacity-30 pointer-events-none;
+    background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.35), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(16, 185, 129, 0.25), transparent 40%);
+}
+
+.enterprise-hero__main {
+    @apply relative z-[1] max-w-3xl;
+}
+
+.enterprise-hero__badge {
+    @apply inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.2em] text-sky-300 mb-3;
+}
+
+.enterprise-hero__title {
+    @apply text-3xl md:text-4xl font-black tracking-tight mb-2;
+}
+
+.enterprise-hero__lead {
+    @apply text-slate-300 text-sm md:text-base font-medium leading-relaxed;
+}
+
+.enterprise-hero__meta {
+    @apply flex flex-wrap gap-2 mt-5;
+}
+
+.enterprise-pill {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-100 backdrop-blur-sm;
+}
+
+.enterprise-pill--muted {
+    @apply text-slate-400 border-white/10;
+}
+
+.enterprise-hero__actions {
+    @apply relative z-[1] mt-6 lg:mt-0 flex flex-wrap gap-2 lg:justify-end;
+}
+
+.enterprise-btn {
+    @apply rounded-xl font-bold;
+}
+
+.enterprise-btn--ghost {
+    @apply bg-white/10 border border-white/20 text-white hover:bg-white/20;
+}
+
+.enterprise-btn--primary {
+    @apply bg-sky-500 border-sky-500 hover:bg-sky-400 text-white;
+}
+
+.enterprise-btn--accent {
+    @apply bg-emerald-600 border-emerald-600 hover:bg-emerald-500 text-white;
+}
+
+.enterprise-panel {
+    @apply bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-3xl p-6 md:p-8 shadow-sm;
+}
+
+.enterprise-panel--dense {
+    @apply p-6;
+}
+
+.enterprise-panel__title h2 {
+    @apply text-xl font-black text-slate-900 dark:text-white tracking-tight mt-1;
+}
+
+.enterprise-panel__title p {
+    @apply text-sm text-slate-600 dark:text-slate-400 mt-2 max-w-3xl;
+}
+
+.enterprise-section-head {
+    @apply flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-5;
+}
+
+.enterprise-section-eyebrow {
+    @apply text-[10px] uppercase tracking-[0.22em] font-black text-sky-600 dark:text-sky-400;
+}
+
+.enterprise-section-title {
+    @apply text-xl font-black text-slate-900 dark:text-white tracking-tight;
+}
+
+.enterprise-section-desc {
+    @apply text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-3xl;
+}
+
+.enterprise-kpi {
+    @apply relative rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm overflow-hidden;
+}
+
+.enterprise-kpi::before {
+    content: '';
+    @apply absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl;
+}
+
+.enterprise-kpi--emerald::before {
+    @apply bg-emerald-500;
+}
+.enterprise-kpi--amber::before {
+    @apply bg-amber-500;
+}
+.enterprise-kpi--slate::before {
+    @apply bg-slate-400;
+}
+.enterprise-kpi--rose::before {
+    @apply bg-rose-500;
+}
+.enterprise-kpi--sky::before {
+    @apply bg-sky-500;
+}
+.enterprise-kpi--indigo::before {
+    @apply bg-indigo-500;
+}
+.enterprise-kpi--violet::before {
+    @apply bg-violet-500;
+}
+.enterprise-kpi--teal::before {
+    @apply bg-teal-500;
+}
+
+.enterprise-kpi__label {
+    @apply text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-slate-400;
+}
+
+.enterprise-kpi__value {
+    @apply block text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight;
+}
+
+.enterprise-kpi__hint {
+    @apply text-xs font-semibold text-slate-500 dark:text-slate-400 mt-2;
+}
+
+.enterprise-stat {
+    @apply rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-4 flex flex-col gap-1;
+}
+
+.enterprise-stat__label {
+    @apply text-[10px] uppercase font-black text-slate-500 tracking-wider;
+}
+
+.enterprise-stat__value {
+    @apply text-lg font-black text-slate-900 dark:text-white;
+}
+
+.enterprise-mini {
+    @apply flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm;
+}
+
+.enterprise-mini span {
+    @apply text-slate-500 dark:text-slate-400 font-semibold;
+}
+
+.enterprise-mini strong {
+    @apply text-slate-900 dark:text-white font-black;
+}
+
+.mix-row {
+    @apply space-y-1;
+}
+
+.mix-row__head {
+    @apply flex justify-between items-baseline gap-2;
+}
+
+.mix-row__method {
+    @apply text-sm font-bold text-slate-800 dark:text-slate-100;
+}
+
+.mix-row__amount {
+    @apply text-sm font-black text-slate-900 dark:text-white;
+}
+
+.mix-bar-track {
+    @apply h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden;
+}
+
+.mix-bar-fill {
+    @apply h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-500 transition-all duration-500;
+}
+
+.mix-row__pct {
+    @apply text-right text-xs font-bold text-slate-500;
+}
+
+.enterprise-strip {
+    @apply grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 rounded-3xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6;
+}
+
+.enterprise-strip__item {
+    @apply flex flex-col gap-1 border-b sm:border-b-0 sm:border-r border-slate-200 dark:border-slate-700 last:border-0 pb-4 sm:pb-0 sm:pr-4 last:pr-0;
+}
+
+.enterprise-strip__item span {
+    @apply text-[10px] uppercase font-black text-slate-500 tracking-wider;
+}
+
+.enterprise-strip__item strong {
+    @apply text-2xl font-black text-slate-900 dark:text-white;
+}
+
+.enterprise-strip__item small {
+    @apply text-xs text-slate-600 dark:text-slate-400;
+}
+
+.flow-card {
+    @apply border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-slate-800/50 hover:border-sky-300 dark:hover:border-sky-600 transition-colors;
+}
+
+.flow-card__date {
+    @apply text-xs font-black text-slate-500 uppercase;
 }

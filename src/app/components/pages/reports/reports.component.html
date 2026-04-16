@@ -1,119 +1,269 @@
 <p-toast></p-toast>
 
-<div class="page-shell min-h-screen p-4 md:p-8 space-y-6">
-    <section class="hero-panel">
-        <div>
-            <p class="hero-eyebrow">Analytics Financiero POS</p>
-            <h2 class="hero-title">Reportes de Caja y Contabilidad</h2>
-            <p class="hero-subtitle">Vista integral de ventas, compras, flujo de caja y cartera con exportación ejecutiva.</p>
+<div class="reports-page enterprise-shell max-w-[1600px] mx-auto px-3 py-4 md:px-5 space-y-6">
+    <header class="reports-toolbar">
+        <div class="reports-toolbar__top">
+            <div class="reports-toolbar__brand">
+                <div class="reports-toolbar__mark" aria-hidden="true">
+                    <i class="pi pi-chart-line"></i>
+                </div>
+                <div class="reports-toolbar__titles">
+                    <p class="reports-toolbar__eyebrow">Inteligencia financiera</p>
+                    <h1 class="reports-toolbar__h1">Panel de reportes y KPI</h1>
+                    <p class="reports-toolbar__tagline">Consolidado de ventas, compras, flujo de caja, cartera y exportación — alineado al periodo y filtros que elijas abajo.</p>
+                    <div class="reports-toolbar__chips">
+                        <span class="reports-toolbar__chip">
+                            <i class="pi pi-calendar text-sky-600"></i>
+                            {{ etiquetaPeriodo }}
+                        </span>
+                        <span class="reports-toolbar__chip"> {{ diasEnPeriodo }} día(s) analizados </span>
+                        @if (lastRefreshed) {
+                            <span class="reports-toolbar__chip reports-toolbar__chip--muted">
+                                <i class="pi pi-sync text-slate-500"></i>
+                                Datos al {{ lastRefreshed | date: 'dd/MM/yyyy HH:mm' }}
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="reports-toolbar__actions">
+                <button pButton type="button" label="Hoy" class="p-button-sm p-button-outlined" (click)="applyQuickRange(1)"></button>
+                <button pButton type="button" label="3 días" class="p-button-sm p-button-outlined" (click)="applyQuickRange(3)"></button>
+                <button pButton type="button" label="7 días" class="p-button-sm p-button-outlined" (click)="applyQuickRange(7)"></button>
+                <button
+                    pButton
+                    type="button"
+                    [label]="loading ? 'Consultando...' : 'Actualizar'"
+                    [icon]="loading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"
+                    class="p-button-sm"
+                    (click)="onSearch()"
+                ></button>
+            </div>
         </div>
 
-        <div class="quick-actions">
-            <button pButton type="button" label="Hoy" class="quick-btn" (click)="applyQuickRange(1)"></button>
-            <button pButton type="button" label="3 días" class="quick-btn" (click)="applyQuickRange(3)"></button>
-            <button pButton type="button" label="7 días" class="quick-btn" (click)="applyQuickRange(7)"></button>
-            <button pButton type="button" [label]="loading ? 'Consultando...' : 'Actualizar'" [icon]="loading ? 'pi pi-spin pi-spinner' : 'pi pi-chart-line'" class="run-btn" (click)="onSearch()"></button>
-        </div>
-    </section>
-
-    <section class="filter-panel">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
-            <div class="field-wrap">
-                <label class="field-label">Fecha inicial</label>
-                <p-calendar [(ngModel)]="startDate" dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="field-input"></p-calendar>
+        <div class="reports-toolbar__filters">
+            <div class="reports-field">
+                <label class="reports-field__label">Desde</label>
+                <p-calendar [(ngModel)]="startDate" dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="reports-input"></p-calendar>
             </div>
-
-            <div class="field-wrap">
-                <label class="field-label">Fecha final</label>
-                <p-calendar [(ngModel)]="endDate" dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="field-input"></p-calendar>
+            <div class="reports-field">
+                <label class="reports-field__label">Hasta</label>
+                <p-calendar [(ngModel)]="endDate" dateFormat="dd/mm/yy" styleClass="w-full" inputStyleClass="reports-input"></p-calendar>
             </div>
-
-            <div class="field-wrap">
-                <label class="field-label">Vendedor</label>
-                <p-dropdown [options]="userOptions" [(ngModel)]="selectedUserId" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full" (onChange)="onSearch()"></p-dropdown>
+            <div class="reports-field reports-field--grow">
+                <label class="reports-field__label">Vendedor</label>
+                <p-dropdown [options]="userOptions" [(ngModel)]="selectedUserId" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full reports-dd" (onChange)="onSearch()"></p-dropdown>
             </div>
-
-            <div class="field-wrap">
-                <label class="field-label">Estado</label>
-                <p-dropdown [options]="estadoOptions" [(ngModel)]="selectedEstadoId" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full" (onChange)="onSearch()"></p-dropdown>
+            <div class="reports-field">
+                <label class="reports-field__label">Estado</label>
+                <p-dropdown [options]="estadoOptions" [(ngModel)]="selectedEstadoId" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full reports-dd" (onChange)="onSearch()"></p-dropdown>
             </div>
-
-            <div class="field-wrap">
-                <label class="field-label">Sección a exportar</label>
-                <p-dropdown [options]="exportSectionOptions" [(ngModel)]="selectedExportSection" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full"></p-dropdown>
+            <div class="reports-field reports-field--grow">
+                <label class="reports-field__label">Exportar</label>
+                <p-dropdown [options]="exportSectionOptions" [(ngModel)]="selectedExportSection" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full reports-dd"></p-dropdown>
             </div>
-
-            <div class="field-wrap">
-                <label class="field-label">Formato</label>
-                <div class="flex gap-2">
-                    <p-dropdown class="flex-1" [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full"></p-dropdown>
-                    <button pButton type="button" [icon]="exporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'" [disabled]="exporting" class="export-btn" (click)="onExport()"></button>
+            <div class="reports-field reports-field--export">
+                <label class="reports-field__label">Formato</label>
+                <div class="flex gap-1.5 items-center">
+                    <p-dropdown class="flex-1 min-w-0" [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat" optionLabel="label" optionValue="value" [appendTo]="'body'" styleClass="w-full reports-dd"></p-dropdown>
+                    <button
+                        pButton
+                        type="button"
+                        [icon]="exporting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"
+                        [disabled]="exporting"
+                        class="p-button-sm flex-shrink-0"
+                        pTooltip="Exportar"
+                        (click)="onExport()"
+                    ></button>
                 </div>
             </div>
         </div>
+    </header>
+
+    <!-- KPI financieros -->
+    <section>
+        <div class="enterprise-section-head">
+            <div>
+                <span class="enterprise-section-eyebrow">Estado de resultados (periodo)</span>
+                <h2 class="enterprise-section-title">Indicadores financieros clave</h2>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="enterprise-kpi enterprise-kpi--emerald" pTooltip="Total facturado según política de estados excluidos">
+                <span class="enterprise-kpi__label">Ventas netas</span>
+                <span class="enterprise-kpi__value">{{ summary.ventasNetas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                <span class="enterprise-kpi__hint">Brutas {{ summary.ventasBrutas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            </div>
+            <div class="enterprise-kpi enterprise-kpi--amber" pTooltip="IVA de ventas en el periodo">
+                <span class="enterprise-kpi__label">IVA ventas</span>
+                <span class="enterprise-kpi__value">{{ summary.ivaVentas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                <span class="enterprise-kpi__hint">Sobre facturación neta</span>
+            </div>
+            <div class="enterprise-kpi enterprise-kpi--slate" pTooltip="Descuentos generales y de línea">
+                <span class="enterprise-kpi__label">Descuentos</span>
+                <span class="enterprise-kpi__value">{{ summary.descuentos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                <span class="enterprise-kpi__hint">Impacto en margen</span>
+            </div>
+            <div class="enterprise-kpi enterprise-kpi--rose" pTooltip="Compras registradas en el rango">
+                <span class="enterprise-kpi__label">Compras</span>
+                <span class="enterprise-kpi__value">{{ summary.comprasTotales | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                <span class="enterprise-kpi__hint">IVA compras {{ summary.ivaCompras | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            </div>
+            <div class="enterprise-kpi enterprise-kpi--sky" pTooltip="Ventas netas menos compras (aprox. utilidad bruta)">
+                <span class="enterprise-kpi__label">Utilidad bruta</span>
+                <span class="enterprise-kpi__value" [class.text-emerald-600]="summary.utilidadBruta >= 0" [class.text-rose-600]="summary.utilidadBruta < 0">{{
+                    summary.utilidadBruta | currency: 'COP' : 'symbol' : '1.0-0'
+                }}</span>
+                <span class="enterprise-kpi__hint">Margen {{ margenBrutoPorcentaje | number: '1.2-2' }}%</span>
+            </div>
+            <div class="enterprise-kpi enterprise-kpi--indigo" pTooltip="Promedio diario de ventas netas en el rango">
+                <span class="enterprise-kpi__label">Ritmo diario (ventas)</span>
+                <span class="enterprise-kpi__value">{{ promedioDiarioVentasNetas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                <span class="enterprise-kpi__hint">Ventas netas / días</span>
+            </div>
+            <div class="enterprise-kpi enterprise-kpi--violet" pTooltip="Cartera de financiación en el periodo">
+                <span class="enterprise-kpi__label">Cartera total</span>
+                <span class="enterprise-kpi__value">{{ summary.carteraTotal | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                <span class="enterprise-kpi__hint">Vencida {{ summary.carteraVencida | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+            </div>
+            <div class="enterprise-kpi enterprise-kpi--teal" pTooltip="Pagos recibidos vinculados a cartera">
+                <span class="enterprise-kpi__label">Recaudo cartera</span>
+                <span class="enterprise-kpi__value">{{ summary.recaudoCartera | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                <span class="enterprise-kpi__hint">En el periodo seleccionado</span>
+            </div>
+        </div>
     </section>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-        <div class="kpi-card kpi-sales">
-            <span class="kpi-label">Ventas Netas</span>
-            <span class="kpi-value">{{ summary.ventasNetas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
-            <span class="kpi-sub">Brutas: {{ summary.ventasBrutas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+    <!-- Operación de caja (API dedicada) -->
+    <section>
+        <div class="enterprise-section-head">
+            <div>
+                <span class="enterprise-section-eyebrow">Liquidez operativa</span>
+                <h2 class="enterprise-section-title">Caja y volumen transaccional</h2>
+                <p class="enterprise-section-desc">Ingresos combinados (ventas + recaudos), egresos por compras, medios y ticket promedio.</p>
+            </div>
         </div>
-
-        <div class="kpi-card kpi-tax">
-            <span class="kpi-label">IVA Ventas</span>
-            <span class="kpi-value">{{ summary.ivaVentas | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
-            <span class="kpi-sub">Descuentos: {{ summary.descuentos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div class="enterprise-stat">
+                <span class="enterprise-stat__label">Ingresos operativos</span>
+                <strong class="enterprise-stat__value text-emerald-700 dark:text-emerald-400">{{ cashDashboard.ingresos | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div class="enterprise-stat">
+                <span class="enterprise-stat__label">Egresos (compras)</span>
+                <strong class="enterprise-stat__value text-rose-700 dark:text-rose-400">{{ cashDashboard.egresos | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div class="enterprise-stat">
+                <span class="enterprise-stat__label">Neto operativo</span>
+                <strong class="enterprise-stat__value" [class.text-sky-700]="cashDashboard.neto >= 0" [class.text-rose-700]="cashDashboard.neto < 0">{{ cashDashboard.neto | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div class="enterprise-stat">
+                <span class="enterprise-stat__label">Transacciones</span>
+                <strong class="enterprise-stat__value">{{ cashDashboard.transacciones | number: '1.0-0' }}</strong>
+            </div>
+            <div class="enterprise-stat">
+                <span class="enterprise-stat__label">Ticket promedio</span>
+                <strong class="enterprise-stat__value">{{ cashDashboard.ticketPromedio | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div class="enterprise-stat">
+                <span class="enterprise-stat__label">Financiado (nuevo)</span>
+                <strong class="enterprise-stat__value">{{ cashDashboard.financiado | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
         </div>
-
-        <div class="kpi-card kpi-purchases">
-            <span class="kpi-label">Compras</span>
-            <span class="kpi-value">{{ summary.comprasTotales | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
-            <span class="kpi-sub">IVA Compras: {{ summary.ivaCompras | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <div class="enterprise-mini">
+                <span>Efectivo (recaudos)</span>
+                <strong>{{ cashDashboard.efectivo | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div class="enterprise-mini">
+                <span>Tarjetas</span>
+                <strong>{{ cashDashboard.tarjetas | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
+            <div class="enterprise-mini">
+                <span>Transferencias</span>
+                <strong>{{ cashDashboard.transferencias | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
+            </div>
         </div>
+    </section>
 
-        <div class="kpi-card kpi-profit">
-            <span class="kpi-label">Utilidad Bruta</span>
-            <span class="kpi-value" [class.text-emerald-600]="summary.utilidadBruta >= 0" [class.text-rose-600]="summary.utilidadBruta < 0">{{ summary.utilidadBruta | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
-            <span class="kpi-sub">Margen: {{ margenBrutoPorcentaje | number: '1.2-2' }}%</span>
+    <!-- Mix de pagos -->
+    <section class="reports-section-compact">
+        <div class="reports-section-compact__head">
+            <span class="enterprise-section-eyebrow">Distribución</span>
+            <h2 class="reports-section-compact__title">Composición de ingresos por método</h2>
         </div>
-
-        <div class="kpi-card kpi-financing">
-            <span class="kpi-label">Cartera / Recaudo</span>
-            <span class="kpi-value">{{ summary.carteraTotal | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
-            <span class="kpi-sub">Recaudo: {{ summary.recaudoCartera | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+        @if (!loading && paymentMix.length === 0) {
+            <p class="empty-note">No hay datos de mix de pagos para el rango (p. ej. sin recaudos ni financiación clasificados).</p>
+        }
+        <div class="space-y-4">
+            @for (item of paymentMix; track item.metodo) {
+                <div class="mix-row">
+                    <div class="mix-row__head">
+                        <span class="mix-row__method">{{ item.metodo }}</span>
+                        <span class="mix-row__amount">{{ item.valor | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                    </div>
+                    <div class="mix-bar-track">
+                        <div class="mix-bar-fill" [style.width.%]="mixBarPercent(item)"></div>
+                    </div>
+                    <div class="mix-row__pct">{{ item.porcentaje | number: '1.1-1' }}%</div>
+                </div>
+            }
         </div>
-    </div>
+    </section>
 
-    <section class="decision-panel">
+    <!-- Actividad del periodo -->
+    <section class="enterprise-strip">
+        <div class="enterprise-strip__item">
+            <span>Facturas (detalle)</span>
+            <strong>{{ cantidadFacturasTabla }}</strong>
+            <small>Total tabulado {{ totalVentasDesdeTabla | currency: 'COP' : 'symbol' : '1.0-0' }}</small>
+        </div>
+        <div class="enterprise-strip__item">
+            <span>Compras (detalle)</span>
+            <strong>{{ cantidadComprasTabla }}</strong>
+            <small>Total tabulado {{ totalComprasDesdeTabla | currency: 'COP' : 'symbol' : '1.0-0' }}</small>
+        </div>
+        <div class="enterprise-strip__item">
+            <span>Financiaciones</span>
+            <strong>{{ financingRows.length }}</strong>
+            <small>Registros en periodo</small>
+        </div>
+        <div class="enterprise-strip__item">
+            <span>Cartera vencida / total</span>
+            <strong>{{ carteraVencidaRatio | number: '1.1-1' }}%</strong>
+            <small>Riesgo relativo</small>
+        </div>
+    </section>
+
+    <!-- Decision board -->
+    <section class="enterprise-panel decision-panel">
         <div class="decision-head">
             <div>
-                <p class="decision-eyebrow">Decision Board</p>
-                <h3>Resumen ejecutivo para tomar decisiones</h3>
+                <p class="decision-eyebrow">Cuadro de mando</p>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Señales para la dirección</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Combina margen, riesgo de cartera y flujo acumulado del periodo.</p>
             </div>
             <p-tag [value]="decisionSignal.label" [severity]="decisionSignal.severity"></p-tag>
         </div>
-
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
             <div class="decision-item">
                 <span>Margen bruto</span>
                 <strong>{{ margenBrutoPorcentaje | number: '1.2-2' }}%</strong>
-                <small>Objetivo sugerido: mayor a 20%</small>
+                <small>Referencia: &gt; 20%</small>
             </div>
             <div class="decision-item">
                 <span>Cartera vencida</span>
                 <strong>{{ carteraVencidaRatio | number: '1.2-2' }}%</strong>
-                <small>Sobre cartera total del periodo</small>
+                <small>Sobre cartera del periodo</small>
             </div>
             <div class="decision-item">
-                <span>Flujo de caja</span>
+                <span>Flujo neto (serie diaria)</span>
                 <strong>{{ flujoNetoTotal | currency: 'COP' : 'symbol' : '1.0-0' }}</strong>
-                <small>{{ cashFlowPositiveDays }} dias positivos / {{ cashFlowNegativeDays }} dias negativos</small>
+                <small>{{ cashFlowPositiveDays }} días ≥ 0 / {{ cashFlowNegativeDays }} días &lt; 0</small>
             </div>
             <div class="decision-item">
-                <span>Relacion ventas/compras</span>
-                <strong>{{ ventasVsComprasRatio | number: '1.2-2' }}x</strong>
-                <small>Capacidad de cubrir egresos con ventas</small>
+                <span>Ventas / compras</span>
+                <strong>{{ ventasVsComprasRatio | number: '1.2-2' }}×</strong>
+                <small>Cobertura de egresos</small>
             </div>
         </div>
     </section>
@@ -121,24 +271,22 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-1 report-card">
             <div class="card-header">
-                <h3>Flujo de Caja</h3>
-                <p>Neto acumulado: {{ flujoNetoTotal | currency: 'COP' : 'symbol' : '1.0-0' }}</p>
+                <h3>Flujo de caja (por periodo)</h3>
+                <p>Neto acumulado en la serie: {{ flujoNetoTotal | currency: 'COP' : 'symbol' : '1.0-0' }}</p>
             </div>
-
-            <div class="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+            <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
                 @if (!loading && cashFlow.length === 0) {
-                    <p class="empty-note">No hay datos de flujo para el rango seleccionado.</p>
+                    <p class="empty-note">Sin movimientos de flujo en el rango.</p>
                 }
-
                 @for (point of cashFlow; track point.periodo) {
-                    <div class="border border-slate-200 dark:border-slate-700 rounded-xl p-3 bg-slate-50 dark:bg-slate-800/50 hover:border-sky-300 dark:hover:border-sky-600 transition-colors">
+                    <div class="flow-card">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-black text-slate-500 uppercase">{{ point.periodo }}</span>
-                            <span class="text-xs font-bold" [class.text-emerald-600]="point.neto >= 0" [class.text-rose-600]="point.neto < 0">{{ point.neto | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                            <span class="flow-card__date">{{ point.periodo }}</span>
+                            <span class="text-sm font-bold" [class.text-emerald-600]="point.neto >= 0" [class.text-rose-600]="point.neto < 0">{{ point.neto | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs">
-                            <span class="text-emerald-600">Ingresos: {{ point.ingresos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
-                            <span class="text-rose-600 text-right">Egresos: {{ point.egresos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                            <span class="text-emerald-600">Ingresos {{ point.ingresos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
+                            <span class="text-rose-600 text-right">Egresos {{ point.egresos | currency: 'COP' : 'symbol' : '1.0-0' }}</span>
                         </div>
                     </div>
                 }
@@ -146,38 +294,39 @@
         </div>
 
         <div class="xl:col-span-2 report-card">
-            <div class="card-header">
-                <h3>Ventas</h3>
-                <p>Facturación consolidada por periodo seleccionado.</p>
+            <div class="card-header flex flex-col md:flex-row md:items-end md:justify-between gap-2">
+                <div>
+                    <h3>Detalle de ventas</h3>
+                    <p>Documentos con cliente, bases, IVA y total. Incluye vendedor cuando existe en origen.</p>
+                </div>
             </div>
-
-            <p-table [value]="salesRows" [loading]="loading" [paginator]="true" [rows]="8" responsiveLayout="scroll">
+            <p-table [value]="salesRows" [loading]="loading" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]" responsiveLayout="scroll">
                 <ng-template pTemplate="header">
                     <tr>
                         <th>Factura</th>
                         <th>Fecha</th>
                         <th>Cliente</th>
+                        <th>Vendedor</th>
                         <th class="text-right">Subtotal</th>
                         <th class="text-right">IVA</th>
                         <th class="text-right">Total</th>
                     </tr>
                 </ng-template>
-
                 <ng-template pTemplate="body" let-row>
                     <tr>
                         <td class="font-semibold">{{ row.numeroFactura || 'FV-' + row.facturaId }}</td>
                         <td>{{ row.fechaFactura | date: 'dd/MM/yyyy' }}</td>
-                        <td>{{ row.cliente || 'Sin nombre' }}</td>
+                        <td>{{ row.cliente || '—' }}</td>
+                        <td class="text-sm text-slate-600">{{ row.vendedorNombre || '—' }}</td>
                         <td class="text-right">{{ row.subtotal | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
                         <td class="text-right">{{ row.totalIva | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
                         <td class="text-right font-bold">{{ row.totalFactura | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
                     </tr>
                 </ng-template>
-
                 <ng-template pTemplate="emptymessage">
                     <tr>
-                        <td colspan="6">
-                            <p class="empty-note">No hay ventas en este rango de fechas.</p>
+                        <td colspan="7">
+                            <p class="empty-note">No hay ventas en este rango.</p>
                         </td>
                     </tr>
                 </ng-template>
@@ -185,14 +334,52 @@
         </div>
     </div>
 
+    <!-- Movimientos recientes -->
+    <section class="report-card">
+        <div class="card-header">
+            <h3>Movimientos recientes</h3>
+            <p>Unificación de ventas, compras y recaudos de cartera (máx. 100 registros ordenados por fecha).</p>
+        </div>
+        <p-table [value]="cashMovements" [loading]="loading" [paginator]="true" [rows]="8" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th>Método</th>
+                    <th>Tipo</th>
+                    <th class="text-right">Monto</th>
+                    <th>Usuario</th>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+                <tr>
+                    <td>{{ row.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+                    <td><p-tag [value]="row.categoria" severity="secondary" styleClass="text-xs"></p-tag></td>
+                    <td>{{ row.descripcion }}</td>
+                    <td class="text-sm">{{ row.metodoPago }}</td>
+                    <td><p-tag [value]="movementTipoLabel(row.tipo)" [severity]="movementTipoSeverity(row.tipo)"></p-tag></td>
+                    <td class="text-right font-semibold" [class.text-emerald-600]="row.tipo === 'income'" [class.text-rose-600]="row.tipo === 'expense'">{{ row.monto | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
+                    <td class="text-sm text-slate-600">{{ row.usuarioNombre || '—' }}</td>
+                </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+                <tr>
+                    <td colspan="7">
+                        <p class="empty-note">No hay movimientos en el periodo.</p>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </section>
+
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div class="report-card">
             <div class="card-header">
                 <h3>Compras</h3>
-                <p>Documentos de compra y egresos operativos.</p>
+                <p>Documentos de proveedor y totales.</p>
             </div>
-
-            <p-table [value]="purchaseRows" [loading]="loading" [paginator]="true" [rows]="6" responsiveLayout="scroll">
+            <p-table [value]="purchaseRows" [loading]="loading" [paginator]="true" [rows]="8" responsiveLayout="scroll">
                 <ng-template pTemplate="header">
                     <tr>
                         <th>Consecutivo</th>
@@ -202,7 +389,6 @@
                         <th class="text-right">Total</th>
                     </tr>
                 </ng-template>
-
                 <ng-template pTemplate="body" let-row>
                     <tr>
                         <td>{{ row.consecutivo || row.doctoCompraId }}</td>
@@ -212,11 +398,10 @@
                         <td class="text-right font-bold">{{ row.total | currency: 'COP' : 'symbol' : '1.0-0' }}</td>
                     </tr>
                 </ng-template>
-
                 <ng-template pTemplate="emptymessage">
                     <tr>
                         <td colspan="5">
-                            <p class="empty-note">No hay compras en este rango de fechas.</p>
+                            <p class="empty-note">No hay compras en este rango.</p>
                         </td>
                     </tr>
                 </ng-template>
@@ -225,21 +410,19 @@
 
         <div class="report-card">
             <div class="card-header">
-                <h3>Cartera y Financiación</h3>
-                <p>Seguimiento de saldo, pagos y vencimientos.</p>
+                <h3>Cartera y financiación</h3>
+                <p>Saldos, cuotas y estado.</p>
             </div>
-
-            <p-table [value]="financingRows" [loading]="loading" [paginator]="true" [rows]="6" responsiveLayout="scroll">
+            <p-table [value]="financingRows" [loading]="loading" [paginator]="true" [rows]="8" responsiveLayout="scroll">
                 <ng-template pTemplate="header">
                     <tr>
-                        <th>Financiación</th>
+                        <th>ID</th>
                         <th>Cliente</th>
                         <th class="text-right">Financiado</th>
                         <th class="text-right">Saldo</th>
                         <th>Estado</th>
                     </tr>
                 </ng-template>
-
                 <ng-template pTemplate="body" let-row>
                     <tr>
                         <td>#{{ row.financiacionId }}</td>
@@ -251,11 +434,10 @@
                         </td>
                     </tr>
                 </ng-template>
-
                 <ng-template pTemplate="emptymessage">
                     <tr>
                         <td colspan="5">
-                            <p class="empty-note">No hay financiación en el rango seleccionado.</p>
+                            <p class="empty-note">No hay financiación en el rango.</p>
                         </td>
                     </tr>
                 </ng-template>

@@ -1,4 +1,4 @@
-<div class="space-y-4">
+<div class="space-y-2">
     <div class="flex items-center justify-between px-1">
         <label class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"> <i class="pi pi-user text-emerald-500"></i> Cliente </label>
         @if (selectedCustomer) {
@@ -6,8 +6,8 @@
         }
     </div>
 
-    <div class="flex gap-3">
-        <div class="flex-1">
+    <div class="flex gap-3 flex-nowrap items-stretch">
+        <div class="flex-1 min-w-0">
             <p-dropdown
                 [options]="customers"
                 [(ngModel)]="selectedCustomer"
@@ -49,6 +49,16 @@
                                 <div class="flex items-center gap-2">
                                     <span class="text-[9px] font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 uppercase shrink-0">
                                         {{ customer.document || 'S/D' }}
+                                    </span>
+                                    <span
+                                        class="text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wide shrink-0"
+                                        [ngClass]="
+                                            customer.isWholesale
+                                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300'
+                                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300'
+                                        "
+                                    >
+                                        {{ customer.isWholesale ? 'Mayorista' : 'Regular' }}
                                     </span>
                                     @if (customer.email) {
                                         <span class="text-[10px] text-slate-400 truncate">{{ customer.email }}</span>

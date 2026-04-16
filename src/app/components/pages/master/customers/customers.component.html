@@ -34,6 +34,16 @@
             </div>
 
             <div class="flex items-center gap-4 w-full md:w-auto">
+                <p-dropdown
+                    [options]="customerTypeOptions"
+                    [(ngModel)]="customerTypeFilter"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Tipo de cliente"
+                    (onChange)="filterCustomers()"
+                    styleClass="!w-full md:!w-48 !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-1"
+                ></p-dropdown>
+
                 <p-dropdown [options]="identificationTypes" [(ngModel)]="identificationTypes" placeholder="Tipo de ID" styleClass="!w-full md:!w-48 !rounded-xl !bg-slate-50 dark:!bg-slate-800/50 !border-none !py-1"></p-dropdown>
 
                 <div class="flex items-center gap-3 px-6 py-2 bg-slate-100 dark:bg-slate-800 rounded-xl whitespace-nowrap">
@@ -48,6 +58,7 @@
                 <ng-template pTemplate="header">
                     <tr class="!bg-slate-50 dark:!bg-slate-800/50">
                         <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Cliente / Empresa</th>
+                        <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Tipo Cliente</th>
                         <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Identificación</th>
                         <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Contacto</th>
                         <th class="!py-5 !px-6 text-[11px] font-black text-slate-400 uppercase tracking-widest bg-transparent">Ubicación</th>
@@ -63,8 +74,20 @@
                                 @if (customer.isCompany) {
                                     <span class="text-[10px] text-indigo-500 font-black uppercase tracking-tighter flex items-center gap-1"> <i class="pi pi-building text-[9px]"></i> {{ customer.businessName }} </span>
                                 }
+                            </div>
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex items-center">
                                 @if (customer.isWholesale) {
-                                    <span class="text-[10px] text-blue-600 font-black uppercase tracking-tighter flex items-center gap-1 mt-1"> <i class="pi pi-briefcase text-[9px]"></i> Mayorista </span>
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300 text-[11px] font-black uppercase tracking-wide">
+                                        <i class="pi pi-briefcase text-[10px]"></i>
+                                        Mayorista
+                                    </span>
+                                } @else {
+                                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 text-[11px] font-black uppercase tracking-wide">
+                                        <i class="pi pi-user text-[10px]"></i>
+                                        Regular
+                                    </span>
                                 }
                             </div>
                         </td>

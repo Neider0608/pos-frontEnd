@@ -7,7 +7,19 @@ import { AuthService } from '../core/guards/auth.service';
 import { AuthSession } from '../api/login';
 import { MasterService } from '../../services/master.service';
 import { ReportsService } from '../../services/reports.service';
-import { CashFlowPoint, ExportFormat, ExportSection, FinancialSummary, FinancingReportRow, PurchaseReportRow, ReportFilters, SalesReportRow } from '../api/reports';
+import {
+    CashDashboardSummary,
+    CashFlowPoint,
+    CashMovementRow,
+    ExportFormat,
+    ExportSection,
+    FinancialSummary,
+    FinancingReportRow,
+    PaymentMixItem,
+    PurchaseReportRow,
+    ReportFilters,
+    SalesReportRow
+} from '../api/reports';
 import { User } from '../api/permissions';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -17,11 +29,12 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { CalendarModule } from 'primeng/calendar';
 import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
     selector: 'app-reports',
     standalone: true,
-    imports: [CommonModule, FormsModule, CardModule, ButtonModule, DropdownModule, TableModule, TagModule, CalendarModule, ToastModule],
+    imports: [CommonModule, FormsModule, CardModule, ButtonModule, DropdownModule, TableModule, TagModule, CalendarModule, ToastModule, TooltipModule],
     templateUrl: './reports.component.html',
     styleUrl: './reports.component.scss',
     providers: [MessageService]
@@ -31,6 +44,7 @@ export class ReportsComponent implements OnInit {
 
     loading = false;
     exporting = false;
+    lastRefreshed: Date | null = null;
 
     startDate: Date = new Date();
     endDate: Date = new Date();
@@ -81,6 +95,25 @@ export class ReportsComponent implements OnInit {
     salesRows: SalesReportRow[] = [];
     purchaseRows: PurchaseReportRow[] = [];
     financingRows: FinancingReportRow[] = [];
+
+    /** Resumen operativo de caja (ventas + recaudos vs compras, medios, ticket). */
+    cashDashboard: CashDashboardSummary = {
+        ingresos: 0,
+        egresos: 0,
+        neto: 0,
+        efectivo: 0,
+        tarjetas: 0,
+        transferencias: 0,
+        financiado: 0,
+        transacciones: 0,
+        ticketPromedio: 0
+    };
+
+    /** Distribución por método de pago / financiado. */
+    paymentMix: PaymentMixItem[] = [];
+
+    /** Últimos movimientos unificados (ventas, compras, recaudos). */
+    cashMovements: CashMovementRow[] = [];
 
     constructor(
         private authService: AuthService,
@@ -169,6 +202,61 @@ export class ReportsComponent implements OnInit {
         return this.summary.ventasNetas / this.summary.comprasTotales;
     }
 
+    /** Suma de totales de factura en la grilla (debe alinearse con ventas netas del resumen). */
+    get totalVentasDesdeTabla(): number {
+        return this.salesRows.reduce((s, r) => s + (r.totalFactura || 0), 0);
+    }
+
+    /** Cantidad de facturas listadas. */
+    get cantidadFacturasTabla(): number {
+        return this.salesRows.length;
+    }
+
+    get totalComprasDesdeTabla(): number {
+        return this.purchaseRows.reduce((s, r) => s + (r.total || 0), 0);
+    }
+
+    get cantidadComprasTabla(): number {
+        return this.purchaseRows.length;
+    }
+
+    get diasEnPeriodo(): number {
+        if (!this.startDate || !this.endDate) return 0;
+        const a = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), this.startDate.getDate());
+        const b = new Date(this.endDate.getFullYear(), this.endDate.getMonth(), this.endDate.getDate());
+        return Math.max(1, Math.round((b.getTime() - a.getTime()) / 86400000) + 1);
+    }
+
+    get promedioDiarioVentasNetas(): number {
+        return this.diasEnPeriodo > 0 ? this.summary.ventasNetas / this.diasEnPeriodo : 0;
+    }
+
+    get etiquetaPeriodo(): string {
+        if (!this.startDate || !this.endDate) return '';
+        const fmt = (d: Date) =>
+            d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+        return `${fmt(this.startDate)} — ${fmt(this.endDate)}`;
+    }
+
+    mixBarPercent(item: PaymentMixItem): number {
+        const p = Number(item.porcentaje);
+        return Number.isFinite(p) ? Math.min(100, Math.max(0, p)) : 0;
+    }
+
+    movementTipoSeverity(tipo: string): 'success' | 'danger' | 'secondary' {
+        const t = (tipo || '').toLowerCase();
+        if (t === 'income' || t === 'ingreso') return 'success';
+        if (t === 'expense' || t === 'egreso') return 'danger';
+        return 'secondary';
+    }
+
+    movementTipoLabel(tipo: string): string {
+        const t = (tipo || '').toLowerCase();
+        if (t === 'income' || t === 'ingreso') return 'Ingreso';
+        if (t === 'expense' || t === 'egreso') return 'Egreso';
+        return tipo || '—';
+    }
+
     get decisionSignal(): { label: string; severity: 'success' | 'warn' | 'danger' } {
         const margin = this.margenBrutoPorcentaje;
         const cartera = this.carteraVencidaRatio;
@@ -213,10 +301,14 @@ export class ReportsComponent implements OnInit {
             cashFlow: this.reportsService.getCashFlow(filters).pipe(catchError(() => of({ code: -1, message: 'error', data: [] }))),
             sales: this.reportsService.getSalesReport(filters, 1, 5000).pipe(catchError(() => of({ code: -1, message: 'error', data: { rows: [], totalRows: 0 } }))),
             purchases: this.reportsService.getPurchasesReport(filters, 1, 5000).pipe(catchError(() => of({ code: -1, message: 'error', data: { rows: [], totalRows: 0 } }))),
-            financing: this.reportsService.getFinancingReport(filters).pipe(catchError(() => of({ code: -1, message: 'error', data: [] })))
+            financing: this.reportsService.getFinancingReport(filters).pipe(catchError(() => of({ code: -1, message: 'error', data: [] }))),
+            cashDashboard: this.reportsService.getCashDashboardSummary(filters).pipe(catchError(() => of({ code: -1, message: 'error', data: null as any }))),
+            paymentMix: this.reportsService.getPaymentMix(filters).pipe(catchError(() => of({ code: -1, message: 'error', data: [] }))),
+            recentMovements: this.reportsService.getRecentCashMovements(filters).pipe(catchError(() => of({ code: -1, message: 'error', data: [] })))
         }).subscribe({
-            next: ({ summary, cashFlow, sales, purchases, financing }) => {
+            next: ({ summary, cashFlow, sales, purchases, financing, cashDashboard, paymentMix, recentMovements }) => {
                 this.loading = false;
+                this.lastRefreshed = new Date();
 
                 this.summary = this.normalizeSummary(summary.data);
                 this.cashFlow = (cashFlow.data || []).map((r: any) => this.normalizeCashFlowRow(r));
@@ -231,7 +323,21 @@ export class ReportsComponent implements OnInit {
 
                 this.financingRows = (financing.data || []).map((r: any) => this.normalizeFinancingRow(r));
 
-                if (summary.code !== 0 && cashFlow.code !== 0 && sales.code !== 0 && purchases.code !== 0 && financing.code !== 0) {
+                this.cashDashboard = this.normalizeCashDashboard(cashDashboard.data);
+                this.paymentMix = (paymentMix.data || []).map((r: any) => this.normalizePaymentMixRow(r));
+                this.cashMovements = (recentMovements.data || []).map((r: any) => this.normalizeCashMovementRow(r));
+
+                const failed =
+                    summary.code !== 0 &&
+                    cashFlow.code !== 0 &&
+                    sales.code !== 0 &&
+                    purchases.code !== 0 &&
+                    financing.code !== 0 &&
+                    cashDashboard.code !== 0 &&
+                    paymentMix.code !== 0 &&
+                    recentMovements.code !== 0;
+
+                if (failed) {
                     this.messageService.add({ severity: 'error', summary: 'Reportes', detail: 'No se pudieron cargar los reportes financieros.' });
                 }
             },
@@ -349,6 +455,60 @@ export class ReportsComponent implements OnInit {
             fechaVencimiento: this.readValue(raw, ['fechaVencimiento', 'fecha_vencimiento']) || '',
             estado: String(this.readValue(raw, ['estado']) || ''),
             pagadoAcumulado: this.readNumber(raw, ['pagadoAcumulado', 'pagado_acumulado'])
+        };
+    }
+
+    private normalizeCashDashboard(raw: any): CashDashboardSummary {
+        if (!raw) {
+            return {
+                ingresos: 0,
+                egresos: 0,
+                neto: 0,
+                efectivo: 0,
+                tarjetas: 0,
+                transferencias: 0,
+                financiado: 0,
+                transacciones: 0,
+                ticketPromedio: 0
+            };
+        }
+        return {
+            ingresos: this.readNumber(raw, ['ingresos', 'Ingresos']),
+            egresos: this.readNumber(raw, ['egresos', 'Egresos']),
+            neto: this.readNumber(raw, ['neto', 'Neto']),
+            efectivo: this.readNumber(raw, ['efectivo', 'Efectivo']),
+            tarjetas: this.readNumber(raw, ['tarjetas', 'Tarjetas']),
+            transferencias: this.readNumber(raw, ['transferencias', 'Transferencias']),
+            financiado: this.readNumber(raw, ['financiado', 'Financiado']),
+            transacciones: this.readNumber(raw, ['transacciones', 'Transacciones']),
+            ticketPromedio: this.readNumber(raw, ['ticketPromedio', 'TicketPromedio'])
+        };
+    }
+
+    private normalizePaymentMixRow(raw: any): PaymentMixItem {
+        return {
+            metodo: String(this.readValue(raw, ['metodo', 'Metodo']) || ''),
+            valor: this.readNumber(raw, ['valor', 'Valor']),
+            porcentaje: this.readNumber(raw, ['porcentaje', 'Porcentaje'])
+        };
+    }
+
+    private normalizeCashMovementRow(raw: any): CashMovementRow {
+        const tipoRaw = String(this.readValue(raw, ['tipo', 'Tipo']) || '').toLowerCase();
+        const tipoNorm: 'income' | 'expense' =
+            tipoRaw === 'expense' || tipoRaw === 'egreso' ? 'expense' : 'income';
+
+        return {
+            id: this.readValue(raw, ['id', 'Id']) ?? '',
+            fecha: this.readValue(raw, ['fecha', 'Fecha']) || '',
+            descripcion: String(this.readValue(raw, ['descripcion', 'Descripcion']) || ''),
+            categoria: String(this.readValue(raw, ['categoria', 'Categoria']) || ''),
+            metodoPago: String(this.readValue(raw, ['metodoPago', 'MetodoPago']) || ''),
+            tipo: tipoNorm,
+            monto: this.readNumber(raw, ['monto', 'Monto']),
+            referencia: String(this.readValue(raw, ['referencia', 'Referencia']) || ''),
+            usuarioId: this.readNumber(raw, ['usuarioId', 'UsuarioId']),
+            usuarioNombre: String(this.readValue(raw, ['usuarioNombre', 'UsuarioNombre']) || '')
         };
     }
 

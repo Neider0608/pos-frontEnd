@@ -12,6 +12,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
 import { BadgeModule } from 'primeng/badge';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TagModule } from 'primeng/tag';
 
 // --- Componente hijo ---
 import { CustomerSelectorComponent } from '../customer-selector/customer-selector.component';
@@ -22,7 +23,7 @@ import { Customer } from '../../api/shared';
 @Component({
     selector: 'app-payment-dialog',
     standalone: true,
-    imports: [CommonModule, FormsModule, DialogModule, ButtonModule, InputNumberModule, InputTextModule, TextareaModule, DropdownModule, DividerModule, BadgeModule, CheckboxModule, CustomerSelectorComponent],
+    imports: [CommonModule, FormsModule, DialogModule, ButtonModule, InputNumberModule, InputTextModule, TextareaModule, DropdownModule, DividerModule, BadgeModule, CheckboxModule, TagModule, CustomerSelectorComponent],
     templateUrl: './payment-dialog.component.html',
     styleUrl: './payment-dialog.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -84,6 +85,12 @@ export class PaymentDialogComponent {
         return Math.max(0, -this.difference);
     }
 
+    get isConsumidorFinal(): boolean {
+        const customer = this.selectedCustomer;
+        if (!customer) return true;
+        return customer.document === '2222222222' || customer.nit === '2222222222' || customer.displayName === 'Consumidor Final';
+    }
+
     get isTouchMode(): boolean {
         return this.viewMode === 'touch';
     }
@@ -111,6 +118,11 @@ export class PaymentDialogComponent {
         { label: '📅 Financiado', value: 'financed' },
         { label: '📝 Otro', value: 'other' }
     ];
+
+    get availablePaymentTypeOptions() {
+        return this.isConsumidorFinal ? this.paymentTypeOptions.filter((x) => x.value !== 'financed') : this.paymentTypeOptions;
+    }
+
     financingMonthsOptions = [3, 6, 9, 12, 18, 24, 36].map((m) => ({ label: `${m} meses`, value: m }));
 
     // --- Lifecycle hooks ---
@@ -243,6 +255,9 @@ export class PaymentDialogComponent {
     }
 
     updatePaymentMethod(index: number, field: keyof PaymentMethod, value: any): void {
+        if (field === 'type' && value === 'financed' && this.isConsumidorFinal) {
+            return;
+        }
         const updated = [...this.paymentMethods];
         updated[index] = { ...updated[index], [field]: value };
         this.paymentMethods = updated;
@@ -281,6 +296,10 @@ export class PaymentDialogComponent {
     }
 
     onCustomerSelect(customer: Customer | null): void {
+        if ((customer?.document === '2222222222' || customer?.nit === '2222222222' || !customer) && this.paymentMethods.some((p) => p.type === 'financed')) {
+            this.paymentMethods = this.paymentMethods.map((p) => (p.type === 'financed' ? { ...p, type: 'cash', months: undefined } : p));
+            this.paymentMethodsChange.emit(this.paymentMethods);
+        }
         this.selectedCustomerChange.emit(customer);
     }
 

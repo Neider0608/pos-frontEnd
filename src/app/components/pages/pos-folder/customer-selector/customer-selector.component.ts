@@ -22,12 +22,7 @@ export class CustomerSelectorComponent {
     showNewCustomerModal = false;
 
     onCustomerSelect(customer: Customer | null): void {
-        this.selectedCustomer = this.customers.find((c) => c.nit === '2222222222') || null;
-        /*  if (!customer) {
-            this.selectedCustomer = null;
-        } else {
-            this.selectedCustomer = customer;
-        } */
+        this.selectedCustomer = customer;
         this.selectCustomer.emit(this.selectedCustomer);
     }
 
