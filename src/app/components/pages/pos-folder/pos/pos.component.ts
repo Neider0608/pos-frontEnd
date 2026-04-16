@@ -20,7 +20,7 @@ import { CartItem, Invoice, LastSale, PaymentMethod, Promotion, ViewMode } from 
 import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.component';
 import { InvoiceDialogComponent } from '../invoice-dialog/invoice-dialog.component';
 import { LOCALE_ID, Inject } from '@angular/core';
-import { Customer, PosProduct, Product, Warehouse } from '../../api/shared';
+import { Customer, PosProduct, Product } from '../../api/shared';
 import { PosService } from '../../../services/pos.service';
 import { MasterService } from '../../../services/master.service';
 import { InventoryService } from '../../../services/inventory.service';
@@ -59,9 +59,8 @@ export class PosComponent implements OnInit {
     @ViewChild('barcodeInputRef') barcodeInputRef!: ElementRef<HTMLInputElement>;
 
     products: PosProduct[] = [];
+    // Lista usada por el diálogo de búsqueda (puede venir filtrada por bodega).
     selectionProducts: PosProduct[] = [];
-    warehouses: Warehouse[] = [];
-    selectedWarehouseId: number | null = null;
     /* customers: Customer[] = []; */
     customers: Customer[] = [];
     invoices: Invoice[] = [];
@@ -124,26 +123,11 @@ export class PosComponent implements OnInit {
         this.companiaId = session.companiaId;
         this.userId = session.userId;
 
-        this.loadWarehouses();
+        this.loadInventory();
         this.loadCustomers();
         this.createNewInvoice(0);
         this.loadPromotions();
         this.focusBarcodeInput();
-    }
-
-    loadWarehouses() {
-        this.masterService.getWarehouses(this.companiaId).subscribe({
-            next: (res) => {
-                this.warehouses = res.data || [];
-                this.selectedWarehouseId = this.warehouses[0]?.id ?? null;
-                this.loadInventory();
-            },
-            error: () => {
-                this.warehouses = [];
-                this.selectedWarehouseId = null;
-                this.loadInventory();
-            }
-        });
     }
 
     private applyPermissions(): void {
@@ -172,7 +156,6 @@ export class PosComponent implements OnInit {
     }
 
     loadInventory() {
-        // Inventario general del POS (sin filtrar por bodega).
         this.inventoryService.getProductsStore(this.companiaId).subscribe({
             next: (res) => {
                 this.products = res.data || [];
@@ -187,21 +170,11 @@ export class PosComponent implements OnInit {
         });
     }
 
-    openSearchDialog() {
-        this.loadSelectionProductsAndOpen();
-    }
-
-    private loadSelectionProductsAndOpen() {
-        this.inventoryService.getProductsStore(this.companiaId, this.selectedWarehouseId).subscribe({
-            next: (res) => {
-                this.selectionProducts = res.data || [];
-                this.showSearchDialog = true;
-            },
-            error: () => {
-                this.selectionProducts = [];
-                this.showSearchDialog = true;
-            }
-        });
+    openSearchDialog(): void {
+        // Por defecto mostramos el inventario cargado.
+        // Si luego se requiere filtrar por bodega, aquí es donde se haría la carga filtrada.
+        this.selectionProducts = this.products || [];
+        this.showSearchDialog = true;
     }
 
     get totalPagado(): number {
@@ -214,25 +187,26 @@ export class PosComponent implements OnInit {
         return this.activeInvoice.items.length > 0 && diff <= 0.01;
     }
 
-    get invoiceElectronicChecklist(): { label: string; ok: boolean }[] {
+    get invoiceElectronicChecklist(): Array<{ label: string; ok: boolean }> {
         const invoice = this.activeInvoice;
-        const customer = invoice?.customer as any;
-
-        const customerName = (customer?.displayName || `${customer?.firstName || ''} ${customer?.lastName || ''}`.trim()).trim();
+        const hasInvoice = !!invoice;
+        const hasItems = !!invoice && invoice.items.length > 0;
+        const hasPayments = !!invoice && (invoice.paymentMethods?.length ?? 0) > 0;
+        const paymentsMatchTotal = this.puedeProcesar;
 
         return [
-            { label: 'Cliente identificado', ok: !!customer && !!customerName },
-            { label: 'Documento del cliente', ok: !!(customer?.document || customer?.nit) },
-            { label: 'Correo para envio', ok: !!customer?.email },
-            { label: 'Items de factura', ok: !!invoice && invoice.items.length > 0 },
-            { label: 'Totales balanceados', ok: !!invoice && Math.abs(this.totalPagado - invoice.total) <= 0.01 }
+            { label: 'Factura activa', ok: hasInvoice },
+            { label: 'Productos agregados', ok: hasItems },
+            { label: 'Métodos de pago', ok: hasPayments },
+            { label: 'Total pagado cuadra', ok: paymentsMatchTotal }
         ];
     }
 
     get invoiceElectronicProgress(): number {
-        const checklist = this.invoiceElectronicChecklist;
-        const completed = checklist.filter((x) => x.ok).length;
-        return checklist.length ? (completed * 100) / checklist.length : 0;
+        const list = this.invoiceElectronicChecklist;
+        if (list.length === 0) return 0;
+        const okCount = list.reduce((s, x) => s + (x.ok ? 1 : 0), 0);
+        return (okCount / list.length) * 100;
     }
 
     removeProduct(productId: number | string) {
@@ -252,7 +226,7 @@ export class PosComponent implements OnInit {
         switch (event.key) {
             case 'F2':
                 event.preventDefault();
-                this.openSearchDialog(); // Buscar producto (filtrado por bodega)
+                this.openSearchDialog(); // Buscar producto
                 break;
 
             case 'F3':
@@ -347,7 +321,6 @@ export class PosComponent implements OnInit {
                 firstName: 'Consumidor',
                 lastName: 'Final',
                 isCompany: false,
-                isWholesale: false,
                 displayName: 'Consumidor Final',
                 email: '',
                 phone: '',
@@ -763,12 +736,12 @@ export class PosComponent implements OnInit {
                     const existingGift = invoice.items.find((i) => i.id === realProduct.id);
 
                     if (existingGift) {
-                        ((existingGift.quantity = totalGiftUnits),
+                        (existingGift.quantity = totalGiftUnits),
                             (existingGift.prevQuantity = totalGiftUnits),
                             (existingGift.discount = 100),
-                            (existingGift.discountValue = realProduct.price * totalGiftUnits),
-                            (existingGift.subtotal = realProduct.price * totalGiftUnits),
-                            (existingGift.total = 0));
+                            (existingGift.discountValue = this.getFirstAvailablePrice(realProduct) * totalGiftUnits),
+                            (existingGift.subtotal = this.getFirstAvailablePrice(realProduct) * totalGiftUnits),
+                            (existingGift.total = 0);
                     } else {
                         const unitPrice = this.getFirstAvailablePrice(realProduct);
                         const giftItem: CartItem = {
@@ -782,7 +755,7 @@ export class PosComponent implements OnInit {
                             priceExcludedTax: 0,
                             subtotal: unitPrice * totalGiftUnits,
                             total: 0,
-                            appliesVAT: realProduct.appliesVAT ?? false
+                            appliesVAT: realProduct.appliesVAT ?? ((realProduct.vat || 0) > 0)
                         };
 
                         invoice.items.push(giftItem);
@@ -800,9 +773,14 @@ export class PosComponent implements OnInit {
         if (!this.activeInvoice) return;
 
         const product = payload.product;
+        const priceMode = payload.priceMode;
         const unitPrice = payload.unitPrice ?? this.getFirstAvailablePrice(product);
 
-        const existingItem = this.activeInvoice.items.find((i) => i.id === product.id);
+        // Si el mismo producto se agrega con otro precio (Detal/Curva/Paquete),
+        // debe ir en otra línea para no mezclar totales/IVA.
+        const existingItem = this.activeInvoice.items.find(
+            (i: any) => i.id === product.id && (i.priceMode ?? null) === (priceMode ?? null) && Number(i.price) === Number(unitPrice)
+        );
 
         if (product.manageStock) {
             const currentQuantity = existingItem ? existingItem.quantity : 0;
@@ -837,9 +815,10 @@ export class PosComponent implements OnInit {
             price: unitPrice,
             subtotal: unitPrice,
             total: unitPrice,
-            appliesVAT: product.appliesVAT ?? false
+            appliesVAT: product.appliesVAT ?? ((product.vat || 0) > 0)
         };
-        (newItem as any).warehouseId = this.selectedWarehouseId ?? 1;
+
+        (newItem as any).priceMode = priceMode ?? null;
 
         this.activeInvoice.items.push(newItem); // 🔥 SOLO AQUÍ
 
@@ -857,10 +836,14 @@ export class PosComponent implements OnInit {
         this.updateTotals(this.activeInvoice);
     }
     updateTotals(invoice: Invoice): void {
-        let grossSubtotal = 0;
-        let totalDiscountDetail = 0;
+        // En este POS el precio del producto se maneja como "IVA incluido".
+        // Por eso: NO se suma el IVA al total; se desglosa (base + iva = total).
+        const pricesIncludeVat = true;
+
+        let grossSubtotal = 0; // bruto (incluye IVA)
+        let totalDiscountDetail = 0; // descuento detalle (incluye IVA)
         let totalVat = 0;
-        let totalExcludedTax = 0;
+        let totalExcludedTax = 0; // base sin IVA
 
         for (const item of invoice.items) {
             item.discountValue = 0;
@@ -869,34 +852,50 @@ export class PosComponent implements OnInit {
         this.applyPromotions(invoice);
 
         for (const item of invoice.items) {
-            const itemSubtotal = item.price * item.quantity;
+            const itemSubtotal = item.price * item.quantity; // bruto (IVA incluido)
 
             if (item.discountValue > itemSubtotal) {
                 item.discountValue = itemSubtotal;
             }
 
-            const itemAfterDiscount = itemSubtotal - item.discountValue;
+            const itemAfterDiscount = itemSubtotal - item.discountValue; // bruto (IVA incluido)
 
-            if (item.appliesVAT && item.vat > 0) {
-                const vatFactor = 1 + item.vat / 100;
-                item.priceExcludedTax = itemAfterDiscount / vatFactor;
-                item.vatValue = itemAfterDiscount - item.priceExcludedTax;
+            const vatRate = Number((item as any).vatRate ?? 0);
+            const appliesVAT = Boolean((item as any).appliesVAT) || vatRate > 0;
+            if (appliesVAT && vatRate > 0) {
+                if (pricesIncludeVat) {
+                    const factor = 1 + vatRate / 100;
+                    const base = itemAfterDiscount / factor;
+                    item.priceExcludedTax = base;
+                    item.vatValue = itemAfterDiscount - base;
+                    item.total = itemAfterDiscount; // NO sumar IVA
+                } else {
+                    item.priceExcludedTax = itemAfterDiscount;
+                    item.vatValue = itemAfterDiscount * (vatRate / 100);
+                    item.total = itemAfterDiscount + item.vatValue;
+                }
             } else {
                 item.priceExcludedTax = itemAfterDiscount;
                 item.vatValue = 0;
+                item.total = itemAfterDiscount;
             }
 
-            item.subtotal = itemSubtotal;
-            item.total = itemAfterDiscount + item.vatValue;
+            // subtotal del ítem = base (sin IVA), como lo espera el backend/reporte.
+            item.subtotal = item.priceExcludedTax;
 
             grossSubtotal += itemSubtotal;
             totalDiscountDetail += item.discountValue;
             totalVat += item.vatValue;
             totalExcludedTax += item.priceExcludedTax;
         }
-        const generalDiscountAmount = totalExcludedTax * (invoice.generalDiscount / 100);
-        const subtotalAfterGeneralDiscount = totalExcludedTax - generalDiscountAmount;
-        const vatAfterGeneralDiscount = totalVat;
+        const netGross = grossSubtotal - totalDiscountDetail; // bruto (IVA incluido) luego de descuento detalle
+        const generalDiscountAmount = netGross * (invoice.generalDiscount / 100); // descuento general sobre bruto
+        const grossAfterGeneralDiscount = netGross - generalDiscountAmount;
+
+        // Prorrateo del descuento general entre base e IVA.
+        const ratio = netGross > 0 ? grossAfterGeneralDiscount / netGross : 0;
+        const subtotalAfterGeneralDiscount = totalExcludedTax * ratio;
+        const vatAfterGeneralDiscount = totalVat * ratio;
 
         invoice.grossSubtotal = grossSubtotal;
         invoice.subtotal = subtotalAfterGeneralDiscount;
