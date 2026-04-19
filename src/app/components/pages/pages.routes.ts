@@ -9,6 +9,7 @@ import { PromotionsComponent } from './promotions/promotions.component';
 
 import { QuotesComponent } from './quotes/quotes.component';
 import { ReportsComponent } from './reports/reports.component';
+import { SendingComponent } from './sending/sending.component';
 import { CustomersComponent } from './master/customers/customers.component';
 import { SettingsComponent } from './master/settings/settings.component';
 import { PosComponent } from './pos-folder/pos/pos.component';
@@ -43,7 +44,8 @@ export default [
     { path: 'invoices', component: InvoicesComponent },
     { path: 'whatsapp-chats', component: WhatsappMultiagentComponent },
     { path: 'agents', component: AgentsComponent },
-    { path: 'company', component: CompanyComponent }
+    { path: 'company', component: CompanyComponent },
+    { path: 'remisiones', component: SendingComponent }
 
     /* { path: '**', redirectTo: '/notfound' } */
 ] as Routes;

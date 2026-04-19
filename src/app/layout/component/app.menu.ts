@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterLink, RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
 import { LoginService } from '../../components/services/login.service';
@@ -32,7 +32,7 @@ export class AppMenu implements OnInit {
         CASH: 'Caja & Contabilidad',
         FINANCING: 'Financiaciones',
         INVOICES: 'Facturas',
-
+        REMISIONES: 'Remisiones',
         COMPANIES: 'Compañias',
         CATEGORIES: 'Categorías',
         WAREHOUSES: 'Bodegas',
@@ -49,17 +49,18 @@ export class AppMenu implements OnInit {
         private authService: AuthService
     ) {}
 
-    ngOnInit() {
+ngOnInit() {
         const session = this.authService.getSession();
 
         const userId = session ? session.userId : 0;
         const companiaId = session ? session.companiaId : 0;
+
         this.loginService.getPermissions(userId, companiaId).subscribe({
             next: (permissions) => {
                 this.buildMenu(permissions.data || []);
             }
         });
-        /* 
+        /*
         this.model = [
             {
                 label: 'Menú',
@@ -155,6 +156,11 @@ export class AppMenu implements OnInit {
                         label: 'Facturas',
                         icon: 'pi pi-shopping-cart',
                         routerLink: ['/pages/invoices']
+                    },
+                    this.canView('Remisiones', permissions) && {
+                        label: 'Remisiones',
+                        icon: 'pi pi-truck',
+                        RouterLink: ['/pages/remisiones']
                     }
                 ].filter(Boolean) as MenuItem[]
             },
