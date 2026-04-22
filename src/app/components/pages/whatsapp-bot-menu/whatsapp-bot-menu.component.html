@@ -1,0 +1,121 @@
+<p-toast></p-toast>
+
+<div class="bot-menu-page">
+    <div class="bot-menu-shell">
+        <header class="bot-menu-header">
+            <div>
+                <h1>Flujo Bot WhatsApp</h1>
+                <p>Configura opciones por numero de forma clara y visual.</p>
+            </div>
+            <button pButton type="button" icon="pi pi-plus" label="Nueva opcion" class="btn-primary" (click)="openCreateDialog(selectedNodeId)"></button>
+        </header>
+
+        <section class="quick-guide">
+            <div class="guide-item">
+                <span>1</span>
+                <p>Elige el <strong>menu padre</strong> donde quieres agregar la opcion.</p>
+            </div>
+            <div class="guide-item">
+                <span>2</span>
+                <p>Define el <strong>numero</strong> que escribe el cliente y el texto de la opcion.</p>
+            </div>
+            <div class="guide-item">
+                <span>3</span>
+                <p>Escribe la <strong>respuesta</strong> que recibira cuando seleccione ese numero.</p>
+            </div>
+        </section>
+
+        <section class="bot-menu-grid">
+            <article class="panel panel-list">
+                <div class="panel-title">
+                    <h2>Nodos configurados</h2>
+                    <span>{{ sortedNodes.length }} registros</span>
+                </div>
+
+                <p-table [value]="sortedNodes" [loading]="loading" responsiveLayout="scroll" styleClass="p-datatable-sm">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>#</th>
+                            <th>Texto opcion</th>
+                            <th>Menu padre</th>
+                            <th>Estado</th>
+                            <th class="text-right">Acciones</th>
+                        </tr>
+                    </ng-template>
+
+                    <ng-template pTemplate="body" let-node>
+                        <tr [class]="selectedNodeId === node.rowid ? 'is-selected' : ''">
+                            <td>{{ node.numero }}</td>
+                            <td>
+                                <button class="option-link" (click)="selectNode(node.rowid)">{{ node.palabra_clave }}</button>
+                            </td>
+                            <td>{{ getParentLabel(node.rowid_padre) }}</td>
+                            <td>
+                                <p-tag [value]="node.activo ? 'Activo' : 'Inactivo'" [severity]="node.activo ? 'success' : 'secondary'"></p-tag>
+                            </td>
+                            <td>
+                                <div class="actions">
+                                    <button pButton type="button" icon="pi pi-pencil" text rounded (click)="openEditDialog(node)"></button>
+                                    <button pButton type="button" icon="pi pi-trash" text rounded (click)="deleteNode(node)"></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </article>
+        </section>
+    </div>
+</div>
+
+<p-dialog
+    [(visible)]="showNodeDialog"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [dismissableMask]="true"
+    [style]="{ width: '640px' }"
+    [header]="isEditing ? 'Editar nodo' : 'Nuevo nodo'"
+>
+    <div class="form-grid">
+        <div class="field">
+            <label class="field-label">Menu padre</label>
+            <p-dropdown [options]="parentOptions" optionLabel="label" optionValue="value" [(ngModel)]="form.rowid_padre" styleClass="w-full"></p-dropdown>
+            <small class="field-help">Aqui se mostrara esta opcion dentro del flujo.</small>
+        </div>
+
+        <div class="form-row-two">
+            <div class="field">
+                <label class="field-label">Numero que escribe el cliente</label>
+                <p-inputNumber [(ngModel)]="form.numero" [min]="0" [useGrouping]="false" styleClass="w-full"></p-inputNumber>
+            </div>
+
+            <div class="field">
+                <label class="field-label">Prioridad</label>
+                <p-inputNumber [(ngModel)]="form.prioridad" [min]="1" [useGrouping]="false" styleClass="w-full"></p-inputNumber>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="field-label">Texto de la opcion</label>
+            <input pInputText [(ngModel)]="form.palabra_clave" class="w-full" placeholder="Ej: Medios de pago" />
+            <small class="field-help">El numero se agrega aparte automaticamente.</small>
+        </div>
+
+        <div class="field">
+            <label class="field-label">Mensaje de respuesta</label>
+            <textarea pInputTextarea [(ngModel)]="form.mensaje_respuesta" rows="8" class="w-full" placeholder="Mensaje que recibira el cliente cuando seleccione esta opcion"></textarea>
+        </div>
+
+        <div class="field switch-row">
+            <span class="text-sm font-semibold text-slate-600">Activo</span>
+            <p-inputSwitch [(ngModel)]="form.activo"></p-inputSwitch>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <button pButton type="button" label="Cancelar" text (click)="showNodeDialog = false"></button>
+            <button pButton type="button" [label]="saving ? 'Guardando...' : 'Guardar'" icon="pi pi-check" [disabled]="saving" (click)="saveNode()"></button>
+        </div>
+    </ng-template>
+</p-dialog>

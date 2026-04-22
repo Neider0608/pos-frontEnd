@@ -216,6 +216,11 @@ ngOnInit() {
                         label: 'Chats',
                         icon: 'pi pi-whatsapp',
                         routerLink: ['/pages/whatsapp-chats']
+                    },
+                    this.canView('Chats', permissions) && {
+                        label: 'Flujo Bot',
+                        icon: 'pi pi-sitemap',
+                        routerLink: ['/pages/whatsapp-bot-menu']
                     }
                 ].filter(Boolean) as MenuItem[]
             }

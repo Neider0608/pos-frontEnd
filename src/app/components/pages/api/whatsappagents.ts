@@ -55,6 +55,27 @@ export interface PhoneNumbers {
     isBot: boolean;
 }
 
+export interface WaBotNode {
+    rowid: number;
+    rowid_padre: number | null;
+    numero: number;
+    palabra_clave: string;
+    mensaje_respuesta: string;
+    prioridad: number;
+    activo: boolean;
+    fecha_creacion?: string;
+}
+
+export interface SetWaBotNodeRequest {
+    rowid: number;
+    rowid_padre: number | null;
+    numero: number;
+    palabra_clave: string;
+    mensaje_respuesta: string;
+    prioridad: number;
+    activo: boolean;
+}
+
 // ==============================
 // 🔹 AGENT
 // ==============================

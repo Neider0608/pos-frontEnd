@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { ApiResponse } from '../pages/api/shared';
-import { Conversation, Message, MessageSend, PhoneNumbers, WhatsAppAgent, AgentAssignmentPayload } from '../pages/api/whatsappagents';
+import { Conversation, Message, MessageSend, PhoneNumbers, WhatsAppAgent, AgentAssignmentPayload, SetWaBotNodeRequest, WaBotNode } from '../pages/api/whatsappagents';
 import { environment } from '../../../enviroments/enviroment';
 
 @Injectable({ providedIn: 'root' })
@@ -70,5 +70,22 @@ export class WhatsappService {
             phoneNumberId,
             clientName
         });
+    }
+
+    getBotMenuNodes(): Observable<ApiResponse<WaBotNode[]>> {
+        return this.http.get<ApiResponse<WaBotNode[]>>(`${environment.apiUrl}WhatsApp/GetBotMenuNodes`);
+    }
+
+    getBotMenuNodeByNumber(numero: number, rowidPadre?: number | null): Observable<ApiResponse<WaBotNode | null>> {
+        const parentParam = rowidPadre === null || rowidPadre === undefined ? '' : `?rowidPadre=${rowidPadre}`;
+        return this.http.get<ApiResponse<WaBotNode | null>>(`${environment.apiUrl}WhatsApp/GetBotMenuNodeByNumber/${numero}${parentParam}`);
+    }
+
+    saveBotMenuNode(payload: SetWaBotNodeRequest): Observable<ApiResponse<number>> {
+        return this.http.post<ApiResponse<number>>(`${environment.apiUrl}WhatsApp/SaveBotMenuNode`, payload);
+    }
+
+    deleteBotMenuNode(rowid: number): Observable<ApiResponse<number>> {
+        return this.http.delete<ApiResponse<number>>(`${environment.apiUrl}WhatsApp/DeleteBotMenuNode/${rowid}`);
     }
 }

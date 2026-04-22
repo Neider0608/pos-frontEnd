@@ -22,6 +22,7 @@ import { AgentsComponent } from './agents/agents.component';
 import { SuppliersComponent } from './master/suppliers/suppliers.component';
 import { CompanyComponent } from './master/company/company.component';
 import { PurchaseComponent } from './purchases/purchases.component';
+import { WhatsappBotMenuComponent } from './whatsapp-bot-menu/whatsapp-bot-menu.component';
 
 export default [
     { path: 'settings', component: SettingsComponent },
@@ -43,6 +44,7 @@ export default [
     { path: 'financing', component: FinancingComponent },
     { path: 'invoices', component: InvoicesComponent },
     { path: 'whatsapp-chats', component: WhatsappMultiagentComponent },
+    { path: 'whatsapp-bot-menu', component: WhatsappBotMenuComponent },
     { path: 'agents', component: AgentsComponent },
     { path: 'company', component: CompanyComponent },
     { path: 'remisiones', component: SendingComponent }
